@@ -14,4 +14,4 @@ login_manager = LoginManager(app)
 
 @app.route("/")
 def index():
-    return render_template("Homepage.html.jinja")
+    return render_template("homepage.html.jinja")
