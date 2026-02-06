@@ -8,7 +8,7 @@ app = Flask(__name__)
 
 config = Dynaconf(settings_file=["settings.toml"])
 
-app.secret_key = config.secret_key
+app.secret_key = config.SECRET_KEY
 
 login_manager = LoginManager(app)
 
