@@ -7,7 +7,7 @@
 
         {
             "name": "Python Debugger: Flask",
-            "type": "debugpy",
+            "type": "python",
             "request": "launch",
             "module": "flask",
             "env": {
@@ -18,7 +18,7 @@
                 "run",
             ],
             "jinja": true,
-            "autoStartBrowser": false
+            "justMyCode": false
         }
     ]
 }
