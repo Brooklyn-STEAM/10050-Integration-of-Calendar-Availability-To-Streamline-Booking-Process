@@ -1,23 +1,82 @@
-<nav class="flex flex-row-reverse justify-between text-lg bg-red-200 max-h-64 pb-6 text-lg ">
+<nav class="bg-[#57068c] px-8 py-4 shadow-md flex items-center justify-between font-medium text-white">
 
-<div class="flex items-center gap-6 font-bold ">
+  <!-- Left: Logo + User -->
+  <div class="flex items-center gap-4">
+    <img
+      src="/static/images/logo.png"
+      alt="Logo"
+      class="h-18 w-18 rounded-full object-cover ring-2 ring-white/40"
+    >
 
-<a href="/" class="hover:bg-red-50">Homepage</a>
+    {# {% if current_user.is_authenticated %} 
+    <span class="text-sm opacity-80">
+      {{ current_user.email }}
+    </span>
+    {% endif %} #}
+  </div>
 
-<a href="/appoint" class="hover:bg-red-50">Appointments</a>
+  <!-- Center: Main Nav -->
+  <div class="flex items-center gap-8 text-sm">
 
-<a href="/docor" class="hover:bg-red-50">Doctors</a>
+    <a href="/" class="hover:text-[#e0c3ff] transition">
+      Homepage
+    </a>
 
-<a href="/doctorsearch" class="hover:bg-red-50">Search</a>
+    <a href="/appoint" class="hover:text-[#e0c3ff] transition">
+      Appointments
+    </a>
 
-<a href="/login" class="hover:bg-red-50">Login</a>
+    <!-- Doctor Search + Icon -->
+    <a href="/doctorsearch"
+       class="flex items-center gap-2 hover:text-[#e0c3ff] transition">
+      Search
+      <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5"
+        fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+          d="M21 21l-4.35-4.35m0 0A7.5 7.5 0 103.5 3.5a7.5 7.5 0 0013.15 13.15z" />
+      </svg>
+    </a>
 
-<a href="/signup" class="hover:bg-red-50 mr-6">Register</a>
+  </div>
 
+  <!-- Right: Hamburger Menu -->
+  <div class="relative group">
 
+    <button class="flex items-center hover:text-[#e0c3ff] transition">
+      <!-- Hamburger Icon -->
+      <svg xmlns="http://www.w3.org/2000/svg" class="h-7 w-7"
+        fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+          d="M4 6h16M4 12h16M4 18h16" />
+      </svg>
+    </button>
 
+    <!-- Dropdown -->
+    <ul
+      class="absolute right-0 mt-3 w-40 bg-white text-[#57068c] rounded-xl shadow-lg
+             opacity-0 invisible group-hover:opacity-100 group-hover:visible
+             transition-all duration-200 text-sm overflow-hidden">
 
+      {# {% if not current_user.is_authenticated %} #}
+      <li>
+        <a href="/login" class="block px-4 py-3 hover:bg-purple-100">
+          Login
+        </a>
+      </li>
+      <li>
+        <a href="/signup" class="block px-4 py-3 hover:bg-purple-100">
+          Register
+        </a>
+      </li>
+      {# {% else %} #}
+      <li>
+        <a href="/logout" class="block px-4 py-3 hover:bg-purple-100">
+          Logout
+        </a>
+      </li>
+      {# {% endif %} #}
 
-</div>
+    </ul>
+  </div>
 
 </nav>
