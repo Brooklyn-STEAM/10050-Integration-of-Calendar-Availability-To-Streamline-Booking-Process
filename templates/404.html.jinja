@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>404 – Page Not Found</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+ <script src="https://cdn.tailwindcss.com"></script>
+  
+</head>
+
+<body class="bg-neutral-950 text-neutral-100 min-h-screen flex items-center justify-center px-6 relative">
+
+
+  <div class="absolute inset-0">
+    <img 
+      src="/static/images/404page.jpeg" 
+      alt="404 background" 
+      class="w-full h-full object-cover opacity-100"
+    >
+    <div class="absolute inset-0 bg-neutral-950/60"></div> 
+  </div>
+
+  <
+  <div class="relative max-w-xl text-center space-y-6 z-10">
+
+    
+    <h1 class="text-[7rem] sm:text-[9rem] font-black tracking-tight leading-none">
+      404
+    </h1>
+
+  
+    <p class="text-xl sm:text-2xl font-semibold">
+      Looks like you booked the wrong appointment
+    </p>
+
+   
+    <p class="text-neutral-200 text-base sm:text-lg">
+      The link might be broken, deleted, or never existed. Either way… awkward.
+    </p>
+
+    
+    <div class="flex items-center justify-center gap-3 pt-2">
+      <span class="h-px w-12 bg-neutral-700"></span>
+      <span class="text-sm text-neutral-200 uppercase tracking-widest">
+        what now?
+      </span>
+      <span class="h-px w-12 bg-neutral-700"></span>
+    </div>
+
+   
+    <div class="flex flex-col sm:flex-row gap-4 justify-center pt-4">
+      <a
+        href="/"
+        class="inline-flex items-center justify-center rounded-md bg-white text-black px-6 py-3 font-semibold hover:bg-neutral-200 transition"
+      >
+        Go Home
+      </a>
+
+      <button
+        onclick="history.back()"
+        class="inline-flex items-center justify-center rounded-md border border-neutral-700 px-6 py-3 font-semibold text-neutral-300 hover:bg-neutral-900 transition"
+      >
+        Go Back
+      </button>
+    </div>
+
+    
+    <p class="pt-6 text-sm text-neutral-300">
+      If you’re lost, don’t worry — so is this page.
+    </p>
+  </div>
+</body>
+</html>

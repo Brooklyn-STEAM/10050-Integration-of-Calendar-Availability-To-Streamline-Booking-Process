@@ -6,39 +6,49 @@
   <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
 </head>
 
-<body class="min-h-screen flex flex-col">
+<body class="min-h-screen flex flex-col ">
   {% include "components/navbar.html.jinja"%}
 
 
 
-  <section class="h-screen/2 min-h-[50vh] radial-gradient(at 0% 50%, rgb(254, 202, 202), rgb(220, 38, 38)) flex items-center justify-center px-6">
-    <div class="max-w-4xl text-center">
-      <h1 class="text-4xl md:text-5xl font-bold text-white drop-shadow">
-        Book Smarter. Faster. Better.
-      </h1>
-      <p class="mt-6 text-lg md:text-xl text-white/90">
-       Book, manage, and reschedule NYU Langone appointments with ease -- synced to your calendar's and tailored to you availability.
-      </p>
+  <section
+  class="relative h-screen/2 min-h-[50vh] flex items-center justify-center px-6
+         bg-[url('/static/images/medicinebg.jpeg')] bg-cover bg-center bg-no-repeat"
+>
+  
+  <div class="absolute inset-0 bg-purple-600/30"></div>
 
-      <div class="mt-8 flex justify-center gap-4">
-        <button class="px-6 py-3 bg-white text-red-600 font-semibold rounded-lg hover:bg-gray-100 transition">
-          Get Started
-        </button>
-        <button class="px-6 py-3 border border-white text-white rounded-lg hover:bg-white hover:text-red-600 transition">
-          Connect MyChart
-        </button>
-      </div>
+ 
+  <div class="relative max-w-4xl text-center">
+    <h1 class="text-4xl md:text-5xl font-bold text-white drop-shadow">
+      Book Smarter. Faster. Better.
+    </h1>
+    <p class="mt-6 text-lg md:text-xl text-white/90">
+      Book, manage, and reschedule NYU Langone appointments with ease -- synced to your calendar's and tailored to you availability.
+    </p>
+
+    <div class="mt-8 flex justify-center gap-4">
+      <button class="px-6 py-3 bg-white text-purple-600 font-semibold rounded-lg hover:bg-purple-200 transition">
+        Get Started
+      </button>
+      <button class="px-6 py-3 bg-white text-purple-600 font-semibold rounded-lg hover:bg-purple-200 transition">
+        Connect MyChart
+      </button>
     </div>
-  </section>
+  </div>
+</section>
 
 
-  <section class="flex-1 bg-white px-6 py-16">
+
+  <section class="flex-1 bg-white-200 px-6 py-16">
     <div class="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
 
      
-      <div class="border-l-4 border-red-600 pl-6">
+      <div class="border-l-4 border-purple-600 pl-6">
         <div class="w-full h-64 bg-gray-200 rounded-lg flex items-center justify-center text-gray-500">
-          <img src="/static/images/nyulangone.jpeg" alt="NYU Langone" class="h-30 w-auto  shadow-lg">
+         <img src="/static/images/nyulangone.jpeg" alt="NYU Langone" class="h-40 md:h-48 lg:h-56 w-auto shadow-lg rounded-lg">
+
+
         </div>
       </div>
 
@@ -59,4 +69,11 @@
           <li>✔ Real-time availability</li>
         </ul>
       </div>
+
+
+
+       <footer class="col-span-full flex justify-center text-center mt-12">
+  <p>© 2026 — Book fast. Smart care, no cast</p>
+</footer>
+
 
