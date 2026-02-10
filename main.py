@@ -14,3 +14,8 @@ app.secret_key = config.SECRET_KEY
 @app.route("/")
 def index():
     return render_template("homepage.html.jinja")
+
+
+@app.errorhandler(404)
+def page_not_found(e):
+    return render_template('404.html.jinja'),404 
