@@ -63,7 +63,7 @@ def connect_db():
 def index():
     return render_template("homepage.html.jinja")
 
-@app.route("/docor")
+@app.route("/doctor")
 def docor():
     connection = connect_db()
 

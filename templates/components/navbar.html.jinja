@@ -8,11 +8,11 @@
       class="h-18 w-18 rounded-full object-cover ring-2 ring-white/40"
     >
 
-    {# {% if current_user.is_authenticated %} 
+    {% if current_user.is_authenticated %} 
     <span class="text-sm opacity-80">
       {{ current_user.email }}
     </span>
-    {% endif %} #}
+    {% endif %}
   </div>
 
 
@@ -56,7 +56,7 @@
              opacity-0 invisible group-hover:opacity-100 group-hover:visible
              transition-all duration-200 text-sm overflow-hidden z-999">
 
-      {# {% if not current_user.is_authenticated %} s#}
+      {% if not current_user.is_authenticated %}
       <li>
         <a href="/login" class="block px-4 py-3 hover:bg-purple-200">
           Login
@@ -67,13 +67,13 @@
           Register
         </a>
       </li>
-      {# {% else %} #}
+       {% else %}
       <li>
         <a href="/logout" class="block px-4 py-3 hover:bg-purple-100">
           Logout
         </a>
       </li>
-      {# {% endif %} #}
+       {% endif %} 
 
     </ul>
   </div>
