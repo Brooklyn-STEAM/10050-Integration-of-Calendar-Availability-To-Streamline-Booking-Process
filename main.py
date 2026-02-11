@@ -53,9 +53,9 @@ def connect_db():
         database="bookwell",
         autocommit=True,
         cursorclass=pymysql.cursors.DictCursor
-
     )
     return conn
+
 
 
 
