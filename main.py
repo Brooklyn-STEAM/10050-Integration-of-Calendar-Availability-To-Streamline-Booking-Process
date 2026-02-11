@@ -140,6 +140,48 @@ def login():
 
     return render_template("doctorsearch.html.jinja")
 
+@app.route("/signup", methods=["POST","GET"])
+def signup():
+    if request.method =='POST':
+        name= request.form["name"]
+        email = request.form["email"]
+
+        password = request.form['password']
+        confirm_password = request.form["confirm_password"]
+        address = request.form["address"]
+
+        if password != confirm_password:
+            flash("Passwords do not match")
+        elif len(password) < 8:
+            flash("Password is too short")
+        else:
+            connection = connect_db()
+
+            cursor = connection.cursor ()
+            try:
+                cursor.execute("""
+                    INSERT INTO `User` (`Name`, `Password`, `Email`, `Address`)
+                    VALUES (%s, %s, %s, %s)
+                """, (name, password, email, address) )
+                connection.close()
+            except pymysql.err.IntegrityError:
+                flash("User with that email already exists")
+
+            else:
+                 return redirect('/login')
+            
+    return render_template("signup.html.jinja")
+
+@app.route("/logout", methods=["POST", "GET"])
+@login_required
+def logout():
+    logout_user()    
+    return redirect("/")
+
+
+
+     
+
 
 
 
