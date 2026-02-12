@@ -53,9 +53,9 @@ def connect_db():
         database="bookwell",
         autocommit=True,
         cursorclass=pymysql.cursors.DictCursor
+
     )
     return conn
-
 
 
 
@@ -64,30 +64,61 @@ def index():
     return render_template("homepage.html.jinja")
 
 @app.route("/doctor")
-def docor():
+def doctor():
     connection = connect_db()
 
     cursor = connection.cursor()
 
-    cursor.execute("SELECT * FROM `DoctorAvailability` ")
+    cursor.execute("SELECT * FROM `Doctor` ")
 
     result = cursor.fetchall()
 
     connection.close()
-    return render_template("docor.html.jinja")
+    return render_template("doctor.html.jinja",doc =result )
+
+@app.route("/doctor/<Doctor_id>")
+def doctor_page(Doctor_id):
+    connection = connect_db()
+
+    cursor = connection.cursor()
+
+    cursor.execute("SELECT * `Doctor` WHERE `ID` = %s", (Doctor_id))
+
+    result = cursor.fetchone()
+
+    cursor.execute("SELECT * FROM ``Review` JOIN `User` ON `User`. `ID` = `Review` . `userID` `DoctorID` = %s", (Doctor_id))
+
+    result2 = cursor.fetchall()
+
+    connection.close()
+
+    if result is None:
+        abort(404)
+
+    return render_template("doctor.html.jinja", doctor = result, review = result2)
+
+
+
 
 @app.route("/appoint")
+@login_required
 def appoint():
     connection = connect_db()
 
     cursor = connection.cursor()
 
-    cursor.execute("SELECT * FROM `Appointment` ")
-
+    cursor.execute("""
+    SELECT * FROM `Appointment`
+    JOIN `Doctor` ON `Doctor`. `ID` = `Appointment`. `DoctorID`
+    WHERE `UserID` = %s
+    """, (current_user.id))
     result = cursor.fetchall()
 
     connection.close()
-    return render_template("appoint.html.jinja")
+    return render_template("appoint.html.jinja", appointment = result)
+
+
+
 
 @app.route("/doctorsearch")
 def doctorsearch():
@@ -177,6 +208,9 @@ def signup():
 def logout():
     logout_user()    
     return redirect("/")
+
+
+
 
 
 
