@@ -97,23 +97,6 @@ def doctor_page(Doctor_id):
 
     return render_template("doctor.html.jinja", doctor = result, review = result2)
 
-    
-
-
-
-
-
-
-
-
-@app.route ("/appoint/<Doctor_id>/add_to_list", methods=["POST"])
-@login_required
-def add_to_list(Doctor_id):
-    return render_template("appoint.html.jinja")
-
-    
-
-
 
 
 
