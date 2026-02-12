@@ -1,6 +1,6 @@
-<nav class="bg-[#57068c] px-8 py-4 shadow-md flex items-center justify-between font-medium text-white">
+<nav class="relative z-50 bg-[#57068c] px-8 py-4 shadow-md flex items-center justify-between font-medium text-white">
 
-  <!-- Left: Logo + User -->
+
   <div class="flex items-center gap-4">
     <img
       src="/static/images/logo.png"
@@ -8,14 +8,14 @@
       class="h-18 w-18 rounded-full object-cover ring-2 ring-white/40"
     >
 
-    {# {% if current_user.is_authenticated %} 
+    {% if current_user.is_authenticated %} 
     <span class="text-sm opacity-80">
-      {{ current_user.email }}
+      {{ current_user.name }}
     </span>
-    {% endif %} #}
+    {% endif %}
   </div>
 
-  <!-- Center: Main Nav -->
+
   <div class="flex items-center gap-8 text-sm">
 
     <a href="/" class="hover:text-[#e0c3ff] transition">
@@ -26,7 +26,7 @@
       Appointments
     </a>
 
-    <!-- Doctor Search + Icon -->
+
     <a href="/doctorsearch"
        class="flex items-center gap-2 hover:text-[#e0c3ff] transition">
       Search
@@ -39,11 +39,10 @@
 
   </div>
 
-  <!-- Right: Hamburger Menu -->
   <div class="relative group">
 
     <button class="flex items-center hover:text-[#e0c3ff] transition">
-      <!-- Hamburger Icon -->
+
       <svg xmlns="http://www.w3.org/2000/svg" class="h-7 w-7"
         fill="none" viewBox="0 0 24 24" stroke="currentColor">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -51,30 +50,30 @@
       </svg>
     </button>
 
-    <!-- Dropdown -->
+
     <ul
       class="absolute right-0 mt-3 w-40 bg-white text-[#57068c] rounded-xl shadow-lg
              opacity-0 invisible group-hover:opacity-100 group-hover:visible
-             transition-all duration-200 text-sm overflow-hidden">
+             transition-all duration-200 text-sm overflow-hidden z-999">
 
-      {# {% if not current_user.is_authenticated %} s#}
+      {% if not current_user.is_authenticated %}
       <li>
-        <a href="/login" class="block px-4 py-3 hover:bg-purple-100">
+        <a href="/login" class="block px-4 py-3 hover:bg-purple-200">
           Login
         </a>
       </li>
       <li>
-        <a href="/signup" class="block px-4 py-3 hover:bg-purple-100">
+        <a href="/signup" class="block px-4 py-3 hover:bg-purple-200">
           Register
         </a>
       </li>
-      {# {% else %} #}
+       {% else %}
       <li>
         <a href="/logout" class="block px-4 py-3 hover:bg-purple-100">
           Logout
         </a>
       </li>
-      {# {% endif %} #}
+       {% endif %} 
 
     </ul>
   </div>

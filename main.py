@@ -63,8 +63,8 @@ def connect_db():
 def index():
     return render_template("homepage.html.jinja")
 
-@app.route("/docor")
-def docor():
+@app.route("/doctor")
+def doctor():
     connection = connect_db()
 
     cursor = connection.cursor()
@@ -74,9 +74,9 @@ def docor():
     result = cursor.fetchall()
 
     connection.close()
-    return render_template("docor.html.jinja",doc =result )
+    return render_template("doctor.html.jinja",doc =result )
 
-@app.route("/docor/<Doctor_id>")
+@app.route("/doctor/<Doctor_id>")
 def doctor_page(Doctor_id):
     connection = connect_db()
 
@@ -95,7 +95,7 @@ def doctor_page(Doctor_id):
     if result is None:
         abort(404)
 
-    return render_template("docor.html.jinja", doctor = result, review = result2)
+    return render_template("doctor.html.jinja", doctor = result, review = result2)
 
     
 
@@ -109,7 +109,7 @@ def doctor_page(Doctor_id):
 @app.route ("/appoint/<Doctor_id>/add_to_list", methods=["POST"])
 @login_required
 def add_to_list(Doctor_id):
-    time = request.form[]
+    return render_template("appoint.html.jinja")
 
     
 
