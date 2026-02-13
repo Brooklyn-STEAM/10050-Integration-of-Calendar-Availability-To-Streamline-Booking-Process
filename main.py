@@ -86,7 +86,7 @@ def doctor_page(Doctor_id):
 
     result = cursor.fetchone()
 
-    cursor.execute("SELECT * FROM ``Review` JOIN `User` ON `User`. `ID` = `Review` . `userID` `DoctorID` = %s", (Doctor_id))
+    cursor.execute("SELECT * FROM `Review` JOIN `User` ON `User`. `ID` = `Review` . `userID` `DoctorID` = %s", (Doctor_id))
 
     result2 = cursor.fetchall()
 
@@ -96,6 +96,30 @@ def doctor_page(Doctor_id):
         abort(404)
 
     return render_template("doctor.html.jinja", doctor = result, review = result2)
+
+
+
+
+@app.route("/doctor/<Doctor_id>/review", methods=["POST"])
+@login_required
+def Review1(Doctor_id):
+
+    rating = request.form["Rating"]
+
+    comment = request.form["comments"]
+
+    connection = connect_db()
+    
+    cursor = connection.cursor()
+
+    cursor.execute("""
+    INSERT INTO `Review` (`UserID`, `Comments`, `Rating`, `DoctorID`)
+    VALUES (%s, %s, %s, %s)
+                   
+    """,(current_user.id, comment, rating, Doctor_id))
+
+    return redirect(f"/doctor/{Doctor_id}")
+    
 
 
 
