@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, flash, redirect
+from flask import Flask, render_template, request, flash, redirect, abort
 from flask_login import LoginManager, login_user, logout_user, login_required, current_user
 import pymysql
 
@@ -74,7 +74,7 @@ def doctor():
     result = cursor.fetchall()
 
     connection.close()
-    return render_template("doctor.html.jinja",doc =result )
+    return render_template("doctor.html.jinja", doctors = result )
 
 @app.route("/doctor/<Doctor_id>")
 def doctor_page(Doctor_id):
@@ -155,7 +155,7 @@ def doctorsearch():
     result = cursor.fetchall()
 
     connection.close()
-    return render_template("doctorsearch.html.jinja")
+    return render_template("doctorsearch.html.jinja", doctors = result)
 
 
 
@@ -193,7 +193,7 @@ def login():
     return render_template("login.html.jinja")
 
 
-    return render_template("doctorsearch.html.jinja")
+    
 
 @app.route("/signup", methods=["POST","GET"])
 def signup():
