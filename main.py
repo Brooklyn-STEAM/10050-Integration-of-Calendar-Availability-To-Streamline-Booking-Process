@@ -96,33 +96,7 @@ def doctor_page(Doctor_id):
 
     return render_template("doctor.html.jinja", doctor = result, reviews=result2)
 
-
-
-
-@app.route("/doctor/<Doctor_id>/review", methods=["POST"])
-@login_required
-def Review1(Doctor_id):
-
-    rating = request.form["Rating"]
-
-    comment = request.form["comments"]
-
-    connection = connect_db()
     
-    cursor = connection.cursor()
-
-    cursor.execute("""
-    INSERT INTO `Review` (`UserID`, `Comments`, `Rating`, `DoctorID`)
-    VALUES (%s, %s, %s, %s)
-                   
-    """,(current_user.id, comment, rating, Doctor_id))
-
-    return redirect(f"/doctor/{Doctor_id}")
-    
-
-
-
-
 @app.route("/appoint")
 @login_required
 def appoint():
@@ -131,14 +105,15 @@ def appoint():
     cursor = connection.cursor()
 
     cursor.execute("""
-    SELECT * FROM `Appointment`
-    JOIN `Doctor` ON `Doctor`. `ID` = `Appointment`. `DoctorID`
+    SELECT Appointment.ID, Appointment.Date, Appointment.Type, Appointment.Status, Doctor.Name AS DoctorName, Doctor.Location AS Location 
+    FROM `Appointment`
+    JOIN `Doctor` ON `Doctor`.`ID` = `Appointment`.`DoctorID`
     WHERE `UserID` = %s
-    """, (current_user.id))
-    result = cursor.fetchall()
+    """, (current_user.id,))
+    appointments = cursor.fetchall()
 
     connection.close()
-    return render_template("appoint.html.jinja", appointment = result)
+    return render_template("appoint.html.jinja", appointments = appointments)
 
 @app.route("/appointments")
 def appointments():
@@ -151,14 +126,65 @@ def appointments():
     connection.close()
     return render_template("appoint.html.jinja", appointments=appointments)
 
+@app.route("/doctor/<Doctor_id>/review", methods=["POST"])
+@login_required
+def submit_review(Doctor_id):
+
+    rating = request.form["rating"]
+    comment = request.form["comments"]
+
+    connection = connect_db()
+    cursor = connection.cursor()
+
+    cursor.execute("""
+        INSERT INTO `Review` (`UserID`, `Comments`, `Rating`, `DoctorID`)
+        VALUES (%s, %s, %s, %s)
+    """, (current_user.id, comment, rating, Doctor_id))
+
+    connection.close()
+
+    return redirect("/thank-you")
+
+@app.route("/doctor/<Doctor_id>/book", methods=["POST"])
+@login_required
+def book_appointment(Doctor_id):
+
+    date = request.form.get("date")
+    time = request.form.get("time")
+    visit_type = request.form.get("visit_type")
+
+    type_field = f"{visit_type} {time}"
+
+    connection = connect_db()
+    cursor = connection.cursor()
+
+    cursor.execute("""
+        INSERT INTO `Appointment` (`DoctorID`, `UserID`, `Date`, `Type`, `Status`)
+        VALUES (%s, %s, %s, %s, %s)
+    """, (Doctor_id, current_user.id, date, type_field, "Scheduled"))
+
+    connection.close()
+
+    return redirect("/appoint")
+
+@app.route("/appoint/<int:appointment_id>/cancel", methods=["POST"])
+@login_required
+def cancel_appointment(appointment_id):
+    connection = connect_db()
+    cursor = connection.cursor()
+    cursor.execute("""
+        UPDATE `Appointment`
+        SET `Status` = 'Cancelled'
+        WHERE `ID` = %s AND `UserID` = %s
+    """, (appointment_id, current_user.id))
+
+    connection.close()
+    flash("Appointment has been cancelled.")
+    return redirect("/appoint")
+
 @app.route("/thank-you")
 def thank():
     return render_template("thank-you.html.jinja")
-
-
-
-
-
 
 
 @app.route("/doctorsearch")
