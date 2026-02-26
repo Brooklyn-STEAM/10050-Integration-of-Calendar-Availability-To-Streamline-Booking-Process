@@ -79,14 +79,13 @@ def doctor():
 @app.route("/doctor/<Doctor_id>")
 def doctor_page(Doctor_id):
     connection = connect_db()
-
     cursor = connection.cursor()
 
-    cursor.execute("SELECT * `Doctor` WHERE `ID` = %s", (Doctor_id))
+    cursor.execute("SELECT * FROM `Doctor` WHERE `ID` = %s", (Doctor_id,))
 
     result = cursor.fetchone()
 
-    cursor.execute("SELECT * FROM `Review` JOIN `User` ON `User`. `ID` = `Review` . `userID` `DoctorID` = %s", (Doctor_id))
+    cursor.execute("SELECT * FROM `Review` JOIN `User` ON `User`.`ID` = `Review`.`userID` WHERE `Review`.`DoctorID` = %s", (Doctor_id,))
 
     result2 = cursor.fetchall()
 
@@ -95,7 +94,7 @@ def doctor_page(Doctor_id):
     if result is None:
         abort(404)
 
-    return render_template("doctor.html.jinja", doctor = result, review = result2)
+    return render_template("doctor.html.jinja", doctor = result, reviews=result2)
 
 
 
@@ -141,6 +140,24 @@ def appoint():
     connection.close()
     return render_template("appoint.html.jinja", appointment = result)
 
+@app.route("/appointments")
+def appointments():
+    connection = connect_db()
+    cursor = connection.cursor()
+
+    cursor.execute("SELECT * FROM `Appointment`")
+    appointments = cursor.fetchall()
+
+    connection.close()
+    return render_template("appoint.html.jinja", appointments=appointments)
+
+@app.route("/thank-you")
+def thank():
+    return render_template("thank-you.html.jinja")
+
+
+
+
 
 
 
@@ -155,11 +172,8 @@ def doctorsearch():
     result = cursor.fetchall()
 
     connection.close()
-    return render_template("doctorsearch.html.jinja", doctors = result)
 
-
-
-
+    return render_template("doctorsearch.html.jinja", doctors = result) 
 
 
 

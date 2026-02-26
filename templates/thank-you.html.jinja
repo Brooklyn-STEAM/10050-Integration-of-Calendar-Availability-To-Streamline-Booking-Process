@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <title>Thank You</title>
+</head>
+
+<body class="bg-[#F8EDE3] text-[#7a5b40] min-h-screen">
+    {% include "components/navbar.html.jinja" %}
+
+    <main class="max-w-3xl mx-auto px-6 py-20">
+        <div class="bg-white rounded-md shadow-sm p-12 text-center">
+
+            <h1 class="text-3xl font-semibold mb-4">
+                Thank You for Your Order!
+            </h1>
+
+            <p class="text-lg mb-6">
+                Your order has been placed successfully.
+                We’re preparing it with care and will notify you when it ships.
+            </p>
+
+            <div class="flex flex-col sm:flex-row justify-center gap-4 mt-8">
+                <a href="/browse"
+                    class="inline-block bg-[#7a5b40] hover:bg-[#6a4f38] text-[#F8EDE3] font-medium px-8 py-3 rounded-md">
+                    Continue Shopping
+                </a>
+
+                <a href="/"
+                    class="inline-block border border-[#7a5b40] text-[#7a5b40] hover:bg-[#7a5b40]/10 font-medium px-8 py-3 rounded-md">
+                    Go to Home
+                </a>
+            </div>
+        </div>
+    </main>
+</body>
+
+</html>

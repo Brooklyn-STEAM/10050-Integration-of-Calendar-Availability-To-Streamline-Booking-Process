@@ -37,8 +37,7 @@
     <a href="/doctor/{{ doctor['ID'] }}" class="group">
       <div class="bg-white shadow-md rounded-lg p-6 flex flex-col items-center">
         <img 
-          src="{{ doctor['Image'] }}"
-          alt="{{ doctor['Name'] }}"
+          src="{{ doctor['Image'] }}" alt="{{ doctor['Name'] }}"
           class="w-32 h-32 object-cover rounded-full border-4 border-[#BF5700]"
         />
 
@@ -47,9 +46,7 @@
             {{ doctor['Name'] }}
           </h2>
 
-          <p class="text-gray-600 mt-2">
-            {{ doctor['Description'] }}
-          </p>
+          
 
           <p class="text-sm text-gray-500 mt-2">
             {{ doctor['Category'] }}
