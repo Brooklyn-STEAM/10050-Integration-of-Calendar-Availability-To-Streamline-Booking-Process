@@ -11,25 +11,24 @@
 <div class="max-w-6xl mx-auto px-4 py-8">
 
  
-  <div class="bg-white shadow-md rounded-lg p-4 mb-8 flex flex-col md:flex-row gap-4 items-center justify-between">
-    <div class="flex w-full md:w-2/3">
-      <input 
+  <form method="get" action="/doctorsearch" class="flex flex-col md:flex-row gap-4 mb-6">
+    <input 
         type="text" 
+        name="q"
+        value="{{ search_query|default('') }}"
         placeholder="Search doctors..."
         class="w-full px-4 py-2 border border-gray-300 rounded-l-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-      />
-      <button class="bg-purple-700 text-white px-6 rounded-r-lg hover:bg-gray-700">
-        Search
-      </button>
-    </div>
-   
-    <select class="w-full md:w-1/3 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 ">
-      <option value="">Filter</option>
-      <option>Cardiology</option>
-      <option>Neurology</option>
-      <option>Orthopedics</option>
+    />
+    <select name="category" class="w-full md:w-1/3 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2">
+        <option value="">All Categories</option>
+        <option value="Cardiology" {% if category_filter=='Cardiology' %}selected{% endif %}>Cardiology</option>
+        <option value="Neurology" {% if category_filter=='Neurology' %}selected{% endif %}>Neurology</option>
+        <option value="Orthopedics" {% if category_filter=='Orthopedics' %}selected{% endif %}>Orthopedics</option>
     </select>
-  </div>
+    <button type="submit" class="bg-purple-700 text-white px-6 rounded-lg hover:bg-gray-700">
+        Search
+    </button>
+</form>
 
 
   <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-10">
