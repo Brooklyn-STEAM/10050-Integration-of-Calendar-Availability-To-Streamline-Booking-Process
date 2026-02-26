@@ -188,18 +188,35 @@ def thank():
 
 
 @app.route("/doctorsearch")
-def doctorsearch():
-    connection = connect_db()
 
+
+
+
+
+@app.route("/doctorsearch", methods=["GET"])
+def doctorsearch():
+    search_query = request.args.get("q", "")  # get search input
+    category_filter = request.args.get("category", "")  # get category filter
+
+    connection = connect_db()
     cursor = connection.cursor()
 
-    cursor.execute("SELECT * FROM `Doctor` ")
+    sql = "SELECT * FROM `Doctor` WHERE 1=1"
+    params = []
 
-    result = cursor.fetchall()
+    if search_query:
+        sql += " AND `Name` LIKE %s"
+        params.append(f"%{search_query}%")
+    
+    if category_filter:
+        sql += " AND `Category` = %s"
+        params.append(category_filter)
 
+    cursor.execute(sql, params)
+    doctors = cursor.fetchall()
     connection.close()
 
-    return render_template("doctorsearch.html.jinja", doctors = result) 
+    return render_template("doctorsearch.html.jinja", doctors=doctors, search_query=search_query, category_filter=category_filter) 
 
 
 
