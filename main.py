@@ -1,7 +1,8 @@
 from flask import Flask, render_template, request, flash, redirect, abort
 from flask_login import LoginManager, login_user, logout_user, login_required, current_user
 import pymysql
-
+import datetime
+import calendar as cal
 from dynaconf import Dynaconf
 
 app = Flask(__name__)
@@ -218,6 +219,50 @@ def doctorsearch():
 
     return render_template("doctorsearch.html.jinja", doctors=doctors, search_query=search_query, category_filter=category_filter) 
 
+
+
+
+@app.route('/calendar')
+@login_required
+def calendar_view():
+    connection = connect_db()
+    cursor = connection.cursor()
+
+    today = datetime.date.today()
+    year = today.year
+    month = today.month
+
+    cursor.execute("""
+        SELECT ID, Date, Type, Status
+        FROM Appointment
+        WHERE UserID = %s
+        AND MONTH(Date) = %s
+        AND YEAR(Date) = %s
+    """, (current_user.id, month, year))
+
+    appointments = cursor.fetchall()
+    connection.close()
+
+    # Organize appointments by date
+    events = {}
+    for appt in appointments:
+        date_key = appt["Date"].strftime("%Y-%m-%d")
+        if date_key not in events:
+            events[date_key] = []
+        events[date_key].append(appt)
+
+    month_calendar = cal.monthcalendar(year, month)
+    month_name = cal.month_name[month]
+
+    return render_template(
+        "calendar.html.jinja",
+        calendar=month_calendar,
+        events=events,
+        year=year,
+        month=month,
+        month_name=month_name,
+        today=today.strftime("%Y-%m-%d")
+    )
 
 
 @app.route("/login", methods=["POST", "GET"])
