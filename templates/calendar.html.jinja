@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>My Calendar</title>
+  <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+</head>
+
+<body class="bg-gray-100">
+
+{% include "components/navbar.html.jinja" %}
+
+   
+
+    <div class="px-4 py-10">
+     
+        <h1 class="text-3xl font-bold text-center mb-10 text-gray-800">
+            {{ month_name }} {{ year }}
+        </h1>
+
+       
+        <div class="max-w-4xl mx-auto">
+
+            
+            <div class="grid grid-cols-7 gap-2 text-center text-sm font-semibold text-gray-600 mb-2">
+                <div>Sun</div>
+                <div>Mon</div>
+                <div>Tue</div>
+                <div>Wed</div>
+                <div>Thu</div>
+                <div>Fri</div>
+                <div>Sat</div>
+            </div>
+
+            
+            <div class="grid grid-cols-7 gap-2 max-w-4xl">
+
+                {% for week in calendar %}
+                    {% for day in week %}
+                        {% if day == 0 %}
+                            <div></div>
+                        {% else %}
+
+                            {% set full_date = year ~ "-" ~ "%02d"|format(month) ~ "-" ~ "%02d"|format(day) %}
+
+                            <div class="bg-white border-white rounded-lg p-2 min-h-[95px] shadow-sm hover:shadow-md transition">
+
+                              
+                                <div class="text-sm font-bold
+                                    {% if full_date == today %}
+                                        text-purple-700
+                                    {% else %}
+                                        text-gray-700
+                                    {% endif %}
+                                ">
+                                    {{ day }}
+                                </div>
+
+                              
+                                {% if full_date in events %}
+                                    {% for appt in events[full_date] %}
+                                        <div class="mt-2 text-xs px-2 py-1 rounded
+                                            {% if appt.Status == 'Cancelled' %}
+                                                bg-red-100 text-red-700
+                                            {% else %}
+                                                bg-blue-100 text-blue-700
+                                            {% endif %}
+                                        ">
+                                            {{ appt.Type }}
+                                        </div>
+                                    {% endfor %}
+                                {% endif %}
+
+                            </div>
+
+                        {% endif %}
+                    {% endfor %}
+                {% endfor %}
+
+            </div>
+
+        </div>
+    </div>
+
+</body>
+</html>
