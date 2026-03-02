@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Contact Us | BookWell</title>
+  <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+</head>
+<body class="bg-white text-gray-900 min-h-screen flex flex-col">
+
+  {% include "components/navbar.html.jinja" %}
+
+  <main class="flex-grow">
+
+ 
+    <section class="px-6 py-16 bg-gray-50">
+      <div class="max-w-4xl mx-auto text-center">
+        <h1 class="text-4xl md:text-5xl font-bold mb-6">
+          We're here to help.
+        </h1>
+        <p class="text-lg text-gray-600 max-w-2xl mx-auto">
+          Whether you have a question about your booking, need support,
+          or just want to say hello — the BookWell team is ready.
+        </p>
+      </div>
+    </section>
+
+
+    <section class="px-6 py-16">
+      <div class="max-w-6xl mx-auto grid md:grid-cols-2 gap-12 items-start">
+
+        
+        <div class="bg-gray-50 rounded-2xl p-8 shadow-sm h-fit">
+          <div class="mb-6">
+            <div class="w-12 h-12 bg-indigo-100 rounded-lg flex items-center justify-center">
+              <svg class="w-6 h-6 text-indigo-600" fill="none" stroke="currentColor" stroke-width="2"
+                viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round"
+                  d="M3 8l9 6 9-6M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+              </svg>
+            </div>
+          </div>
+
+          <h3 class="text-xl font-semibold mb-4">Email Support</h3>
+          <p class="text-gray-600 mb-6">
+            Reach out to any of our team members directly.
+          </p>
+
+          <div class="space-y-3 break-words">
+            <a href="mailto:jquiles@brooklynsteamcenter.org"
+              class="block text-indigo-600 font-medium hover:underline">
+              jquiles@brooklynsteamcenter.org
+            </a>
+
+            <a href="mailto:swhite2@brooklynsteamcenter.org"
+              class="block text-indigo-600 font-medium hover:underline">
+              swhite2@brooklynsteamcenter.org
+            </a>
+
+            <a href="mailto:jprity@brooklynsteamcenter.org"
+              class="block text-indigo-600 font-medium hover:underline">
+              jprity@brooklynsteamcenter.org
+            </a>
+          </div>
+        </div>
+
+        
+        <div class="bg-white rounded-2xl shadow-lg p-10 border border-gray-100">
+          <h2 class="text-2xl font-bold mb-6">
+            Send us a message
+          </h2>
+
+          <form method="POST" action="{{ url_for('contact') }}" class="space-y-6">
+
+            <div>
+              <label class="block text-sm font-medium mb-2">Full Name</label>
+              <input type="text" name="name" required
+                class="w-full border border-gray-300 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+            </div>
+
+            <div>
+              <label class="block text-sm font-medium mb-2">Email Address</label>
+              <input type="email" name="email" required
+                class="w-full border border-gray-300 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+            </div>
+
+            <div>
+              <label class="block text-sm font-medium mb-2">How can we help?</label>
+              <textarea rows="5" name="message" required
+                class="w-full border border-gray-300 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-indigo-500"></textarea>
+            </div>
+
+            <button type="submit"
+              class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold px-6 py-3 rounded-lg transition">
+              Send Message
+            </button>
+
+          </form>
+        </div>
+
+      </div>
+    </section>
+
+  </main>
+
+  <footer class="px-6 py-8 text-center text-gray-500 text-sm border-t">
+    © 2026 BookWell. All rights reserved.
+  </footer>
+
+</body>

@@ -1,7 +1,8 @@
-from flask import Flask, render_template, request, flash, redirect, abort
+from flask import Flask, render_template, request, flash, redirect, abort, url_for
 from flask_login import LoginManager, login_user, logout_user, login_required, current_user
 import pymysql
-import datetime
+import datetime 
+import os
 import calendar as cal
 from dynaconf import Dynaconf
 
@@ -199,9 +200,7 @@ def mark_attended(appointment_id):
     flash("Appointment marked as attended.")
     return redirect("/appoint")
 
-@app.route("/thank-you")
-def thank():
-    return render_template("thank-you.html.jinja")
+
 
 
 
@@ -350,9 +349,29 @@ def logout():
     return redirect("/")
 
 
+@app.route("/thanks")
+def thanks():
+    return render_template("thanks.html.jinja")
 
+@app.route("/contact", methods=["GET", "POST"])
+def contact():
+    if request.method == "POST":
+        name = request.form.get("name")
+        email = request.form.get("email")
+        message = request.form.get("message")
 
+        
+        if not name or not email or not message:
+            flash("Please fill in all fields.", "error")
+            return redirect(url_for("contact"))
 
+        
+        print(f"New message from {name} ({email}): {message}")
+
+        flash("Your message has been sent successfully!", "success")
+        return redirect(url_for("thank_you"))
+
+    return render_template("contactus.html.jinja")
 
      
 
