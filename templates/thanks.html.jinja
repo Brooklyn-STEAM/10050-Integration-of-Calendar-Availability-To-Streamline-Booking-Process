@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Booking Confirmed | BookWell</title>
+  <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+</head>
+<body class="bg-gray-50 text-gray-900">
+
+ {% include "components/navbar.html.jinja"%}
+
+  
+  <div class="min-h-screen flex items-center justify-center px-6 py-16">
+    <div class="max-w-3xl w-full bg-white shadow-xl rounded-2xl p-10">
+
+      
+      <div class="text-center mb-8">
+        <h1 class="text-3xl font-bold text-indigo-600">BookWell</h1>
+      </div>
+
+      
+      <div class="flex justify-center mb-6">
+        <div class="bg-green-100 p-4 rounded-full">
+          <svg class="w-10 h-10 text-green-600" fill="none" stroke="currentColor" stroke-width="2"
+            viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round"
+              d="M5 13l4 4L19 7" />
+          </svg>
+        </div>
+      </div>
+
+      
+      <div class="text-center mb-6">
+        <h2 class="text-2xl md:text-3xl font-bold mb-3">
+          Your Booking Is Confirmed 🎉
+        </h2>
+        <p class="text-gray-600 text-lg">
+          You’ve successfully secured your appointment with BookWell.
+        </p>
+      </div>
+
+      
+      <div class="bg-indigo-50 rounded-xl p-6 mb-8">
+        <h3 class="font-semibold text-lg mb-4 text-indigo-700">
+          Here’s What Happens Next:
+        </h3>
+
+        <div class="space-y-4">
+          <div class="flex items-start gap-4">
+            <div class="bg-indigo-600 text-white w-8 h-8 flex items-center justify-center rounded-full font-semibold">1</div>
+            <p class="text-gray-700">You’ll receive a confirmation email with your booking details.</p>
+          </div>
+
+          <div class="flex items-start gap-4">
+            <div class="bg-indigo-600 text-white w-8 h-8 flex items-center justify-center rounded-full font-semibold">2</div>
+            <p class="text-gray-700">We’ll send you a reminder before your appointment.</p>
+          </div>
+
+          <div class="flex items-start gap-4">
+            <div class="bg-indigo-600 text-white w-8 h-8 flex items-center justify-center rounded-full font-semibold">3</div>
+            <p class="text-gray-700">Show up relaxed — we’ll take care of the rest.</p>
+          </div>
+        </div>
+      </div>
+
+     
+      <div class="text-center mb-8">
+        <h3 class="text-xl font-semibold mb-2">
+          Want to make changes?
+        </h3>
+        <p class="text-gray-600">
+          No problem. You can reschedule or manage your booking anytime using the link in your confirmation email.
+        </p>
+      </div>
+
+   
+      <div class="text-center">
+        <a href="/appoint"
+          class="inline-block bg-indigo-600 hover:bg-indigo-700 text-white font-semibold px-6 py-3 rounded-lg transition duration-200">
+          View My Booking
+        </a>
+
+        <p class="text-sm text-gray-500 mt-4">
+          Questions? Contact our support team anytime.
+        </p>
+      </div>
+
+    </div>
+  </div>
+
+</body>
+</html>
