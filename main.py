@@ -167,7 +167,7 @@ def book_appointment(Doctor_id):
 
     connection.close()
 
-    return redirect("/appoint")
+    return redirect("/thanks")
 
 @app.route("/appoint/<int:appointment_id>/cancel", methods=["POST"])
 @login_required
@@ -353,6 +353,11 @@ def logout():
 def thanks():
     return render_template("thanks.html.jinja")
 
+
+@app.route("/thankscontact")
+def thankscontact():
+    return render_template("thankscontact.html.jinja")
+
 @app.route("/contact", methods=["GET", "POST"])
 def contact():
     if request.method == "POST":
@@ -363,13 +368,13 @@ def contact():
         
         if not name or not email or not message:
             flash("Please fill in all fields.", "error")
-            return redirect(url_for("contact"))
+            return redirect("/contact")
 
         
         print(f"New message from {name} ({email}): {message}")
 
         flash("Your message has been sent successfully!", "success")
-        return redirect(url_for("thank_you"))
+        return redirect("/thankscontact")
 
     return render_template("contactus.html.jinja")
 
