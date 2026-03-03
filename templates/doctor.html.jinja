@@ -1,14 +1,211 @@
 <!doctype html>
 <html>
+
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
 </head>
 
-<body>
-{% include "components/navbar.html.jinja"%}
+<body class="bg-purple-30 min-h-screen">
 
-<h1>Hello</h1>
+    {% include "components/navbar.html.jinja" %}
+
+    <div class="max-w-7xl mx-auto p-6">
+
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+
+
+            <div class="lg:col-span-4 bg-white p-2 rounded shadow">
+                <img src="{{ doctor['Image'] }}" alt="{{ doctor['Name'] }}" class="w-full rounded-lg object-cover" />
+            </div>
+
+
+            <div class="lg:col-span-5 space-y-4">
+
+                <h1 class="text-3xl font-bold text-purple-900">
+                    Dr. {{ doctor['Name'] }}
+                </h1>
+
+                <p class="text-lg text-purple-900 font-semibold">
+                    {{ doctor['Category'] }} • {{ doctor['Type'] }}
+                </p>
+
+                <p class="text-black">
+                    📍 {{ doctor['Location'] }}
+                </p>
+
+
+                <div class="flex items-center space-x-2">
+                    {% if average_rating %}
+                    <p class="text-black font-semibold">
+                        Average Rating: {{ average_rating }}/5
+                    </p>
+                    <p class="text-gray-500">
+                        ({{ reviews|length }} reviews)
+                    </p>
+                    {% else %}
+                    <p class="text-gray-500">
+                        No reviews yet.
+                    </p>
+                    {% endif %}
+                </div>
+
+
+                <div class="bg-white p-4 rounded shadow-sm">
+                    <h2 class="text-xl font-semibold text-gray-800 mb-2">
+                        About
+                    </h2>
+                    <p class="text-gray-700 leading-relaxed">
+                        {{ doctor['Description'] }}
+                    </p>
+                </div>
+
+
+                <div class="bg-white p-4 rounded shadow-sm">
+                    <h2 class="text-xl font-semibold text-gray-800 mb-2">
+                        Accepted Insurance
+                    </h2>
+                    <p class="text-gray-700">
+                        {{ doctor['Insurance'] }}
+                    </p>
+                </div>
+
+            </div>
+
+            <div class="lg:col-span-3">
+                <div class="bg-white p-6 rounded shadow space-y-4">
+
+                    <h2 class="text-xl font-semibold text-purple-800">
+                        Book an Appointment
+                    </h2>
+
+                    <p class="text-purple-800 font-semibold">
+                        Accepting New Patients
+                    </p>
+
+                    <form method="post" action="/doctor/{{ doctor['ID'] }}/book" class="space-y-3">
+
+                        <div>
+                            <label class="block mb-1 text-sm font-medium text-gray-600">
+                                Select Date
+                            </label>
+                            <input type="date" name="date" required
+                                class="w-full px-3 py-2 border border-purple-300 rounded-md focus:outline-none focus:ring-1 focus:ring-[#e6af6c]" />
+                        </div>
+
+                        <div>
+                            <label class="block mb-1 text-sm font-medium text-gray-600">
+                                Select Time
+                            </label>
+                            <input type="time" name="time" required
+                                class="w-full px-3 py-2 border border-purple-300 rounded-md focus:outline-none focus:ring-1 focus:ring-[#e6af6c]" />
+                        </div>
+
+                        <div>
+                            <label class="block mb-1 text-sm font-medium text-gray-600">
+                                Visit Type
+                            </label>
+                            <select name="visit_type"
+                                class="w-full px-3 py-2 border border-purple-300 rounded-md focus:outline-none focus:ring-1 focus:ring-[#e6af6c]">
+                                <option value="In-Person">In-Person</option>
+                                <option value="Virtual">Virtual</option>
+                            </select>
+                        </div>
+
+                        <button
+                            class="w-full py-2 bg-purple-700 text-white rounded-full font-semibold hover:bg-purple-800 transition">
+                            Confirm Appointment
+                        </button>
+
+
+                    </form>
+
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+
+    <div class="max-w-4xl mx-auto p-6 mt-12">
+        <div class="bg-white rounded shadow p-6">
+
+            <h2 class="text-2xl font-bold text-gray-900 mb-6 text-center">
+                Patient Reviews
+            </h2>
+
+
+            <form method="post" action="/doctor/{{doctor['ID']}}/review"
+                class="max-w-lg mx-auto bg-white p-6 rounded-lg shadow-md space-y-4">
+
+                <div class="w-24">
+                    <label class="block mb-1 text-xs font-medium text-gray-600">
+                        Rating
+                    </label>
+                    <select name="rating"
+                        class="w-full px-2 py-1 text-sm font-semibold border border-gray-300 rounded-md bg-white focus:outline-none focus:ring-1 focus:ring-[#e6af6c]">
+                        <option value="1">1</option>
+                        <option value="2">2</option>
+                        <option value="3">3</option>
+                        <option value="4">4</option>
+                        <option value="5">5</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label class="block text-gray-800 font-semibold mb-2">
+                        Your Name
+                    </label>
+                    <input type="text" name="name" required
+                        class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-[#e6af6c]" />
+                </div>
+
+                <div>
+                    <label class="block text-gray-800 font-semibold mb-2">
+                        Your Review
+                    </label>
+                    <textarea name="comments" required rows="4"
+                        class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-[#e6af6c]"></textarea>
+                </div>
+
+                <button type="submit"
+                    class="w-full px-6 py-2 bg-purple-700 text-white border border-purple-300 rounded-full font-semibold hover:bg-purple-800 transition-colors">
+                    Submit Review
+                </button>
+            </form>
+
+
+            <h2 class="text-2xl font-bold text-gray-800 mt-10 mb-4 text-center">
+                Reviews
+            </h2>
+
+            <div class="max-w-lg mx-auto space-y-4">
+                {% for review in reviews %}
+                <div class="border border-gray-200 p-4 rounded-lg shadow-sm bg-white">
+                    <p class="font-semibold text-gray-700">
+                        {{ review["Name"] }}
+                    </p>
+                    <p class="text-gray-600 mt-1">
+                        {{ review["Comments"] }}
+                    </p>
+                    <p class="text-sm text-gray-500 mt-2">
+                        Rating: {{ review["Rating"] }}/5
+                    </p>
+                    <p class="text-sm text-gray-400 mt-1">
+                        Posted on: {{ review["Timestamp"] }}
+                    </p>
+                </div>
+                {% else %}
+                <p class="text-center text-gray-500">
+                    No reviews yet.
+                </p>
+                {% endfor %}
+            </div>
+
+        </div>
+    </div>
 
 </body>
+
+</html>
