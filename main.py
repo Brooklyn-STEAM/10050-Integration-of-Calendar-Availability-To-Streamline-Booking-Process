@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, flash, redirect
+from flask import Flask, render_template, request, flash, redirect, abort
 from flask_login import LoginManager, login_user, logout_user, login_required, current_user
 import pymysql
 
@@ -93,7 +93,7 @@ def doctor_page(Doctor_id):
     connection.close()
 
     if result is None:
-        abort(404)
+        abort(404) 
 
     return render_template("doctor.html.jinja", doctor = result, review = result2)
 
@@ -116,6 +116,10 @@ def appoint():
 
     connection.close()
     return render_template("appoint.html.jinja", appointment = result)
+
+
+
+
 
 
 
