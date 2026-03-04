@@ -6,79 +6,76 @@
   <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
 </head>
 
-<body class="min-h-screen flex flex-col ">
+<body class="h-screen w-screen overflow-x-hidden flex flex-col">
 
-
- {% include "components/navbar.html.jinja"%}
+  {% include "components/navbar.html.jinja"%}
 
   <section
-  class="relative h-screen/2 min-h-[50vh] flex items-center justify-center px-6
+  class="relative min-h-[50vh] md:h-screen/2 flex items-center justify-center
+         px-0 md:px-6
          bg-[url('/static/images/medicinebg.jpeg')] bg-cover bg-center bg-no-repeat"
 >
-  
+
   <div class="absolute inset-0 bg-purple-600/30"></div>
 
- 
-  <div class="relative max-w-4xl text-center">
-    <h1 class="text-4xl md:text-5xl font-bold text-white drop-shadow">
+  <div class="relative w-full md:max-w-4xl text-center px-4 md:px-0">
+    <h1 class="text-3xl md:text-5xl font-bold text-white drop-shadow">
       Book Smarter. Faster. Better.
     </h1>
-    <p class="mt-6 text-lg md:text-xl text-white/90">
-      Book, manage, and reschedule NYU Langone appointments with ease -- synced to your calendar's and tailored to you availability.
+
+    <p class="mt-6 text-base md:text-xl text-white/90">
+      Book, manage, and reschedule NYU Langone appointments with ease --
+      synced to your calendar and tailored to your availability.
     </p>
 
-    <div class="mt-8 flex justify-center gap-4">
-  <a href="/signup"
-     class="px-6 py-3 bg-white text-purple-600 font-semibold rounded-lg hover:bg-purple-200 transition">
-    Get Started
-  </a>
+    <div class="mt-8 flex flex-col md:flex-row justify-center gap-4">
+      <a href="/signup"
+         class="w-full md:w-auto px-6 py-3 bg-white text-purple-600 font-semibold rounded-lg text-center">
+        Get Started
+      </a>
 
-  <a href="https://mychart.nyulmc.org/mychart/Authentication/Login"
-     target="_blank" rel="noopener noreferrer"
-     class="px-6 py-3 bg-white text-purple-600 font-semibold rounded-lg hover:bg-purple-200 transition">
-    Connect MyChart
-  </a>
-</div>
+      <a href="https://mychart.nyulmc.org/mychart/Authentication/Login"
+         target="_blank"
+         class="w-full md:w-auto px-6 py-3 bg-white text-purple-600 font-semibold rounded-lg text-center">
+        Connect MyChart
+      </a>
+    </div>
+  </div>
+</section>
+  </section>
+
+  <section class="flex-1 bg-gray-50 px-0 md:px-6 py-12 md:py-16">
+  <div class="w-full md:max-w-6xl md:mx-auto grid grid-cols-1 md:grid-cols-2 gap-12 items-center px-4 md:px-0">
+
+    <div class="border-l-0 md:border-l-4 border-purple-600 md:pl-6 flex justify-center">
+      <img src="/static/images/nyulangone.jpeg"
+           alt="NYU Langone"
+           class="w-3/4 md:h-48 md:w-auto shadow-lg rounded-lg">
+    </div>
+
+    <div class="text-center md:text-left">
+      <h2 class="text-2xl md:text-3xl font-bold text-gray-900">
+        Everything You Need in One Place
+      </h2>
+
+      <p class="mt-4 text-gray-600 leading-relaxed text-sm md:text-base">
+        Manage appointments, automate reminders, reduce no-shows, and deliver
+        a seamless scheduling experience for your clients.
+      </p>
+
+      <ul class="mt-6 space-y-3 text-gray-700 text-sm md:text-base">
+        <li>✔ Smart calendar management</li>
+        <li>✔ Automated email & SMS reminders</li>
+        <li>✔ Secure your appointment</li>
+        <li>✔ Real-time availability</li>
+      </ul>
+    </div>
+
+    <footer class="col-span-full flex justify-center text-center mt-12">
+      <p>© 2026 — Book fast. Smart care, no cast</p>
+    </footer>
 
   </div>
 </section>
 
-
-
-  <section class="flex-1 bg-white-200 px-6 py-16">
-    <div class="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
-
-     
-      <div class="border-l-4 border-purple-600 pl-6">
-        <div class="w-full h-64 bg-gray-200 rounded-lg flex items-center justify-center text-gray-500">
-         <img src="/static/images/nyulangone.jpeg" alt="NYU Langone" class="h-40 md:h-48 lg:h-56 w-auto shadow-lg rounded-lg">
-
-
-        </div>
-      </div>
-
-      
-      <div>
-        <h2 class="text-3xl font-bold text-gray-900">
-          Everything You Need in One Place
-        </h2>
-        <p class="mt-4 text-gray-600 leading-relaxed">
-          Manage appointments, automate reminders, reduce no-shows, and deliver a seamless
-          scheduling experience for your clients. Built for scalability, security, and speed. We are here to help you get to your doctors stress free Sign Up today!!.
-        </p>
-
-        <ul class="mt-6 space-y-3 text-gray-700">
-          <li>✔ Smart calendar management</li>
-          <li>✔ Automated email & SMS reminders</li>
-          <li>✔ Secure your appointment </li>
-          <li>✔ Real-time availability</li>
-        </ul>
-      </div>
-
-
-
-       <footer class="col-span-full flex justify-center text-center mt-12">
-  <p>© 2026 — Book fast. Smart care, no cast</p>
-</footer>
-
-
+</body>
