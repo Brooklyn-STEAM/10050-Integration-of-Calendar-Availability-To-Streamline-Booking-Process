@@ -10,6 +10,7 @@
 <body>
   {% include "components/navbar.html.jinja"%}
 
+
   <div class="max-w-6xl mx-auto px-4 py-8">
 
 
@@ -29,7 +30,7 @@
     </form>
 
 
-    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-10">
+    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-10 sm: grid-cols-2">
       {% for doctor in doctors %}
       <a href="/doctor/{{ doctor['ID'] }}" class="group">
         <div class="bg-white shadow-md rounded-lg p-6 flex flex-col items-center">
