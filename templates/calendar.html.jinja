@@ -1,85 +1,89 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+    <meta charset="UTF-8">
     <title>My Calendar</title>
-  <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
 </head>
-
-<body class="bg-gray-100">
+<body class="bg-gray-100 min-h-screen">
 
 {% include "components/navbar.html.jinja" %}
 
-   
+<div class="px-4 py-10">
 
-    <div class="px-4 py-10">
-     
-        <h1 class="text-3xl font-bold text-center mb-10 text-gray-800">
-            {{ month_name }} {{ year }}
-        </h1>
+    <h1 class="text-3xl font-bold text-center mb-10 text-gray-800">
+        {{ month_name }} {{ year }}
+    </h1>
 
-       
-        <div class="max-w-4xl mx-auto">
+    <div class="max-w-5xl mx-auto">
 
-            
-            <div class="grid grid-cols-7 gap-2 text-center text-sm font-semibold text-gray-600 mb-2">
-                <div>Sun</div>
-                <div>Mon</div>
-                <div>Tue</div>
-                <div>Wed</div>
-                <div>Thu</div>
-                <div>Fri</div>
-                <div>Sat</div>
-            </div>
+        <div class="grid grid-cols-7 gap-2 text-center text-sm font-semibold text-gray-600 mb-2">
+            <div>Sun</div>
+            <div>Mon</div>
+            <div>Tue</div>
+            <div>Wed</div>
+            <div>Thu</div>
+            <div>Fri</div>
+            <div>Sat</div>
+        </div>
 
-            
-            <div class="grid grid-cols-7 gap-2 max-w-4xl">
 
-                {% for week in calendar %}
-                    {% for day in week %}
-                        {% if day == 0 %}
-                            <div></div>
-                        {% else %}
+        <div class="grid grid-cols-7 gap-2 max-w-5xl">
+            {% for week in calendar %}
+                {% for day in week %}
+                    {% if day == 0 %}
+                        <div></div>
+                    {% else %}
+                        {% set full_date = year ~ "-" ~ "%02d"|format(month) ~ "-" ~ "%02d"|format(day) %}
 
-                            {% set full_date = year ~ "-" ~ "%02d"|format(month) ~ "-" ~ "%02d"|format(day) %}
+                        <div class="bg-white border rounded-lg p-2 min-h-[110px] shadow-sm hover:shadow-md transition
+                            {% if full_date == today %}
+                                border-purple-700 bg-purple-50
+                            {% else %}
+                                border-gray-200
+                            {% endif %}
+                        ">
 
-                            <div class="bg-white border-white rounded-lg p-2 min-h-[95px] shadow-sm hover:shadow-md transition">
+                            <div class="text-sm font-bold
+                                {% if full_date == today %}
+                                    text-purple-700
+                                {% else %}
+                                    text-gray-700
+                                {% endif %}
+                            ">
+                                {{ day }}
+                            </div>
 
-                              
-                                <div class="text-sm font-bold
-                                    {% if full_date == today %}
-                                        text-purple-700
-                                    {% else %}
-                                        text-gray-700
-                                    {% endif %}
-                                ">
-                                    {{ day }}
-                                </div>
-
-                              
-                                {% if full_date in events %}
+                            {% if full_date in events %}
+                                <div class="mt-2 flex flex-col gap-1 max-h-32 overflow-y-auto">
                                     {% for appt in events[full_date] %}
-                                        <div class="mt-2 text-xs px-2 py-1 rounded
+                                        <div class="relative group text-xs px-2 py-1 rounded
                                             {% if appt.Status == 'Cancelled' %}
                                                 bg-red-100 text-red-700
+                                            {% elif appt.Status == 'Confirmed' %}
+                                                bg-green-100 text-green-700
                                             {% else %}
                                                 bg-blue-100 text-blue-700
                                             {% endif %}
                                         ">
-                                            {{ appt.Type }}
+                                            {{ appt.Type }} <span class="font-bold">({{ appt.Status }})</span>
+                                            {% if appt.DoctorName is defined %}
+                                       
+                                                <div class="absolute left-0 bottom-full mb-1 w-max p-1 text-xs bg-gray-700 text-white rounded opacity-0 group-hover:opacity-100 transition-opacity z-10">
+                                                    {{ appt.Date.strftime("%H:%M") }} with Dr. {{ appt.DoctorName }}
+                                                </div>
+                                            {% endif %}
                                         </div>
                                     {% endfor %}
-                                {% endif %}
-
-                            </div>
-
-                        {% endif %}
-                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                    {% endif %}
                 {% endfor %}
-
-            </div>
-
+            {% endfor %}
         </div>
     </div>
+</div>
 
 </body>
 </html>
