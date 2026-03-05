@@ -169,10 +169,11 @@
                         class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-[#e6af6c]"></textarea>
                 </div>
 
-                <button type="submit"
-                    class="w-full px-6 py-2 bg-purple-700 text-white border border-purple-300 rounded-full font-semibold hover:bg-purple-800 transition-colors">
+                <button type="submit">
+                    <p class="w-full px-6 py-2 bg-purple-700 text-white border border-purple-300 rounded-full font-semibold hover:bg-purple-800 transition-colors">
                     Submit Review
                 </button>
+                </p>
             </form>
 
 
@@ -193,7 +194,7 @@
                         Rating: {{ review["Rating"] }}/5
                     </p>
                     <p class="text-sm text-gray-400 mt-1">
-                        Posted on: {{ review["Timestamp"] }}
+                        Posted on: {{ review["timestamp"].strftime('%m/%d/%Y %I:%M %p')}}
                     </p>
                 </div>
                 {% else %}
