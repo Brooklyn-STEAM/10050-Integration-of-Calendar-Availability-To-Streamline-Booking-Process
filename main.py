@@ -155,18 +155,45 @@ def book_appointment(Doctor_id):
     time = request.form.get("time")
     visit_type = request.form.get("visit_type")
 
-    type_field = f"{visit_type} {time}"
+    start_datetime = f"{date} {time}"
 
     connection = connect_db()
     cursor = connection.cursor()
 
+    # 1️⃣ Check if doctor has this slot available
     cursor.execute("""
-        INSERT INTO `Appointment` (`DoctorID`, `UserID`, `Date`, `Type`, `Status`)
+        SELECT * FROM DoctorAvailability
+        WHERE DoctorID = %s
+        AND AvailableDate = %s
+        AND Booked = 0
+    """, (Doctor_id, start_datetime))
+
+    available_slot = cursor.fetchone()
+
+    if not available_slot:
+        connection.close()
+        flash("This time slot is not available.", "error")
+        return redirect(f"/doctor/{Doctor_id}")
+
+
+    type_field = f"{visit_type} {time}"
+
+    cursor.execute("""
+        INSERT INTO Appointment (DoctorID, UserID, Date, Type, Status)
         VALUES (%s, %s, %s, %s, %s)
-    """, (Doctor_id, current_user.id, date, type_field, "Scheduled"))
+    """, (Doctor_id, current_user.id, start_datetime, type_field, "Scheduled"))
+
+
+    cursor.execute("""
+        UPDATE DoctorAvailability
+        SET Booked = 1
+        WHERE DoctorID = %s
+        AND AvailableDate = %s
+    """, (Doctor_id, start_datetime))
 
     connection.close()
 
+    flash("Appointment successfully booked!", "success")
     return redirect("/thanks")
 
 @app.route("/appoint/<int:appointment_id>/cancel", methods=["POST"])
@@ -377,6 +404,49 @@ def contact():
         return redirect("/thankscontact")
 
     return render_template("contactus.html.jinja")
+
+@app.route("/doctorlogin", methods=["GET","POST"])
+def doctor_login():
+    if request.method == "POST":
+        email = request.form["email"]
+        password = request.form["password"]
+
+        connection = connect_db()
+        cursor = connection.cursor()
+
+        cursor.execute("SELECT * FROM Doctor WHERE Email = %s", (email,))
+        doctor = cursor.fetchone()
+
+        connection.close()
+
+        if doctor is None:
+            flash("Doctor account not found.")
+        elif password != doctor["Password"]:
+            flash("Incorrect password.")
+        else:
+            flash("Doctor login successful.")
+            return redirect(f"/doctor/{doctor['ID']}/dashboard")
+
+    return render_template("doctorlogin.html.jinja")
+@app.route("/doctor/<int:doctor_id>/dashboard")
+def doctor_dashboard(doctor_id):
+
+    connection = connect_db()
+    cursor = connection.cursor()
+
+    cursor.execute("""
+        SELECT Appointment.ID, Appointment.Date, Appointment.Type, Appointment.Status,
+        User.Name AS PatientName
+        FROM Appointment
+        JOIN User ON User.ID = Appointment.UserID
+        WHERE Appointment.DoctorID = %s
+        ORDER BY Appointment.Date
+    """, (doctor_id,))
+
+    appointments = cursor.fetchall()
+    connection.close()
+
+    return render_template("doctorhomepage.html.jinja", appointments=appointments)
 
      
 
