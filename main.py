@@ -145,7 +145,7 @@ def submit_review(Doctor_id):
 
     connection.close()
 
-    return redirect("/thank-you")
+    return redirect(f"/doctor/{Doctor_id}")
 
 @app.route("/doctor/<Doctor_id>/book", methods=["POST"])
 @login_required
