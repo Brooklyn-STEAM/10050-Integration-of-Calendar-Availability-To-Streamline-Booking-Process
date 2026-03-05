@@ -9,19 +9,15 @@
 
 {% include "components/navbar.html.jinja" %}
 
-   
-
     <div class="px-4 py-10">
      
         <h1 class="text-3xl font-bold text-center mb-10 text-gray-800">
             {{ month_name }} {{ year }}
         </h1>
 
-       
         <div class="max-w-4xl mx-auto">
 
-            
-            <div class="grid grid-cols-7 gap-2 text-center text-sm font-semibold text-gray-600 mb-2">
+            <div class="hidden lg:grid grid-cols-7 gap-2 text-center text-sm font-semibold text-gray-600 mb-2">
                 <div>Sun</div>
                 <div>Mon</div>
                 <div>Tue</div>
@@ -31,8 +27,7 @@
                 <div>Sat</div>
             </div>
 
-            
-            <div class="grid grid-cols-7 gap-2 max-w-4xl">
+            <div class="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-7 gap-2 max-w-4xl">
 
                 {% for week in calendar %}
                     {% for day in week %}
@@ -44,7 +39,6 @@
 
                             <div class="bg-white border-white rounded-lg p-2 min-h-[95px] shadow-sm hover:shadow-md transition">
 
-                              
                                 <div class="text-sm font-bold
                                     {% if full_date == today %}
                                         text-purple-700
@@ -55,7 +49,6 @@
                                     {{ day }}
                                 </div>
 
-                              
                                 {% if full_date in events %}
                                     {% for appt in events[full_date] %}
                                         <div class="mt-2 text-xs px-2 py-1 rounded
