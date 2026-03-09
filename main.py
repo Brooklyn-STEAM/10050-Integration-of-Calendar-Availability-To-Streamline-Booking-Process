@@ -155,23 +155,25 @@ def book_appointment(Doctor_id):
     time = request.form.get("time")
     visit_type = request.form.get("visit_type")
 
-    start_datetime = f"{date} {time}"
+    start_datetime = f"{date} {time}:00"
 
     connection = connect_db()
     cursor = connection.cursor()
 
-    
     cursor.execute("""
-        UPDATE DoctorAvailability
-        SET Booked = 1
+        SELECT *
+        FROM DoctorAvailability
         WHERE DoctorID = %s
-        AND AvailableDate = %s
+        AND DATE(AvailableDate) = %s
+        AND TIME(AvailableDate) = %s
         AND Booked = 0
-    """, (Doctor_id, start_datetime))
+    """, (Doctor_id, date, time))
 
-    if cursor.rowcount == 0:
+    available_slot = cursor.fetchone()
+
+    if available_slot is None:
         connection.close()
-        flash("This slot was already booked.", "error")
+        flash("This time slot is not available.")
         return redirect(f"/doctor/{Doctor_id}")
 
     type_field = f"{visit_type} {time}"
@@ -181,9 +183,18 @@ def book_appointment(Doctor_id):
         VALUES (%s, %s, %s, %s, %s)
     """, (Doctor_id, current_user.id, start_datetime, type_field, "Scheduled"))
 
+    cursor.execute("""
+        UPDATE DoctorAvailability
+        SET Booked = 1
+        WHERE DoctorID = %s
+        AND DATE(AvailableDate) = %s
+        AND TIME(AvailableDate) = %s
+    """, (Doctor_id, date, time))
+
+    connection.commit()
     connection.close()
 
-    flash("Appointment successfully booked!", "success")
+    flash("Appointment successfully booked!")
     return redirect("/thanks")
 
 
@@ -303,25 +314,20 @@ def login():
         password = request.form['password']
 
         connection = connect_db()
-
         cursor = connection.cursor()
 
-        cursor.execute("SELECT * FROM `User` WHERE `Email` = %s", (email))
-
+        cursor.execute("SELECT * FROM User WHERE Email = %s", (email,))
         result = cursor.fetchone()
 
         connection.close()
 
         if result is None:
-                flash("No account found.")
-
-        elif password != result ['Password']:
-                flash("Wrong Password!")
-
+            flash("No account found.")
+        elif password != result["Password"]:
+            flash("Wrong password!")
         else:
-            login_user (User(result))
-
-            return redirect ("/")
+            login_user(User(result))
+            return redirect("/")
 
     return render_template("login.html.jinja")
 
@@ -331,10 +337,9 @@ def login():
 @app.route("/signup", methods=["POST","GET"])
 def signup():
     if request.method =='POST':
-        name= request.form["name"]
+        name = request.form["name"]
         email = request.form["email"]
-
-        password = request.form['password']
+        password = request.form["password"]
         confirm_password = request.form["confirm_password"]
         address = request.form["address"]
 
@@ -344,20 +349,20 @@ def signup():
             flash("Password is too short")
         else:
             connection = connect_db()
-
-            cursor = connection.cursor ()
+            cursor = connection.cursor()
             try:
                 cursor.execute("""
-                    INSERT INTO `User` (`Name`, `Password`, `Email`, `Address`)
+                    INSERT INTO User (Name, Password, Email, Address)
                     VALUES (%s, %s, %s, %s)
-                """, (name, password, email, address) )
-                connection.close()
+                """, (name, password, email, address))
+                connection.commit()
             except pymysql.err.IntegrityError:
                 flash("User with that email already exists")
-
             else:
-                 return redirect('/login')
-            
+                connection.close()
+                return redirect('/login')
+            connection.close()
+
     return render_template("signup.html.jinja")
 
 @app.route("/logout", methods=["POST", "GET"])
