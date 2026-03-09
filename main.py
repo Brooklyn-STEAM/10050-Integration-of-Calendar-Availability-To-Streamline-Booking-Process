@@ -83,49 +83,80 @@ def doctor_page(Doctor_id):
     connection = connect_db()
     cursor = connection.cursor()
 
+    # Doctor info
     cursor.execute("SELECT * FROM `Doctor` WHERE `ID` = %s", (Doctor_id,))
+    doctor = cursor.fetchone()
 
-    result = cursor.fetchone()
+    # Reviews
+    cursor.execute("""
+        SELECT * FROM `Review` JOIN `User` ON `User`.`ID` = `Review`.`userID`
+        WHERE `Review`.`DoctorID` = %s
+    """, (Doctor_id,))
+    reviews = cursor.fetchall()
 
-    cursor.execute("SELECT * FROM `Review` JOIN `User` ON `User`.`ID` = `Review`.`userID` WHERE `Review`.`DoctorID` = %s", (Doctor_id,))
-
-    result2 = cursor.fetchall()
+    # Get unavailable dates
+    cursor.execute("""
+        SELECT DATE(AvailableDate) AS blocked_date
+        FROM DoctorAvailability
+        WHERE DoctorID = %s AND Booked = 1
+    """, (Doctor_id,))
+    blocked_dates = [row["blocked_date"].strftime("%Y-%m-%d") for row in cursor.fetchall()]
 
     connection.close()
 
-    if result is None:
-        abort(404) 
+    if doctor is None:
+        abort(404)
 
-    return render_template("doctor.html.jinja", doctor = result, reviews=result2)
+    return render_template ("doctor.html.jinja", doctor=doctor, reviews=reviews, blocked_dates=blocked_dates)
 
     
 @app.route("/appoint")
 @login_required
 def appoint():
     connection = connect_db()
-
     cursor = connection.cursor()
 
     cursor.execute("""
-    SELECT Appointment.ID, Appointment.Date, Appointment.Type, Appointment.Status, Doctor.Name AS DoctorName, Doctor.Location AS Location 
-    FROM `Appointment`
-    JOIN `Doctor` ON `Doctor`.`ID` = `Appointment`.`DoctorID`
-    WHERE `UserID` = %s
+        SELECT Appointment.ID, Appointment.Date, Appointment.Type, Appointment.Status,
+               Doctor.Name AS DoctorName, Doctor.Location AS Location
+        FROM Appointment
+        JOIN Doctor ON Doctor.ID = Appointment.DoctorID
+        WHERE UserID = %s
+        ORDER BY Appointment.Date ASC
     """, (current_user.id,))
-    appointments = cursor.fetchall()
 
+    appointments = cursor.fetchall()
     connection.close()
-    return render_template("appoint.html.jinja", appointments = appointments)
+
+    # Ensure Date is a datetime object for Jinja
+    for appt in appointments:
+        if isinstance(appt["Date"], str):
+            appt["Date"] = datetime.datetime.strptime(appt["Date"], "%Y-%m-%d %H:%M:%S")
+
+    return render_template("appoint.html.jinja", appointments=appointments)
 
 @app.route("/appointments")
+@login_required
 def appointments():
     connection = connect_db()
     cursor = connection.cursor()
 
-    cursor.execute("SELECT * FROM `Appointment`")
+    cursor.execute("""
+        SELECT Appointment.ID, Appointment.Date, Appointment.Type, Appointment.Status,
+               Doctor.Name AS DoctorName, Doctor.Location AS Location,
+               User.Name AS PatientName
+        FROM Appointment
+        JOIN Doctor ON Doctor.ID = Appointment.DoctorID
+        JOIN User ON User.ID = Appointment.UserID
+        ORDER BY Appointment.Date ASC
+    """)
     appointments = cursor.fetchall()
-
     connection.close()
+
+    for appt in appointments:
+        if isinstance(appt["Date"], str):
+            appt["Date"] = datetime.datetime.strptime(appt["Date"], "%Y-%m-%d %H:%M:%S")
+
     return render_template("appoint.html.jinja", appointments=appointments)
 
 @app.route("/doctor/<Doctor_id>/review", methods=["POST"])
@@ -150,51 +181,43 @@ def submit_review(Doctor_id):
 @app.route("/doctor/<Doctor_id>/book", methods=["POST"])
 @login_required
 def book_appointment(Doctor_id):
-
-    date = request.form.get("date")
-    time = request.form.get("time")
+    date = request.form.get("date")      
+    time = request.form.get("time")      
     visit_type = request.form.get("visit_type")
+
+    if not date or not time or not visit_type:
+        flash("Please provide date, time, and visit type.", "error")
+        return redirect(f"/doctor/{Doctor_id}")
 
     start_datetime = f"{date} {time}"
 
     connection = connect_db()
     cursor = connection.cursor()
 
-    # 1️⃣ Check if doctor has this slot available
     cursor.execute("""
         SELECT * FROM DoctorAvailability
         WHERE DoctorID = %s
-        AND AvailableDate = %s
-        AND Booked = 0
-    """, (Doctor_id, start_datetime))
+        AND DATE(AvailableDate) = %s
+        AND Booked = 1
+    """, (Doctor_id, date))
 
-    available_slot = cursor.fetchone()
-
-    if not available_slot:
+    blocked = cursor.fetchone()
+    if blocked:
         connection.close()
-        flash("This time slot is not available.", "error")
+        flash("Doctor is not available on this date.", "error")
         return redirect(f"/doctor/{Doctor_id}")
 
-
     type_field = f"{visit_type} {time}"
-
     cursor.execute("""
         INSERT INTO Appointment (DoctorID, UserID, Date, Type, Status)
         VALUES (%s, %s, %s, %s, %s)
     """, (Doctor_id, current_user.id, start_datetime, type_field, "Scheduled"))
 
-
-    cursor.execute("""
-        UPDATE DoctorAvailability
-        SET Booked = 1
-        WHERE DoctorID = %s
-        AND AvailableDate = %s
-    """, (Doctor_id, start_datetime))
-
+    connection.commit()
     connection.close()
 
     flash("Appointment successfully booked!", "success")
-    return redirect("/thanks")
+    return redirect("/appoint")
 
 @app.route("/appoint/<int:appointment_id>/cancel", methods=["POST"])
 @login_required
