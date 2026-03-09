@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Doctor Homepage</title>
+  <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+</head>
+<body class="h-screen w-screen overflow-x-hidden flex flex-col bg-gray-50">
+
+
+  {% include "components/navbartwo.html.jinja" %}
+
+
+  <section class="relative min-h-[30vh] flex items-center justify-center bg-[url('/static/images/medicinebg.jpeg')] bg-cover bg-center">
+    <div class="absolute inset-0 bg-purple-600/40"></div>
+    <div class="relative text-center px-4 md:px-0">
+      <h1 class="text-3xl md:text-5xl font-bold text-white drop-shadow">
+        Welcome, Dr. {{ doctor.Name }}
+      </h1>
+      <p class="mt-4 text-white/90 md:text-lg">
+        Manage your appointments and stay on top of your schedule effortlessly.
+      </p>
+    </div>
+  </section>
+
+
+  <section class="flex-1 px-4 md:px-12 py-8 md:py-12">
+    <h2 class="text-2xl font-bold text-gray-900 mb-6">Upcoming Appointments</h2>
+
+    {% if appointments %}
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {% for appt in appointments %}
+        <div class="bg-white rounded-lg shadow-md p-5 border-l-4 border-purple-600 flex flex-col justify-between">
+          <div>
+            <h3 class="text-lg font-semibold text-gray-800">{{ appt.PatientName }}</h3>
+            <p class="text-gray-600 text-sm mt-1">Date: {{ appt.Date.strftime('%Y-%m-%d %H:%M') }}</p>
+            <p class="text-gray-600 text-sm">Type: {{ appt.Type }}</p>
+            <p class="mt-1 text-sm font-medium 
+              {% if appt.Status == 'Scheduled' %}text-yellow-600
+              {% elif appt.Status == 'Confirmed' %}text-green-600
+              {% elif appt.Status == 'Cancelled' %}text-red-600
+              {% endif %}">
+              Status: {{ appt.Status }}
+            </p>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+    {% else %}
+      <p class="text-gray-600 mt-4">No upcoming appointments at the moment.</p>
+    {% endif %}
+  </section>
+
+
+  <footer class="bg-purple-600 text-white text-center py-4 mt-auto">
+    © 2026 — Book fast. Smart care, no cast
+  </footer>
+
+</body>
+</html>

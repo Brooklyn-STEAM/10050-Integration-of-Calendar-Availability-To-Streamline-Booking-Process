@@ -1,5 +1,6 @@
 <!doctype html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -18,7 +19,6 @@
     </h1>
 
     {% if appointments|length == 0 %}
-    
     <div class="text-center py-20 bg-white rounded-xl shadow-md">
       <p class="text-lg mb-6 text-gray-600">
         You don’t have any appointments scheduled yet.
@@ -31,18 +31,17 @@
     </div>
 
     {% else %}
-
     {% for appointment in appointments %}
     <div class="bg-white rounded-xl shadow-md mb-8 p-6 hover:shadow-lg transition">
 
-      <div class="flex flex-col md:flex-row md:justify-between md:items-center border-b border-purple-200 pb-4 mb-4 gap-4">
-        
+      <div
+        class="flex flex-col md:flex-row md:justify-between md:items-center border-b border-purple-200 pb-4 mb-4 gap-4">
         <div>
           <p class="font-semibold text-lg text-[#57068c]">
             Appointment #{{ appointment["ID"] }}
           </p>
           <p class="text-sm text-gray-500">
-            Dr. {{ appointment["Doctor"] }}
+            Dr. {{ appointment["DoctorName"] }}
           </p>
         </div>
 
@@ -51,19 +50,21 @@
             bg-green-100 text-green-700
           {% elif appointment['Status'] == 'Pending' %}
             bg-yellow-100 text-yellow-700
+          {% elif appointment['Status'] == 'Cancelled' %}
+            bg-gray-100 text-gray-700
           {% else %}
             bg-red-100 text-red-700
           {% endif %}">
           {{ appointment["Status"] }}
         </span>
-
       </div>
-      <div class="flex flex-col md:flex-row md:justify-between gap-6">
+
+      <div class="flex flex-col md:flex-row md:justify-center gap-6">
 
         <div>
           <p class="font-medium">Date & Time</p>
           <p class="text-sm text-gray-600">
-            {{ appointment["Date"].strftime("%B %d, %Y") }} at {{ appointment["Time"] }}
+            {{ appointment["Date"].strftime("%B %d, %Y") }} at {{ appointment["Type"] }}
           </p>
         </div>
 
@@ -74,14 +75,35 @@
           </p>
         </div>
 
+        <div class="flex gap-3 mt-2 md:mt-0">
+
+          {% if appointment["Status"] == "Scheduled" %}
+          <form action="/appoint/{{ appointment['ID'] }}/cancel" method="POST">
+            <button type="submit" class="bg-purple-900 hover:bg-purple-700 text-white px-4 py-2 rounded-lg transition">
+              Cancel
+            </button>
+          </form>
+          {% endif %}
+
+          {% if appointment["Status"] == "Scheduled" %}
+          <form action="/appoint/{{ appointment['ID'] }}/attend" method="POST">
+            <button type="submit" class="bg-purple-900 hover:bg-purple-700 text-white px-4 py-2 rounded-lg transition">
+              Mark as Attended
+            </button>
+          </form>
+          {% endif %}
+
+        </div>
+
       </div>
 
     </div>
     {% endfor %}
-
     {% endif %}
+
 
   </main>
 
 </body>
+
 </html>

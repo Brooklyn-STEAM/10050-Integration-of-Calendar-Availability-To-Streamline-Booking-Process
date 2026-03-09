@@ -1,37 +1,29 @@
-<nav class="relative z-50 bg-[#57068c] px-8 py-4 shadow-md flex items-center justify-between font-medium text-white">
+<nav class="relative z-50 bg-[#57068c] px-4 md:px-8 py-4 shadow-md flex items-center justify-between font-medium text-white w-full">
 
-
-  <div class="flex items-center gap-4">
+  <div class="flex items-center gap-3 md:gap-4">
     <img
       src="/static/images/logo.png"
       alt="Logo"
-      class="h-18 w-18 rounded-full object-cover ring-2 ring-white/40"
+      class="h-12 w-12 md:h-18 md:w-18 rounded-full object-cover ring-2 ring-white/40"
     >
 
     {% if current_user.is_authenticated %} 
-    <span class="text-sm opacity-80">
+    <span class="text-xs md:text-sm opacity-80 truncate md:truncate-none max-w-[100px] md:max-w-none">
       {{ current_user.name }}
     </span>
     {% endif %}
   </div>
 
 
-  <div class="flex items-center gap-8 text-sm">
+  <div class="hidden md:flex items-center gap-8 text-sm">
 
-    <a href="/" class="hover:text-[#e0c3ff] transition">
-      Homepage
-    </a>
-
-    <a href="/appoint" class="hover:text-[#e0c3ff] transition">
-      Appointments
-    </a>
-
-
-    <a href="/doctorsearch"
-       class="flex items-center gap-2 hover:text-[#e0c3ff] transition">
+    <a href="/" class="hover:text-[#e0c3ff] transition">Homepage</a>
+    <a href="/appoint" class="hover:text-[#e0c3ff] transition">Appointments</a>
+    <a href="/calendar" class="hover:text-[#e0c3ff] transition">Your Calendar</a>
+    <a href="/contact" class="hover:text-[#e0c3ff] transition">Reach Us</a>
+    <a href="/doctorsearch" class="flex items-center gap-2 hover:text-[#e0c3ff] transition">
       Search
-      <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5"
-        fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
           d="M21 21l-4.35-4.35m0 0A7.5 7.5 0 103.5 3.5a7.5 7.5 0 0013.15 13.15z" />
       </svg>
@@ -39,41 +31,30 @@
 
   </div>
 
-  <div class="relative group">
 
-    <button class="flex items-center hover:text-[#e0c3ff] transition">
-
-      <svg xmlns="http://www.w3.org/2000/svg" class="h-7 w-7"
-        fill="none" viewBox="0 0 24 24" stroke="currentColor">
+  <div class="relative">
+    <button onclick="document.getElementById('menu').classList.toggle('hidden')"
+            class="flex items-center hover:text-[#e0c3ff] transition">
+      <svg xmlns="http://www.w3.org/2000/svg" class="h-7 w-7" fill="none" viewBox="0 0 24 24" stroke="currentColor">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
           d="M4 6h16M4 12h16M4 18h16" />
       </svg>
     </button>
 
+    <ul id="menu" class="hidden absolute right-0 mt-3 w-44 bg-white text-[#57068c] rounded-xl shadow-lg text-sm overflow-hidden">
 
-    <ul
-      class="absolute right-0 mt-3 w-40 bg-white text-[#57068c] rounded-xl shadow-lg
-             opacity-0 invisible group-hover:opacity-100 group-hover:visible
-             transition-all duration-200 text-sm overflow-hidden z-999">
+      <li><a href="/" class="block px-4 py-3 hover:bg-purple-200">Homepage</a></li>
+      <li><a href="/appoint" class="block px-4 py-3 hover:bg-purple-200">Appointments</a></li>
+      <li><a href="/calendar" class="block px-4 py-3 hover:bg-purple-200">Your Calendar</a></li>
+      <li><a href="/contact" class="block px-4 py-3 hover:bg-purple-200">Reach Us</a></li>
+      <li><a href="/doctorsearch" class="block px-4 py-3 hover:bg-purple-200">Search</a></li>
 
       {% if not current_user.is_authenticated %}
-      <li>
-        <a href="/login" class="block px-4 py-3 hover:bg-purple-200">
-          Login
-        </a>
-      </li>
-      <li>
-        <a href="/signup" class="block px-4 py-3 hover:bg-purple-200">
-          Register
-        </a>
-      </li>
-       {% else %}
-      <li>
-        <a href="/logout" class="block px-4 py-3 hover:bg-purple-100">
-          Logout
-        </a>
-      </li>
-       {% endif %} 
+      <li><a href="/login" class="block px-4 py-3 hover:bg-purple-200">Login</a></li>
+      <li><a href="/signup" class="block px-4 py-3 hover:bg-purple-200">Register</a></li>
+      {% else %}
+      <li><a href="/logout" class="block px-4 py-3 hover:bg-purple-100">Logout</a></li>
+      {% endif %}
 
     </ul>
   </div>
