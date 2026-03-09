@@ -9,18 +9,18 @@
 
     {% if current_user.is_authenticated %}
     <span class="text-xs md:text-sm opacity-80 truncate md:truncate-none max-w-[100px] md:max-w-none">
-      {{ current_user.name }}
+      {{ doctor.Name }}
     </span>
     {% endif %}
   </div>
 
 
   <div class="hidden md:flex items-center gap-8 text-sm">
-    <a href="/doctor/{{ current_user.id }}/dashboard" class="hover:text-[#e0c3ff] transition">Dashboard</a>
-    <a href="/doctor/{{ current_user.id }}/appointments" class="hover:text-[#e0c3ff] transition">Appointments</a>
-    <a href="/doctor/{{ current_user.id }}/calendar" class="hover:text-[#e0c3ff] transition">Calendar</a>
-    <a href="/contact" class="hover:text-[#e0c3ff] transition">Reach Us</a>
-  </div>
+  <a href="/doctor/{{ doctor.ID }}/homepage" class="hover:text-[#e0c3ff] transition">Homepage</a>
+  <a href="/doctor/{{ doctor.ID }}/appointments" class="hover:text-[#e0c3ff] transition">Appointments</a>
+  <a href="/doctor/{{ doctor.ID }}/calendar" class="hover:text-[#e0c3ff] transition">Calendar</a>
+  <a href="/contact" class="hover:text-[#e0c3ff] transition">Reach Us</a>
+</div>
 
 
   <div class="relative">
@@ -33,11 +33,11 @@
     </button>
 
     <ul id="menu" class="hidden absolute right-0 mt-3 w-44 bg-white text-[#57068c] rounded-xl shadow-lg text-sm overflow-hidden">
-      <li><a href="/doctor/{{ current_user.id }}/homepage" class="block px-4 py-3 hover:bg-purple-200">Dashboard</a></li>
-      <li><a href="/doctor/{{ current_user.id }}/appointments" class="block px-4 py-3 hover:bg-purple-200">Appointments</a></li>
-      <li><a href="/doctor/{{ current_user.id }}/calendar" class="block px-4 py-3 hover:bg-purple-200">Calendar</a></li>
-      <li><a href="/contact" class="block px-4 py-3 hover:bg-purple-200">Reach Us</a></li>
-      <li><a href="/logout" class="block px-4 py-3 hover:bg-purple-100">Logout</a></li>
-    </ul>
+  <li><a href="/doctor/{{ doctor.ID }}/homepage" class="block px-4 py-3 hover:bg-purple-200">Homepage</a></li>
+  <li><a href="/doctor/{{ doctor.ID }}/appointments" class="block px-4 py-3 hover:bg-purple-200">Appointments</a></li>
+  <li><a href="/doctor/{{ doctor.ID }}/calendar" class="block px-4 py-3 hover:bg-purple-200">Calendar</a></li>
+  <li><a href="/contact" class="block px-4 py-3 hover:bg-purple-200">Reach Us</a></li>
+  <li><a href="/logout" class="block px-4 py-3 hover:bg-purple-100">Logout</a></li>
+</ul>
   </div>
 </nav>
