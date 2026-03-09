@@ -425,15 +425,24 @@ def doctor_login():
             flash("Incorrect password.")
         else:
             flash("Doctor login successful.")
-            return redirect(f"/doctor/{doctor['ID']}/dashboard")
+            return redirect(f"/doctor/{doctor['ID']}/homepage")
 
     return render_template("doctorlogin.html.jinja")
-@app.route("/doctor/<int:doctor_id>/dashboard")
+@app.route("/doctor/<int:doctor_id>/homepage")
 def doctor_dashboard(doctor_id):
 
     connection = connect_db()
     cursor = connection.cursor()
 
+
+    cursor.execute("SELECT * FROM Doctor WHERE ID = %s", (doctor_id,))
+    doctor = cursor.fetchone()
+
+    if doctor is None:
+        connection.close()
+        abort(404)
+
+  
     cursor.execute("""
         SELECT Appointment.ID, Appointment.Date, Appointment.Type, Appointment.Status,
         User.Name AS PatientName
@@ -444,15 +453,63 @@ def doctor_dashboard(doctor_id):
     """, (doctor_id,))
 
     appointments = cursor.fetchall()
+
     connection.close()
 
-    return render_template("doctorhomepage.html.jinja", appointments=appointments)
+    return render_template("doctorhomepage.html.jinja", doctor=doctor, appointments=appointments)
 
-     
+@app.route("/doctor/<int:doctor_id>/appointments", methods=["GET", "POST"])
+def doctor_appointments(doctor_id):
+    connection = connect_db()
+    cursor = connection.cursor()
+
+    # Fetch doctor info
+    cursor.execute("SELECT * FROM Doctor WHERE ID = %s", (doctor_id,))
+    doctor = cursor.fetchone()
+
+    if not doctor:
+        connection.close()
+        abort(404)
+
+    if request.method == "POST":
+        action = request.form.get("action")
+        appointment_id = request.form.get("appointment_id")
+
+        if action == "cancel":
+            cursor.execute("""
+                UPDATE Appointment
+                SET Status = 'Cancelled'
+                WHERE ID = %s AND DoctorID = %s
+            """, (appointment_id, doctor_id))
+            flash("Appointment cancelled successfully.", "success")
+
+        elif action == "reschedule":
+            new_date = request.form.get("new_date")
+            new_time = request.form.get("new_time")
+            if new_date and new_time:
+                new_datetime = f"{new_date} {new_time}"
+                cursor.execute("""
+                    UPDATE Appointment
+                    SET Date = %s, Status = 'Scheduled'
+                    WHERE ID = %s AND DoctorID = %s
+                """, (new_datetime, appointment_id, doctor_id))
+                flash("Appointment rescheduled successfully.", "success")
+        connection.commit()
 
 
+    cursor.execute("""
+        SELECT Appointment.ID, Appointment.Date, Appointment.Type, Appointment.Status,
+               User.Name AS PatientName
+        FROM Appointment
+        JOIN User ON User.ID = Appointment.UserID
+        WHERE Appointment.DoctorID = %s
+        ORDER BY Appointment.Date
+    """, (doctor_id,))
+    appointments = cursor.fetchall()
+    connection.close()
 
-
-
-
-
+    return render_template(
+        "doctorappoint.html.jinja",
+        appointments=appointments,
+        doctor=doctor
+    )
