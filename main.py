@@ -160,21 +160,19 @@ def book_appointment(Doctor_id):
     connection = connect_db()
     cursor = connection.cursor()
 
-    # 1️⃣ Check if doctor has this slot available
+    
     cursor.execute("""
-        SELECT * FROM DoctorAvailability
+        UPDATE DoctorAvailability
+        SET Booked = 1
         WHERE DoctorID = %s
         AND AvailableDate = %s
         AND Booked = 0
     """, (Doctor_id, start_datetime))
 
-    available_slot = cursor.fetchone()
-
-    if not available_slot:
+    if cursor.rowcount == 0:
         connection.close()
-        flash("This time slot is not available.", "error")
+        flash("This slot was already booked.", "error")
         return redirect(f"/doctor/{Doctor_id}")
-
 
     type_field = f"{visit_type} {time}"
 
@@ -183,18 +181,11 @@ def book_appointment(Doctor_id):
         VALUES (%s, %s, %s, %s, %s)
     """, (Doctor_id, current_user.id, start_datetime, type_field, "Scheduled"))
 
-
-    cursor.execute("""
-        UPDATE DoctorAvailability
-        SET Booked = 1
-        WHERE DoctorID = %s
-        AND AvailableDate = %s
-    """, (Doctor_id, start_datetime))
-
     connection.close()
 
     flash("Appointment successfully booked!", "success")
     return redirect("/thanks")
+
 
 @app.route("/appoint/<int:appointment_id>/cancel", methods=["POST"])
 @login_required
@@ -428,6 +419,8 @@ def doctor_login():
             return redirect(f"/doctor/{doctor['ID']}/dashboard")
 
     return render_template("doctorlogin.html.jinja")
+
+
 @app.route("/doctor/<int:doctor_id>/dashboard")
 def doctor_dashboard(doctor_id):
 
