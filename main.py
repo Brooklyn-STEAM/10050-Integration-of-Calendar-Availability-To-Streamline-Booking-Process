@@ -181,43 +181,49 @@ def submit_review(Doctor_id):
 @app.route("/doctor/<Doctor_id>/book", methods=["POST"])
 @login_required
 def book_appointment(Doctor_id):
-    date = request.form.get("date")      
-    time = request.form.get("time")      
+
+    date = request.form.get("date")
+    time = request.form.get("time")
     visit_type = request.form.get("visit_type")
 
     if not date or not time or not visit_type:
         flash("Please provide date, time, and visit type.", "error")
         return redirect(f"/doctor/{Doctor_id}")
 
-    start_datetime = f"{date} {time}"
+    start_datetime = datetime.datetime.strptime(f"{date} {time}", "%Y-%m-%d %H:%M")
+    end_datetime = start_datetime + datetime.timedelta(minutes=20)
 
     connection = connect_db()
     cursor = connection.cursor()
 
+    # 🔴 Check if another appointment overlaps this 20 min slot
     cursor.execute("""
-        SELECT * FROM DoctorAvailability
+        SELECT * FROM Appointment
         WHERE DoctorID = %s
-        AND DATE(AvailableDate) = %s
-        AND Booked = 1
-    """, (Doctor_id, date))
+        AND Status != 'Cancelled'
+        AND Date >= %s
+        AND Date < %s
+    """, (Doctor_id, start_datetime, end_datetime))
 
-    blocked = cursor.fetchone()
-    if blocked:
+    existing = cursor.fetchone()
+
+    if existing:
         connection.close()
-        flash("Doctor is not available on this date.", "error")
+        flash("Doctor is not available at this time. Please choose another time in the next 20 minutes.", "error")
         return redirect(f"/doctor/{Doctor_id}")
 
-    type_field = f"{visit_type} {time}"
+    # ✅ Insert appointment
     cursor.execute("""
         INSERT INTO Appointment (DoctorID, UserID, Date, Type, Status)
         VALUES (%s, %s, %s, %s, %s)
-    """, (Doctor_id, current_user.id, start_datetime, type_field, "Scheduled"))
+    """, (Doctor_id, current_user.id, start_datetime, visit_type, "Scheduled"))
 
     connection.commit()
     connection.close()
 
     flash("Appointment successfully booked!", "success")
-    return redirect("/appoint")
+    return redirect("/thanks")
+
 
 @app.route("/appoint/<int:appointment_id>/cancel", methods=["POST"])
 @login_required
