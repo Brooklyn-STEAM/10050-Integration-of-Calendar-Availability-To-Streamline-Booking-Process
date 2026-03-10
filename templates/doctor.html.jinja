@@ -11,6 +11,25 @@
 
     {% include "components/navbar.html.jinja" %}
 
+    {% with messages = get_flashed_messages(with_categories=true) %}
+  {% if messages %}
+    <div class="max-w-4xl mx-auto mt-4">
+      {% for category, message in messages %}
+        <div class="mb-4 px-4 py-3 rounded shadow
+                    {% if category == 'success' %}
+                      bg-green-100 text-green-800
+                    {% elif category == 'error' %}
+                      bg-red-100 text-red-800
+                    {% else %}
+                      bg-gray-100 text-gray-800
+                    {% endif %}">
+          {{ message }}
+        </div>
+      {% endfor %}
+    </div>
+  {% endif %}
+{% endwith %}
+
     <div class="max-w-7xl mx-auto p-6">
 
         <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
