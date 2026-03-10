@@ -83,18 +83,18 @@ def doctor_page(Doctor_id):
     connection = connect_db()
     cursor = connection.cursor()
 
-    # Doctor info
+
     cursor.execute("SELECT * FROM `Doctor` WHERE `ID` = %s", (Doctor_id,))
     doctor = cursor.fetchone()
 
-    # Reviews
+
     cursor.execute("""
         SELECT * FROM `Review` JOIN `User` ON `User`.`ID` = `Review`.`userID`
         WHERE `Review`.`DoctorID` = %s
     """, (Doctor_id,))
     reviews = cursor.fetchall()
 
-    # Get unavailable dates
+  
     cursor.execute("""
         SELECT DATE(AvailableDate) AS blocked_date
         FROM DoctorAvailability
@@ -181,9 +181,11 @@ def submit_review(Doctor_id):
 @app.route("/doctor/<Doctor_id>/book", methods=["POST"])
 @login_required
 def book_appointment(Doctor_id):
-    date = request.form.get("date")      
+
+    date = request.form.get("date")   
     time = request.form.get("time")      
     visit_type = request.form.get("visit_type")
+
 
     if not date or not time or not visit_type:
         flash("Please provide date, time, and visit type.", "error")
@@ -200,11 +202,12 @@ def book_appointment(Doctor_id):
         AND DATE(AvailableDate) = %s
         AND Booked = 1
     """, (Doctor_id, date))
-
     blocked = cursor.fetchone()
+
     if blocked:
         connection.close()
-        flash("Doctor is not available on this date.", "error")
+
+        flash("⚠️ Doctor is not available on this date. Please choose another date.", "error")
         return redirect(f"/doctor/{Doctor_id}")
 
     type_field = f"{visit_type} {time}"
@@ -216,7 +219,7 @@ def book_appointment(Doctor_id):
     connection.commit()
     connection.close()
 
-    flash("Appointment successfully booked!", "success")
+    flash("✅ Appointment successfully booked!", "success")
     return redirect("/appoint")
 
 @app.route("/appoint/<int:appointment_id>/cancel", methods=["POST"])
@@ -306,7 +309,6 @@ def calendar_view():
     appointments = cursor.fetchall()
     connection.close()
 
-    # Organize appointments by date
     events = {}
     for appt in appointments:
         date_key = appt["Date"].strftime("%Y-%m-%d")
@@ -486,7 +488,7 @@ def doctor_appointments(doctor_id):
     connection = connect_db()
     cursor = connection.cursor()
 
-    # Fetch doctor info
+
     cursor.execute("SELECT * FROM Doctor WHERE ID = %s", (doctor_id,))
     doctor = cursor.fetchone()
 
@@ -536,3 +538,87 @@ def doctor_appointments(doctor_id):
         appointments=appointments,
         doctor=doctor
     )
+@app.route("/doctor/<int:doctor_id>/calendar", methods=["GET"])
+def doctor_calendar(doctor_id):
+
+    connection = connect_db()
+    cursor = connection.cursor()
+
+    today = datetime.date.today()
+    year = today.year
+    month = today.month
+
+    cursor.execute("SELECT * FROM Doctor WHERE ID = %s", (doctor_id,))
+    doctor = cursor.fetchone()
+
+
+    cursor.execute("""
+        SELECT Date, Type, Status
+        FROM Appointment
+        WHERE DoctorID = %s
+        AND MONTH(Date) = %s
+        AND YEAR(Date) = %s
+    """, (doctor_id, month, year))
+
+    appointments = cursor.fetchall()
+
+    cursor.execute("""
+        SELECT AvailableDate
+        FROM DoctorAvailability
+        WHERE DoctorID = %s AND Booked = 1
+    """, (doctor_id,))
+
+    blocked = cursor.fetchall()
+
+    connection.close()
+
+    events = {}
+    for appt in appointments:
+        date_key = appt["Date"].strftime("%Y-%m-%d")
+        if date_key not in events:
+            events[date_key] = []
+        events[date_key].append(appt)
+
+    blocked_dates = [b["AvailableDate"].strftime("%Y-%m-%d") for b in blocked]
+
+    month_calendar = cal.monthcalendar(year, month)
+    month_name = cal.month_name[month]
+
+    return render_template("doctorcalendar.html.jinja", doctor=doctor, calendar=month_calendar, events=events, blocked_dates=blocked_dates, year=year, month=month, month_name=month_name)
+
+@app.route("/doctor/<int:doctor_id>/block-date", methods=["POST"])
+def block_date(doctor_id):
+
+    date = request.form.get("date")
+    reason = request.form.get("reason")
+
+    if not date:
+        flash("Please select a date.", "error")
+        return redirect(f"/doctor/{doctor_id}/calendar")
+
+    connection = connect_db()
+    cursor = connection.cursor()
+
+    cursor.execute("""
+        SELECT * FROM DoctorAvailability
+        WHERE DoctorID = %s AND AvailableDate = %s
+    """, (doctor_id, date))
+
+    exists = cursor.fetchone()
+
+    if exists:
+        connection.close()
+        flash("This date has already been marked as unavailable.", "error")
+        return redirect(f"/doctor/{doctor_id}/calendar")
+
+    cursor.execute("""
+        INSERT INTO DoctorAvailability (DoctorID, AvailableDate, Booked)
+        VALUES (%s, %s, 1)
+    """, (doctor_id, date))
+
+    connection.commit()
+    connection.close()
+
+    flash("Date successfully marked as unavailable.", "success")
+
+    return redirect(f"/doctor/{doctor_id}/calendar")
