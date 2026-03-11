@@ -375,6 +375,36 @@ def logout():
 
 
 # ---------------- DOCTORS SIDE OF THINGS ----------------
+@app.route("/doctor/<int:doctor_id>/contact", methods=["GET", "POST"])
+def doctor_contact(doctor_id):
+    connection = connect_db()
+    cursor = connection.cursor()
+
+    # Get doctor info
+    cursor.execute("SELECT * FROM Doctor WHERE ID=%s", (doctor_id,))
+    doctor = cursor.fetchone()
+
+    if not doctor:
+        connection.close()
+        abort(404)
+
+    if request.method == "POST":
+        name = request.form.get("name")
+        email = request.form.get("email")
+        message = request.form.get("message")
+
+        if not name or not email or not message:
+            flash("Please fill in all fields.", "error")
+        else:
+            
+            print(f"Message for Dr. {doctor['Name']} from {name} ({email}): {message}")
+            flash("Your message has been sent successfully!, we will respond shortly.", "success")
+            return redirect(f"/doctor/{doctor_id}/contact")
+
+    connection.close()
+    return render_template("doctorcontact.html.jinja", doctor=doctor)
+
+
 @app.route("/doctorlogin", methods=["GET","POST"])
 def doctor_login():
 
