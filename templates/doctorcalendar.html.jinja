@@ -17,7 +17,6 @@
 
         <div class="max-w-5xl mx-auto">
 
-            <!-- Weekdays -->
             <div class="hidden lg:grid grid-cols-7 gap-2 text-center text-sm font-semibold text-gray-600 mb-2">
                 <div>Sun</div>
                 <div>Mon</div>
@@ -28,7 +27,7 @@
                 <div>Sat</div>
             </div>
 
-            <!-- Calendar Grid -->
+
             <div class="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-7 gap-2">
 
                 {% for week in calendar %}
@@ -40,7 +39,7 @@
 
                             <div class="bg-white border border-gray-200 rounded-lg p-2 min-h-[100px] shadow-sm hover:shadow-md transition relative">
 
-                                <!-- Day number -->
+   
                                 <div class="text-sm font-bold
                                     {% if full_date == today %}
                                         text-purple-700
@@ -51,7 +50,7 @@
                                     {{ day }}
                                 </div>
 
-                                <!-- Doctor's appointments -->
+
                                 {% if full_date in events %}
                                     {% for appt in events[full_date] %}
                                         <div class="mt-1 text-xs px-2 py-1 rounded
@@ -69,7 +68,6 @@
                                     {% endfor %}
                                 {% endif %}
 
-                                <!-- Blocked dates -->
                                 {% if full_date in blocked_dates %}
                                     <div class="absolute top-1 right-1 text-xs bg-gray-300 text-gray-800 px-1 rounded">
                                         Blocked
@@ -84,7 +82,6 @@
             </div>
         </div>
 
-        <!-- Block Date Form -->
         <div class="max-w-lg mx-auto mt-10 bg-white p-6 rounded-lg shadow-md">
             <h2 class="text-xl font-bold mb-4 text-gray-900">Block a Date</h2>
             <form method="post" action="/doctor/{{ doctor.ID }}/block-date" class="space-y-4">
