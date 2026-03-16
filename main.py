@@ -5,10 +5,25 @@ import datetime
 import calendar as cal
 from dynaconf import Dynaconf
 
+from flask_mail import Mail, Message
+from apscheduler.schedulers.background import BackgroundScheduler
+
 app = Flask(__name__)
 
 config = Dynaconf(settings_files=["settings.toml"])
 app.secret_key = config.secret_key
+
+# ---------------- EMAIL CONFIG ----------------
+app.config["MAIL_SERVER"] = "smtp.gmail.com"
+app.config["MAIL_PORT"] = 587
+app.config["MAIL_USE_TLS"] = True
+app.config["MAIL_USE_SSL"] = False
+app.config["MAIL_USERNAME"] = config.email
+app.config["MAIL_PASSWORD"] = config.email_password
+app.config["MAIL_DEFAULT_SENDER"] = config.email
+mail = Mail(app)
+
+
 
 login_manager = LoginManager(app)
 login_manager.login_view = "/login"
@@ -658,6 +673,87 @@ def thanks():
 @app.route("/thankscontact")
 def thankscontact():
     return render_template("thankscontact.html.jinja")
+
+
+
+
+## ---------------- SEND EMAIL REMINDER ----------------
+# ---------------- EMAIL REMINDERS ----------------
+def send_reminder(email, doctor_name, appointment_time, patient_name):
+    with app.app_context(): 
+        msg = Message(
+            subject="BookWell Appointment Reminder",
+            recipients=[email],
+        )
+        msg.body = f"""
+Dear {patient_name},
+
+This is a friendly reminder regarding your upcoming medical appointment scheduled through BookWell. Please find the details of your appointment below:
+
+Doctor: Dr. {doctor_name}
+Date: {appointment_time.strftime('%Y-%m-%d')}
+Time: {appointment_time.strftime('%H:%M')}
+
+We kindly ask that you arrive a few minutes early to allow time for check-in and any necessary paperwork.
+
+If you are unable to attend or need to reschedule your appointment, please log in to your BookWell account at your earliest convenience to make the necessary changes. Providing advance notice helps us offer the appointment time to other patients who may be waiting.
+
+If you have any questions or require assistance, please do not hesitate to contact our support team.
+
+Thank you for choosing BookWell for your healthcare scheduling needs. We look forward to serving you.
+
+Warm regards,  
+The BookWell Team
+"""
+        try:
+            mail.send(msg)
+            print("Reminder sent successfully.")
+        except Exception as e:
+            print(f"Failed to send reminder: {e}")
+
+
+# ---------------- CHECK APPOINTMENT REMINDERS ----------------
+def check_appointment_reminders():
+    print("Checking for upcoming appointments to remind...")
+    connection = connect_db()
+    cursor = connection.cursor()
+
+    now = datetime.datetime.now()
+    reminder_window = now + datetime.timedelta(minutes=20)  # For testing: 1 min ahead
+
+    cursor.execute("""
+        SELECT Appointment.ID, Appointment.Date,
+               User.Email AS user_email,
+               User.Name AS user_name,
+               Doctor.Name AS doctor_name
+        FROM Appointment
+        JOIN User ON User.ID = Appointment.UserID
+        JOIN Doctor ON Doctor.ID = Appointment.DoctorID
+        WHERE Appointment.Status='Scheduled'
+        AND Appointment.Date BETWEEN %s AND %s
+    """, (now, reminder_window))
+
+    appointments = cursor.fetchall()
+    connection.close()
+
+    for appt in appointments:
+        send_reminder(
+            appt["user_email"],    # client email
+            appt["doctor_name"],   # doctor name
+            appt["Date"],          # appointment datetime
+            appt["user_name"]      # client name
+        )
+
+
+
+
+
+
+
+# ---------------- START REMINDER SCHEDULER ----------------
+scheduler = BackgroundScheduler()
+scheduler.add_job(check_appointment_reminders, "interval", minutes=5)
+scheduler.start()
 
 
 # ---------------- RUN APP ----------------
