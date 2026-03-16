@@ -513,3 +513,18 @@ def doctor_appointments(doctor_id):
         appointments=appointments,
         doctor=doctor
     )
+
+
+@app.route('/aboutus')
+def about():
+    connection = connect_db()
+
+    cursor = connection.cursor()
+
+    cursor.execute("SELECT * FROM `AboutUs` ")
+
+    result = cursor.fetchall()
+
+    connection.close()
+    
+    return render_template("aboutus.html.jinja", about = result)
