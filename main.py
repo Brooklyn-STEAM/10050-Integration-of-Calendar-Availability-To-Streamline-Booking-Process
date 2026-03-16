@@ -304,6 +304,36 @@ def book_appointment(Doctor_id):
     flash("Appointment successfully booked!")
     return redirect("/appoint")
 
+@app.route("/appoint/<int:appointment_id>/cancel", methods=["POST"])
+@login_required
+def cancel_appointment(appointment_id):
+    connection = connect_db()
+    cursor = connection.cursor()
+    cursor.execute("""
+        UPDATE `Appointment`
+        SET `Status` = 'Cancelled'
+        WHERE `ID` = %s AND `UserID` = %s
+    """, (appointment_id, current_user.id))
+
+    connection.close()
+    flash("Appointment has been cancelled.")
+    return redirect("/appoint")
+
+@app.route("/appoint/<int:appointment_id>/attend", methods=["POST"])
+@login_required
+def mark_attended(appointment_id):
+    connection = connect_db()
+    cursor = connection.cursor()
+
+    cursor.execute("""
+        UPDATE `Appointment`
+        SET `Status` = 'Confirmed'
+        WHERE `ID` = %s AND `UserID` = %s
+    """, (appointment_id, current_user.id))
+
+    connection.close()
+    flash("Appointment marked as attended.")
+    return redirect("/appoint")
 
 # ---------------- LOGIN ----------------
 @app.route("/login", methods=["GET", "POST"])
