@@ -681,7 +681,6 @@ def thankscontact():
 # ---------------- EMAIL REMINDERS ----------------
 def send_reminder(email, doctor_name, appointment_time, patient_name):
     with app.app_context(): 
-        print(f"Sending reminder to {patient_name} ({email}) for {appointment_time}")
         msg = Message(
             subject="BookWell Appointment Reminder",
             recipients=[email],
@@ -747,8 +746,7 @@ def check_appointment_reminders():
 
 
 
-print("EMAIL:", config.email)
-print("PASS:", config.email_password)
+
 
 
 
