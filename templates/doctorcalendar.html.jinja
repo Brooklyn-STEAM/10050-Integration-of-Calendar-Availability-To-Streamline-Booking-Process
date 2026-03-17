@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Doctor Calendar</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+</head>
+<body class="bg-gray-50 min-h-screen flex flex-col">
+
+    {% include "components/navbartwo.html.jinja" %}
+
+    <section class="px-4 py-10">
+        <h1 class="text-3xl font-bold text-center mb-6 text-gray-800">
+            {{ month_name }} {{ year }}
+        </h1>
+
+        <div class="max-w-5xl mx-auto">
+
+            <div class="hidden lg:grid grid-cols-7 gap-2 text-center text-sm font-semibold text-gray-600 mb-2">
+                <div>Sun</div>
+                <div>Mon</div>
+                <div>Tue</div>
+                <div>Wed</div>
+                <div>Thu</div>
+                <div>Fri</div>
+                <div>Sat</div>
+            </div>
+
+
+            <div class="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-7 gap-2">
+
+                {% for week in calendar %}
+                    {% for day in week %}
+                        {% if day == 0 %}
+                            <div></div>
+                        {% else %}
+                            {% set full_date = year ~ "-" ~ "%02d"|format(month) ~ "-" ~ "%02d"|format(day) %}
+
+                            <div class="bg-white border border-gray-200 rounded-lg p-2 min-h-[100px] shadow-sm hover:shadow-md transition relative">
+
+   
+                                <div class="text-sm font-bold
+                                    {% if full_date == today %}
+                                        text-purple-700
+                                    {% else %}
+                                        text-gray-700
+                                    {% endif %}
+                                ">
+                                    {{ day }}
+                                </div>
+
+
+                                {% if full_date in events %}
+                                    {% for appt in events[full_date] %}
+                                        <div class="mt-1 text-xs px-2 py-1 rounded
+                                            {% if appt.Status == 'Cancelled' %}
+                                                bg-red-100 text-red-700
+                                            {% elif appt.Status == 'Confirmed' %}
+                                                bg-green-100 text-green-700
+                                            {% else %}
+                                                bg-blue-100 text-blue-700
+                                            {% endif %}
+                                        ">
+                                            {{ appt.Type }} <br>
+                                            {{ appt.PatientName }}
+                                        </div>
+                                    {% endfor %}
+                                {% endif %}
+
+                                {% if full_date in blocked_dates %}
+                                    <div class="absolute top-1 right-1 text-xs bg-gray-300 text-gray-800 px-1 rounded">
+                                        Blocked
+                                    </div>
+                                {% endif %}
+
+                            </div>
+                        {% endif %}
+                    {% endfor %}
+                {% endfor %}
+
+            </div>
+        </div>
+
+        <div class="max-w-lg mx-auto mt-10 bg-white p-6 rounded-lg shadow-md">
+            <h2 class="text-xl font-bold mb-4 text-gray-900">Block a Date</h2>
+            <form method="post" action="/doctor/{{ doctor.ID }}/block-date" class="space-y-4">
+
+                <div>
+                    <label class="block text-gray-800 font-semibold mb-2">Select Date to Block</label>
+                    <input type="date" name="date" required
+                        class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-purple-600" />
+                </div>
+
+                <div>
+                    <label class="block text-gray-800 font-semibold mb-2">Reason (Optional)</label>
+                    <textarea name="reason" rows="3"
+                        class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-purple-600"
+                        placeholder="Vacation, conference, personal leave..."></textarea>
+                </div>
+
+                <button type="submit" class="w-full px-6 py-2 bg-purple-700 text-white font-semibold rounded-full hover:bg-purple-800 transition-colors">
+                    Block Date
+                </button>
+
+            </form>
+        </div>
+
+    </section>
+
+    <footer class="bg-purple-600 text-white text-center py-4 mt-auto">
+        © 2026 — Book fast. Smart care, no cast
+    </footer>
+
+</body>
+</html>

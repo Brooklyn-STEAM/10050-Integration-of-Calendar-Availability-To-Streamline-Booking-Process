@@ -9,7 +9,42 @@
 
 <body class="bg-purple-30 min-h-screen">
 
+
     {% include "components/navbar.html.jinja" %}
+
+
+   {% with messages = get_flashed_messages(with_categories=true) %}
+  {% if messages %}
+    <div class="max-w-5xl mx-auto mt-6 px-4">
+      {% for category, message in messages %}
+        <div class="mb-4 flex items-center justify-between p-4 rounded-lg shadow-sm border
+          {% if category == 'error' %}
+              bg-red-50 border-red-200 text-red-700
+          {% elif category == 'success' %}
+              bg-green-50 border-green-200 text-green-700
+          {% elif category == 'warning' %}
+              bg-yellow-50 border-yellow-200 text-yellow-700
+          {% else %}
+              bg-purple-50 border-purple-200 text-purple-800
+          {% endif %}
+        ">
+          <div class="flex items-center gap-3">
+            {% if category == 'error' %}
+              <span class="text-xl">❌</span>
+            {% elif category == 'success' %}
+              <span class="text-xl">✅</span>
+            {% elif category == 'warning' %}
+              <span class="text-xl">⚠️</span>
+            {% else %}
+              <span class="text-xl">ℹ️</span>
+            {% endif %}
+            <p class="font-medium">{{ message }}</p>
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+  {% endif %}
+{% endwith %}
 
     <div class="max-w-7xl mx-auto p-6">
 
@@ -206,6 +241,11 @@
 
         </div>
     </div>
+
+
+
+<script>
+
 
 </body>
 

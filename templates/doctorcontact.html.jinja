@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <title>Contact Dr. {{ doctor['Name'] }}</title>
+</head>
+<body class="bg-gray-50 min-h-screen font-sans">
+
+{% include "components/navbartwo.html.jinja" %}
+
+<div class="max-w-7xl mx-auto p-6 mt-10">
+
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+
+        <!-- Doctor Info Sidebar -->
+        <div class="lg:col-span-4 bg-white p-6 rounded-lg shadow-lg space-y-4">
+            <img src="{{ doctor['Image'] }}" alt="{{ doctor['Name'] }}" class="w-full rounded-lg object-cover">
+            <h1 class="text-2xl font-bold text-purple-800">Dr. {{ doctor['Name'] }}</h1>
+            <p class="text-gray-700">{{ doctor['Category'] }} • {{ doctor['Type'] }}</p>
+            <p class="text-gray-600">📍 {{ doctor['Location'] }}</p>
+            <p class="text-gray-700 mt-2">{{ doctor['Description'] }}</p>
+            <p class="text-gray-600 font-semibold mt-4">Accepted Insurance:</p>
+            <p class="text-gray-700">{{ doctor['Insurance'] }}</p>
+        </div>
+
+        <!-- Contact Form -->
+        <div class="lg:col-span-8 bg-white p-8 rounded-lg shadow-lg">
+            <h2 class="text-2xl font-bold text-purple-800 mb-4">Have Questions? Send  us a Message</h2>
+
+            {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                <div class="mb-4 p-4 rounded shadow
+                    {% if category == 'success' %}bg-green-100 text-green-800{% elif category == 'error' %}bg-red-100 text-red-800{% else %}bg-gray-100 text-gray-800{% endif %}">
+                    {{ message }}
+                </div>
+                {% endfor %}
+            {% endif %}
+            {% endwith %}
+
+            <form method="post" class="space-y-4">
+                <div>
+                    <label class="block text-gray-700 font-semibold mb-1">Your Name</label>
+                    <input type="text" name="name" required
+                           class="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500">
+                </div>
+
+                <div>
+                    <label class="block text-gray-700 font-semibold mb-1">Email</label>
+                    <input type="email" name="email" required
+                           class="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500">
+                </div>
+
+                <div>
+                    <label class="block text-gray-700 font-semibold mb-1">Message</label>
+                    <textarea name="message" rows="6" required
+                              class="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"></textarea>
+                </div>
+
+                <button type="submit"
+                        class="px-6 py-2 bg-purple-700 text-white rounded-full font-semibold hover:bg-purple-800 transition">
+                    Send Message
+                </button>
+            </form>
+        </div>
+
+    </div>
+</div>
+
+</body>
+</html>
