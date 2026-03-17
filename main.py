@@ -644,6 +644,12 @@ def block_date(doctor_id):
         flash("Please select a date")
         return redirect(f"/doctor/{doctor_id}/calendar")
 
+
+    selected_date = datetime.datetime.strptime(date, "%Y-%m-%d").date()
+    if selected_date < datetime.date.today():
+        flash("Cannot block a past date")
+        return redirect(f"/doctor/{doctor_id}/calendar")
+
     connection = connect_db()
     cursor = connection.cursor()
 
@@ -660,18 +666,81 @@ def block_date(doctor_id):
 
     cursor.execute("""
         INSERT INTO DoctorAvailability (DoctorID, AvailableDate, Booked)
-        VALUES (%s,%s,1)
+        VALUES (%s, %s, 1)
+    """, (doctor_id, date))
+
+    cursor.execute("""
+        SELECT Appointment.ID, Appointment.Date,
+               User.Email, User.Name,
+               Doctor.Name AS DoctorName
+        FROM Appointment
+        JOIN User ON User.ID = Appointment.UserID
+        JOIN Doctor ON Doctor.ID = Appointment.DoctorID
+        WHERE Appointment.DoctorID = %s
+        AND DATE(Appointment.Date) = %s
+        AND Appointment.Status = 'Scheduled'
+    """, (doctor_id, date))
+
+    appointments_to_cancel = cursor.fetchall()
+
+    
+    cursor.execute("""
+        UPDATE Appointment
+        SET Status = 'Cancelled'
+        WHERE DoctorID = %s
+        AND DATE(Date) = %s
+        AND Status = 'Scheduled'
     """, (doctor_id, date))
 
     connection.commit()
     connection.close()
 
-    flash("Date marked unavailable")
+   
+    for appt in appointments_to_cancel:
+        send_cancellation_email(
+            appt["Email"],
+            appt["DoctorName"],
+            appt["Date"],
+            appt["Name"]
+        )
 
+    flash("Date blocked and affected appointments cancelled.")
     return redirect(f"/doctor/{doctor_id}/calendar")
 
+def send_cancellation_email(email, doctor_name, appointment_time, patient_name):
+    with app.app_context():
+        msg = Message(
+            subject="BookWell Appointment Cancellation",
+            recipients=[email],
+        )
 
+        msg.body = f"""
+Dear {patient_name},
 
+We regret to inform you that your upcoming appointment scheduled through BookWell has been cancelled due to the doctor's unavailability.
+
+Please find the details of the cancelled appointment below:
+
+Doctor: Dr. {doctor_name}
+Date: {appointment_time.strftime('%Y-%m-%d')}
+Time: {appointment_time.strftime('%H:%M')}
+
+We sincerely apologize for any inconvenience this may cause.
+
+We encourage you to log in to your BookWell account to reschedule your appointment at a time that works best for you.
+
+If you have any questions or need assistance, please do not hesitate to contact our support team.
+
+Thank you for your understanding.
+
+Warm regards,  
+The BookWell Team
+"""
+        try:
+            mail.send(msg)
+            print("Cancellation email sent successfully.")
+        except Exception as e:
+            print(f"Failed to send cancellation email: {e}")
 
 # ---------------- CONTACT ----------------
 @app.route("/contact", methods=["GET", "POST"])
