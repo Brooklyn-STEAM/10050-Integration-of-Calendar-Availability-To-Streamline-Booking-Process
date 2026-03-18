@@ -774,6 +774,11 @@ def thankscontact():
     return render_template("thankscontact.html.jinja")
 
 
+@app.errorhandler(404)
+def page_not_found(e):
+    return render_template("404.html.jinja"), 404
+
+
 
 
 ## ---------------- SEND EMAIL REMINDER ----------------
