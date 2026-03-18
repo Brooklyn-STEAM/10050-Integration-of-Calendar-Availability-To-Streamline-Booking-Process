@@ -3,6 +3,7 @@ from flask_login import LoginManager, login_user, logout_user, login_required, c
 import pymysql
 import datetime
 import calendar as cal
+cal.setfirstweekday(cal.SUNDAY)
 from dynaconf import Dynaconf
 
 from flask_mail import Mail, Message
@@ -218,17 +219,47 @@ def calendar_view():
     """, (current_user.id, month, year))
 
     appointments = cursor.fetchall()
+
+ 
+    cursor.execute("""
+        SELECT Title, EventDate
+        FROM PersonalEvent
+        WHERE UserID = %s
+        AND MONTH(EventDate) = %s
+        AND YEAR(EventDate) = %s
+    """, (current_user.id, month, year))
+
+    personal_events = cursor.fetchall()
+
     connection.close()
 
     events = {}
 
+
     for appt in appointments:
+
+        if isinstance(appt["Date"], str):
+            appt["Date"] = datetime.datetime.strptime(
+                appt["Date"], "%Y-%m-%d %H:%M:%S"
+            )
+
         date_key = appt["Date"].strftime("%Y-%m-%d")
 
-        if date_key not in events:
-            events[date_key] = []
+        events.setdefault(date_key, []).append(appt)
 
-        events[date_key].append(appt)
+    for event in personal_events:
+
+        if isinstance(event["EventDate"], str):
+            event["EventDate"] = datetime.datetime.strptime(
+                event["EventDate"], "%Y-%m-%d %H:%M:%S"
+            )
+
+        date_key = event["EventDate"].strftime("%Y-%m-%d")
+
+        events.setdefault(date_key, []).append({
+            "Type": event["Title"],
+            "Status": "Personal"
+        })
 
     month_calendar = cal.monthcalendar(year, month)
     month_name = cal.month_name[month]
@@ -334,6 +365,36 @@ def mark_attended(appointment_id):
     connection.close()
     flash("Appointment marked as attended.")
     return redirect("/appoint")
+
+@app.route("/add-event", methods=["POST"])
+@login_required
+def add_event():
+
+    title = request.form.get("title")
+    date = request.form.get("date")
+    time = request.form.get("time")
+
+    if not title or not date or not time:
+        flash("Please fill all fields")
+        return redirect("/calendar")
+
+    event_datetime = datetime.datetime.strptime(
+        f"{date} {time}", "%Y-%m-%d %H:%M"
+    )
+
+    connection = connect_db()
+    cursor = connection.cursor()
+
+    cursor.execute("""
+        INSERT INTO PersonalEvent (UserID, Title, EventDate)
+        VALUES (%s, %s, %s)
+    """, (current_user.id, title, event_datetime))
+
+    connection.commit()
+    connection.close()
+
+    flash("Event added successfully!")
+    return redirect("/calendar")
 
 # ---------------- LOGIN ----------------
 @app.route("/login", methods=["GET", "POST"])
