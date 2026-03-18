@@ -149,6 +149,10 @@ def appoint():
         FROM Appointment
         JOIN Doctor ON Doctor.ID = Appointment.DoctorID
         WHERE UserID = %s
+        AND (
+        Status != 'Cancelled'
+        OR Date >= NOW() - INTERVAL 1 DAY
+        )
         ORDER BY Appointment.Date ASC
     """, (current_user.id,))
 
@@ -260,7 +264,11 @@ def book_appointment(Doctor_id):
         f"{date} {time}", "%Y-%m-%d %H:%M"
     )
     end_datetime = start_datetime + datetime.timedelta(minutes=20)
-
+    
+    now = datetime.datetime.now()
+    if start_datetime <= now:
+        flash("You cannot book an appointment in the past.")
+        return redirect(f"/doctor/{Doctor_id}")
     connection = connect_db()
     cursor = connection.cursor()
 
@@ -303,6 +311,9 @@ def book_appointment(Doctor_id):
 
     flash("Appointment successfully booked!")
     return redirect("/appoint")
+
+
+
 
 @app.route("/appoint/<int:appointment_id>/cancel", methods=["POST"])
 @login_required
@@ -779,7 +790,23 @@ def page_not_found(e):
     return render_template("404.html.jinja"), 404
 
 
+# ---------------- Auto Delete Cancelled Appointments----------------
+def cleanup_cancelled_appointments():
+    print("Cleaning up old cancelled appointments...")
 
+    connection = connect_db()
+    cursor = connection.cursor()
+
+    cutoff_time = datetime.datetime.now() - datetime.timedelta(hours=1)
+
+    cursor.execute("""
+        DELETE FROM Appointment
+        WHERE Status = 'Cancelled'
+        AND Date < %s
+    """, (cutoff_time,))
+
+    connection.commit()
+    connection.close()
 
 ## ---------------- SEND EMAIL REMINDER ----------------
 # ---------------- EMAIL REMINDERS ----------------
@@ -856,7 +883,8 @@ def check_appointment_reminders():
 
 # ---------------- START REMINDER SCHEDULER ----------------
 scheduler = BackgroundScheduler()
-scheduler.add_job(check_appointment_reminders, "interval", minutes=5)
+scheduler.add_job(check_appointment_reminders, "interval", minutes=15)
+scheduler.add_job(cleanup_cancelled_appointments, "interval", seconds=30)
 scheduler.start()
 
 
