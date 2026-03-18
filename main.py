@@ -860,6 +860,6 @@ scheduler.add_job(check_appointment_reminders, "interval", minutes=5)
 scheduler.start()
 
 
-# ---------------- RUN APP ----------------
-if __name__ == "__main__":
-    app.run(debug=True)
+@app.route("/aboutus")
+def about():
+    return render_template("aboutus.html.jinja")
