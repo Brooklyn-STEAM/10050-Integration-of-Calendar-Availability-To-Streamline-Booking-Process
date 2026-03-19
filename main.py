@@ -164,7 +164,47 @@ def appoint():
 
     return render_template("appoint.html.jinja", appointments=appointments)
 
+@app.route("/suggdoctors", methods=["POST"])
+@login_required
+def suggest_doctors():
+    date = request.form.get("date")
+    if not date:
+        flash("Please select a date")
+        return redirect("/calendar")
 
+    # Convert string to date object
+    try:
+        date_obj = datetime.datetime.strptime(date, "%Y-%m-%d").date()
+    except ValueError:
+        flash("Invalid date format")
+        return redirect("/calendar")
+
+    connection = connect_db()
+    cursor = connection.cursor()
+
+    # Get doctors who are NOT fully booked on this day
+    cursor.execute("""
+        SELECT * FROM Doctor d
+        WHERE d.ID NOT IN (
+            SELECT DoctorID
+            FROM DoctorAvailability
+            WHERE AvailableDate = %s AND Booked = 1
+        )
+        ORDER BY d.Name
+    """, (date_obj,))
+
+    doctors = cursor.fetchall()
+    connection.close()
+
+    if not doctors:
+        flash("No doctors available on this day.")
+        return redirect("/calendar")
+
+    return render_template(
+        "suggestions.html.jinja",
+        doctors=doctors,
+        selected_date=date
+    )
 # ---------------- BOOK APPOINTMENT ----------------
 @app.route("/doctorsearch", methods=["GET"])
 def doctorsearch():
