@@ -187,7 +187,8 @@ def suggest_doctors():
     connection = connect_db()
     cursor = connection.cursor()
 
-    sql = """
+    # Base query
+    query = """
         SELECT * FROM Doctor d
         WHERE d.ID NOT IN (
             SELECT DoctorID
@@ -195,15 +196,17 @@ def suggest_doctors():
             WHERE AvailableDate = %s AND Booked = 1
         )
     """
+
     params = [date_obj]
 
+    # ✅ Add category filter if selected
     if category:
-        sql += " AND d.Category = %s"
+        query += " AND d.Category = %s"
         params.append(category)
 
-    sql += " ORDER BY d.Name"
+    query += " ORDER BY d.Name"
 
-    cursor.execute(sql, params)
+    cursor.execute(query, tuple(params))
     doctors = cursor.fetchall()
 
     connection.close()
@@ -215,7 +218,8 @@ def suggest_doctors():
     return render_template(
         "suggestions.html.jinja",
         doctors=doctors,
-        selected_date=date
+        selected_date=date,
+        category_filter=category
     )
 # ---------------- BOOK APPOINTMENT ----------------
 @app.route("/doctorsearch", methods=["GET"])
