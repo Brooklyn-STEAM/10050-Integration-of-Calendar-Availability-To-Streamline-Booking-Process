@@ -212,7 +212,7 @@ def suggest_doctors():
     connection.close()
 
     if not doctors:
-        flash("No doctors available for this selection.")
+        flash("No doctors available for that date and specialty.")
         return redirect("/calendar")
 
     return render_template(
