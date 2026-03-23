@@ -172,11 +172,12 @@ def appoint():
 @login_required
 def suggest_doctors():
     date = request.form.get("date")
+    category = request.form.get("category")
+
     if not date:
         flash("Please select a date")
         return redirect("/calendar")
 
-    # Convert string to date object
     try:
         date_obj = datetime.datetime.strptime(date, "%Y-%m-%d").date()
     except ValueError:
@@ -186,22 +187,29 @@ def suggest_doctors():
     connection = connect_db()
     cursor = connection.cursor()
 
-    # Get doctors who are NOT fully booked on this day
-    cursor.execute("""
+    sql = """
         SELECT * FROM Doctor d
         WHERE d.ID NOT IN (
             SELECT DoctorID
             FROM DoctorAvailability
             WHERE AvailableDate = %s AND Booked = 1
         )
-        ORDER BY d.Name
-    """, (date_obj,))
+    """
+    params = [date_obj]
 
+    if category:
+        sql += " AND d.Category = %s"
+        params.append(category)
+
+    sql += " ORDER BY d.Name"
+
+    cursor.execute(sql, params)
     doctors = cursor.fetchall()
+
     connection.close()
 
     if not doctors:
-        flash("No doctors available on this day.")
+        flash("No doctors available for that date and specialty.")
         return redirect("/calendar")
 
     return render_template(
