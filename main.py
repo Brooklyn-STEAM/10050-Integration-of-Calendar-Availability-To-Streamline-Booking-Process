@@ -708,6 +708,7 @@ def doctor_calendar(doctor_id):
     today = datetime.date.today()
     year = today.year
     month = today.month
+    month_name = cal.month_name[month]  # ✅ FIX
 
     connection = connect_db()
     cursor = connection.cursor()
@@ -755,7 +756,8 @@ def doctor_calendar(doctor_id):
         events=events,
         blocked_dates=blocked_dates,
         year=year,
-        month=month
+        month=month,
+        month_name=month_name 
     )
 
 
