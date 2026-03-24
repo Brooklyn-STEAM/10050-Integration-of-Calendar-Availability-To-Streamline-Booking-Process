@@ -81,18 +81,44 @@
     </div>
 
 
-    <div class="hidden lg:block relative w-1/2 h-screen">
-      <img src="/static/images/doctorlog.jpeg" alt="Doctor Login Illustration"
-        class="absolute w-full h-full object-cover" />
+   <style>
+@keyframes slowPan {
+  0% {
+    transform: scale(1.1) translateX(0px) translateY(0px);
+  }
+  50% {
+    transform: scale(1.15) translateX(-30px) translateY(-20px);
+  }
+  100% {
+    transform: scale(1.1) translateX(0px) translateY(0px);
+  }
+}
 
-      <div class="absolute inset-0 bg-black/40 flex items-center justify-center">
-        <div class="text-center text-white space-y-4 px-6">
-          <h2 class="text-4xl font-bold">Welcome Back!</h2>
-          <p class="text-lg">Access your schedule, appointments, and patient information.</p>
-        </div>
-      </div>
+.moving-bg {
+  animation: slowPan 20s ease-in-out infinite;
+}
+</style>
+
+<div class="hidden lg:block relative w-1/2 h-screen overflow-hidden">
+
+  
+  <img
+    src="/static/images/doctorlog.jpeg"
+    alt="Doctor Login Illustration"
+    class="absolute w-[110%] h-[110%] object-cover moving-bg"
+  />
+
+ 
+  <div class="absolute inset-0 bg-black/40 flex items-center justify-center">
+
+    <div class="text-center text-white space-y-4 px-6">
+      <h2 class="text-4xl font-bold">Welcome Back!</h2>
+      <p class="text-lg">Access your schedule, appointments, and patient information.</p>
     </div>
 
+  </div>
+
+</div>
   </div>
 
 </body>
