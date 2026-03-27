@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Doctor Suggestions</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <link rel="shortcut icon" href="/static/images/logotab.png" type="image/x-icon">
+</head>
+
+<body class="bg-gray-100 p-10">
+
+<h1 class="text-2xl font-bold mb-6 text-center">
+    Available Doctors on {{ selected_date }}
+</h1>
+
+<div class="max-w-3xl mx-auto space-y-4">
+
+    {% for doctor in doctors %}
+        <div class="bg-white p-4 rounded-lg shadow">
+            <h2 class="text-lg font-semibold">
+                Dr. {{ doctor.Name }}
+            </h2>
+            <p class="text-sm text-gray-600">
+                {{ doctor.Category }} • {{ doctor.Location }}
+            </p>
+
+            <a href="/doctor/{{ doctor.ID }}"
+               class="inline-block mt-2 text-purple-700 hover:underline">
+               View Profile
+            </a>
+        </div>
+    {% endfor %}
+
+</div>
+
+</body>
+</html>

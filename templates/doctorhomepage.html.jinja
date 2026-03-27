@@ -4,7 +4,45 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Doctor Homepage</title>
+  <link rel="shortcut icon" href="/static/images/logotab.png" type="image/x-icon">
   <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+  <style>
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slowZoom {
+  from { transform: scale(1); }
+  to { transform: scale(1.1); }
+}
+
+.hero-bg {
+  animation: slowZoom 20s ease-in-out infinite alternate;
+}
+
+.fade-in {
+  animation: fadeInUp 1s ease forwards;
+}
+</style>
+<style>
+.card {
+  opacity: 0;
+  transform: translateY(20px);
+  animation: fadeInUp 0.6s ease forwards;
+}
+
+.card:nth-child(1) { animation-delay: 0.1s; }
+.card:nth-child(2) { animation-delay: 0.2s; }
+.card:nth-child(3) { animation-delay: 0.3s; }
+.card:nth-child(4) { animation-delay: 0.4s; }
+</style>
 </head>
 <body class="h-screen w-screen overflow-x-hidden flex flex-col bg-gray-50">
 
@@ -12,17 +50,25 @@
   {% include "components/navbartwo.html.jinja" %}
 
 
-  <section class="relative min-h-[30vh] flex items-center justify-center bg-[url('/static/images/medicinebg.jpeg')] bg-cover bg-center">
-    <div class="absolute inset-0 bg-purple-600/40"></div>
-    <div class="relative text-center px-4 md:px-0">
-      <h1 class="text-3xl md:text-5xl font-bold text-white drop-shadow">
-        Welcome, Dr. {{ doctor.Name }}
-      </h1>
-      <p class="mt-4 text-white/90 md:text-lg">
-        Manage your appointments and stay on top of your schedule effortlessly.
-      </p>
-    </div>
-  </section>
+  <section class="relative min-h-[30vh] flex items-center justify-center overflow-hidden">
+
+ 
+  <div class="absolute inset-0 bg-[url('/static/images/medicinebg.jpeg')] bg-cover bg-center hero-bg"></div>
+
+ 
+  <div class="absolute inset-0 bg-purple-600/40"></div>
+
+  
+  <div class="relative text-center px-4 md:px-0 fade-in">
+    <h1 class="text-3xl md:text-5xl font-bold text-white drop-shadow">
+      Welcome, Dr. {{ doctor.Name }}
+    </h1>
+    <p class="mt-4 text-white/90 md:text-lg">
+      Manage your appointments and stay on top of your schedule effortlessly.
+    </p>
+  </div>
+
+</section>
 
 
   <section class="flex-1 px-4 md:px-12 py-8 md:py-12">
@@ -31,7 +77,7 @@
     {% if appointments %}
       <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {% for appt in appointments %}
-        <div class="bg-white rounded-lg shadow-md p-5 border-l-4 border-purple-600 flex flex-col justify-between">
+        <div class="card bg-white rounded-lg shadow-md p-5 border-l-4 border-purple-600 flex flex-col justify-between transform transition duration-300 hover:scale-105 hover:shadow-xl">
           <div>
             <h3 class="text-lg font-semibold text-gray-800">{{ appt.PatientName }}</h3>
             <p class="text-gray-600 text-sm mt-1">Date: {{ appt.Date.strftime('%Y-%m-%d %H:%M') }}</p>
@@ -42,6 +88,9 @@
               {% elif appt.Status == 'Cancelled' %}text-red-600
               {% endif %}">
               Status: {{ appt.Status }}
+              {% if appt.Status == 'Scheduled' %}
+              <span class="text-yellow-600 animate-pulse">
+              {% endif %}
             </p>
           </div>
         </div>
@@ -50,11 +99,12 @@
     {% else %}
       <p class="text-gray-600 mt-4">No upcoming appointments at the moment.</p>
     {% endif %}
+    
   </section>
 
 
 
-  <footer class="bg-purple-600 text-white text-center py-4 mt-auto">
+  <footer class="bg-[#57068c] text-white text-center py-4 mt-auto">
     © 2026 — Book fast. Smart care, no cast
   </footer>
 
