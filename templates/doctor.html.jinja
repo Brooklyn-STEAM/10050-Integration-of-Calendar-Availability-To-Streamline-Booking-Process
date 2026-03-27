@@ -245,11 +245,11 @@
                         Rating: {{ review["Rating"] }}/5
                     </p>
                     <p class="text-sm text-gray-400 mt-1">
-                        Posted on: {{ review["timestamp"].strftime('%m/%d/%Y %I:%M %p')}}
+                        Posted on: {{ review["timestamp"].strftime('%m/%d/%Y')}}
 
 
                     <form method="POST" action="/doctor/{{review['DoctorID']}}/remove_review">
-               <button class="border" type="submit">Remove</button>
+               <button class="text-sm text-zinc-700 mt-1 " type="submit">Delete</button>
                </form>
 
 
