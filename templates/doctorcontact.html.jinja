@@ -7,28 +7,28 @@
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
     <title>Contact Dr. {{ doctor['Name'] }}</title>
 </head>
-<body class="bg-gray-50 min-h-screen font-sans">
+<body class="bg-gray-50 min-h-screen font-sans dark:bg-gray-900 dark:text-white">
 
 {% include "components/navbartwo.html.jinja" %}
 
-<div class="max-w-7xl mx-auto p-6 mt-10">
+<div class="max-w-7xl mx-auto p-6 mt-10 dark:bg-gray-900 dark:text-white">
 
-    <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 dark:bg-gray-900 dark:text-white">
 
         <!-- Doctor Info Sidebar -->
-        <div class="lg:col-span-4 bg-white p-6 rounded-lg shadow-lg space-y-4">
-            <img src="{{ doctor['Image'] }}" alt="{{ doctor['Name'] }}" class="w-full rounded-lg object-cover">
-            <h1 class="text-2xl font-bold text-purple-800">Dr. {{ doctor['Name'] }}</h1>
-            <p class="text-gray-700">{{ doctor['Category'] }} • {{ doctor['Type'] }}</p>
-            <p class="text-gray-600">📍 {{ doctor['Location'] }}</p>
-            <p class="text-gray-700 mt-2">{{ doctor['Description'] }}</p>
-            <p class="text-gray-600 font-semibold mt-4">Accepted Insurance:</p>
-            <p class="text-gray-700">{{ doctor['Insurance'] }}</p>
+        <div class="lg:col-span-4 bg-white p-6 rounded-lg shadow-lg space-y-4 dark:bg-gray-900 dark:text-white">
+            <img src="{{ doctor['Image'] }}" alt="{{ doctor['Name'] }}" class="w-full rounded-lg object-cover  dark:text-white">
+            <h1 class="text-2xl font-bold text-purple-800  dark:text-white">Dr. {{ doctor['Name'] }}</h1>
+            <p class="text-gray-700  dark:text-white">{{ doctor['Category'] }} • {{ doctor['Type'] }}</p>
+            <p class="text-gray-600  dark:text-white">📍 {{ doctor['Location'] }}</p>
+            <p class="text-gray-700 mt-2  dark:text-white ">{{ doctor['Description'] }}</p>
+            <p class="text-gray-600 font-semibold mt-4  dark:text-white">Accepted Insurance:</p>
+            <p class="text-gray-700  dark:text-white">{{ doctor['Insurance'] }}</p>
         </div>
 
         <!-- Contact Form -->
-        <div class="lg:col-span-8 bg-white p-8 rounded-lg shadow-lg">
-            <h2 class="text-2xl font-bold text-purple-800 mb-4">Have Questions? Send  us a Message</h2>
+        <div class="lg:col-span-8 bg-white p-8 rounded-lg shadow-lg dark:bg-gray-900 ">
+            <h2 class="text-2xl font-bold text-purple-800 mb-4 dark:bg-gray-900 dark:text-white ">Have Questions? Send  us a Message</h2>
 
             {% with messages = get_flashed_messages(with_categories=true) %}
             {% if messages %}
@@ -41,23 +41,23 @@
             {% endif %}
             {% endwith %}
 
-            <form method="post" class="space-y-4">
+            <form method="post" class="space-y-4 dark:bg-gray-900 dark:text-white">
                 <div>
-                    <label class="block text-gray-700 font-semibold mb-1">Your Name</label>
+                    <label class="block text-gray-700 font-semibold mb-1 dark:bg-gray-900 dark:text-white">Your Name</label>
                     <input type="text" name="name" required
-                           class="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500">
+                           class=" dark:bg-gray-900 dark:text-white w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500">
                 </div>
 
                 <div>
-                    <label class="block text-gray-700 font-semibold mb-1">Email</label>
+                    <label class="block text-gray-700 font-semibold mb-1 dark:bg-gray-900 dark:text-white">Email</label>
                     <input type="email" name="email" required
-                           class="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500">
+                           class=" dark:bg-gray-900 dark:text-white w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500">
                 </div>
 
                 <div>
-                    <label class="block text-gray-700 font-semibold mb-1">Message</label>
+                    <label class="block text-gray-700 font-semibold mb-1 dark:bg-gray-900 dark:text-white">Message</label>
                     <textarea name="message" rows="6" required
-                              class="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"></textarea>
+                              class="dark:bg-gray-900 dark:text-white w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"></textarea>
                 </div>
 
                 <button type="submit"
@@ -70,5 +70,29 @@
     </div>
 </div>
 
+
+<script>
+  const toggle = document.getElementById("theme-toggle");
+
+  // Load saved theme
+  if (localStorage.getItem("theme") === "dark") {
+    document.documentElement.classList.add("dark");
+  }
+
+  // Set icon on load
+  toggle.textContent = document.documentElement.classList.contains("dark") ? "☀️" : "🌙";
+
+  toggle.addEventListener("click", () => {
+    document.documentElement.classList.toggle("dark");
+
+    if (document.documentElement.classList.contains("dark")) {
+      localStorage.setItem("theme", "dark");
+      toggle.textContent = "☀️";
+    } else {
+      localStorage.setItem("theme", "light");
+      toggle.textContent = "🌙";
+    }
+  });
+</script>
 </body>
 </html>

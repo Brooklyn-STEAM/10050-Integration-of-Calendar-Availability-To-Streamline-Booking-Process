@@ -11,17 +11,17 @@
 
   {% include "components/navbartwo.html.jinja" %}
 
-  <section class="flex-1 px-4 md:px-12 py-8 md:py-12">
-    <h1 class="text-3xl font-bold mb-6">Manage Appointments</h1>
+  <section class="flex-1 px-4 md:px-12 py-8 md:py-12 dark:bg-gray-900 dark:text-white">
+    <h1 class="text-3xl font-bold mb-6 dark:bg-gray-900 dark:text-white">Manage Appointments</h1>
 
     {% if appointments %}
       <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {% for appt in appointments %}
-        <div class="bg-white rounded-lg shadow-md p-5 border-l-4 border-purple-600 flex flex-col justify-between">
+        <div class="bg-white dark:bg-gray-600 dark:text-white rounded-lg shadow-md p-5 border-l-4 border-purple-600 flex flex-col justify-between">
           <div>
-            <h3 class="text-lg font-semibold text-gray-800">{{ appt.PatientName }}</h3>
-            <p class="text-gray-600 text-sm mt-1">Date: {{ appt.Date.strftime('%Y-%m-%d %H:%M') }}</p>
-            <p class="text-gray-600 text-sm">Type: {{ appt.Type }}</p>
+            <h3 class="text-lg font-semibold text-gray-800 dark:bg-gray-600 dark:text-white">{{ appt.PatientName }}</h3>
+            <p class="text-gray-600 text-sm mt-1 dark:bg-gray-600 dark:text-white">Date: {{ appt.Date.strftime('%Y-%m-%d %H:%M') }}</p>
+            <p class="text-gray-600 text-sm dark:bg-gray-600 dark:text-white">Type: {{ appt.Type }}</p>
             <p class="mt-1 text-sm font-medium 
               {% if appt.Status == 'Scheduled' %}text-yellow-600
               {% elif appt.Status == 'Confirmed' %}text-green-600

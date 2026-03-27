@@ -44,7 +44,7 @@
 .card:nth-child(4) { animation-delay: 0.4s; }
 </style>
 </head>
-<body class="h-screen w-screen overflow-x-hidden flex flex-col bg-gray-50">
+<body class="h-screen w-screen overflow-x-hidden flex flex-col bg-gray-50 dark:bg-gray-900 dark:text-white">
 
 
   {% include "components/navbartwo.html.jinja" %}
@@ -71,17 +71,17 @@
 </section>
 
 
-  <section class="flex-1 px-4 md:px-12 py-8 md:py-12">
-    <h2 class="text-2xl font-bold text-gray-900 mb-6">Upcoming Appointments</h2>
+  <section class="flex-1 px-4 md:px-12 py-8 md:py-12 dark:bg-gray-900 dark:text-white">
+    <h2 class="text-2xl font-bold text-gray-900 mb-6 dark:bg-gray-900 dark:text-white">Upcoming Appointments</h2>
 
     {% if appointments %}
       <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {% for appt in appointments %}
-        <div class="card bg-white rounded-lg shadow-md p-5 border-l-4 border-purple-600 flex flex-col justify-between transform transition duration-300 hover:scale-105 hover:shadow-xl">
+        <div class="card bg-white rounded-lg shadow-md p-5 border-l-4 border-purple-600 flex flex-col justify-between transform transition duration-300 hover:scale-105 hover:shadow-xl dark:bg-gray-600 dark:text-white">
           <div>
-            <h3 class="text-lg font-semibold text-gray-800">{{ appt.PatientName }}</h3>
-            <p class="text-gray-600 text-sm mt-1">Date: {{ appt.Date.strftime('%Y-%m-%d %H:%M') }}</p>
-            <p class="text-gray-600 text-sm">Type: {{ appt.Type }}</p>
+            <h3 class="text-lg font-semibold text-gray-800 dark:bg-gray-600 dark:text-white">{{ appt.PatientName }}</h3>
+            <p class="text-gray-600 text-sm mt-1 dark:bg-gray-600 dark:text-white">Date: {{ appt.Date.strftime('%Y-%m-%d %H:%M') }}</p>
+            <p class="text-gray-600 text-sm dark:bg-gray-600 dark:text-white">Type: {{ appt.Type }}</p>
             <p class="mt-1 text-sm font-medium 
               {% if appt.Status == 'Scheduled' %}text-yellow-600
               {% elif appt.Status == 'Confirmed' %}text-green-600
@@ -97,7 +97,7 @@
         {% endfor %}
       </div>
     {% else %}
-      <p class="text-gray-600 mt-4">No upcoming appointments at the moment.</p>
+      <p class="text-gray-600 mt-4 dark:bg-gray-900 dark:text-white">No upcoming appointments at the moment.</p>
     {% endif %}
     
   </section>
@@ -107,6 +107,30 @@
   <footer class="bg-[#57068c] text-white text-center py-4 mt-auto">
     © 2026 — Book fast. Smart care, no cast
   </footer>
+
+  <script>
+  const toggle = document.getElementById("theme-toggle");
+
+  // Load saved theme
+  if (localStorage.getItem("theme") === "dark") {
+    document.documentElement.classList.add("dark");
+  }
+
+  // Set icon on load
+  toggle.textContent = document.documentElement.classList.contains("dark") ? "☀️" : "🌙";
+
+  toggle.addEventListener("click", () => {
+    document.documentElement.classList.toggle("dark");
+
+    if (document.documentElement.classList.contains("dark")) {
+      localStorage.setItem("theme", "dark");
+      toggle.textContent = "☀️";
+    } else {
+      localStorage.setItem("theme", "light");
+      toggle.textContent = "🌙";
+    }
+  });
+</script>
 
 </body>
 </html>
