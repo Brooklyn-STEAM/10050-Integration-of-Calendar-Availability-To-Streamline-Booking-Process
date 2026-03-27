@@ -1,4 +1,4 @@
-<nav class="sticky top-0 z-50 bg-[#57068c]/90 backdrop-blur-md px-4 md:px-8 py-4 shadow-md flex items-center justify-between font-medium text-white w-full">
+<nav class="sticky top-0 z-50 bg-[#57068c]/90 dark:bg-[#2e014d]/90 backdrop-blur-md px-4 md:px-8 py-4 shadow-md flex items-center justify-between font-medium text-white w-full transition-colors">
 
   <div class="flex items-center gap-3 md:gap-4">
     <img
@@ -32,8 +32,8 @@
   </div>
 
 
-  <div class="relative">
-    <button onclick="document.getElementById('menu').classList.toggle('hidden')"
+ <div class="relative">
+ <button onclick="document.getElementById('menu').classList.toggle('hidden')"
             class="flex items-center hover:text-[#e0c3ff] transition">
       <svg xmlns="http://www.w3.org/2000/svg" class="h-7 w-7" fill="none" viewBox="0 0 24 24" stroke="currentColor">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -41,23 +41,21 @@
       </svg>
     </button>
 
-    <ul id="menu" class="hidden absolute right-0 mt-3 w-44 bg-white text-[#57068c] rounded-xl shadow-lg text-sm overflow-hidden">
+  <ul id="menu" class="hidden absolute right-0 mt-3 w-44 bg-white dark:bg-gray-800 text-[#57068c] dark:text-white rounded-xl shadow-lg text-sm overflow-hidden z-50">
+  <li><a href="/" class="block px-4 py-3 hover:bg-purple-200 dark:hover:bg-gray-700">Homepage</a></li>
+  <li><a href="/appoint" class="block px-4 py-3 hover:bg-purple-200 dark:hover:bg-gray-700">Appointments</a></li>
+  <li><a href="/calendar" class="block px-4 py-3 hover:bg-purple-200 dark:hover:bg-gray-700">Your Calendar</a></li>
+  <li><a href="/contact" class="block px-4 py-3 hover:bg-purple-200 dark:hover:bg-gray-700">Reach Us</a></li>
+  <li><a href="/aboutus" class="block px-4 py-3 hover:bg-purple-200 dark:hover:bg-gray-700">About Us</a></li>
+  <li><a href="/doctorsearch" class="block px-4 py-3 hover:bg-purple-200 dark:hover:bg-gray-700">Search</a></li>
 
-      <li><a href="/" class="block px-4 py-3 hover:bg-purple-200">Homepage</a></li>
-      <li><a href="/appoint" class="block px-4 py-3 hover:bg-purple-200">Appointments</a></li>
-      <li><a href="/calendar" class="block px-4 py-3 hover:bg-purple-200">Your Calendar</a></li>
-      <li><a href="/contact" class="block px-4 py-3 hover:bg-purple-200">Reach Us</a></li>
-      <li><a href="/aboutus" class="block px-4 py-3 hover:bg-purple-200">About Us</a>
-      <li><a href="/doctorsearch" class="block px-4 py-3 hover:bg-purple-200">Search</a></li>
-
-      {% if not current_user.is_authenticated %}
-      <li><a href="/login" class="block px-4 py-3 hover:bg-purple-200">Login</a></li>
-      <li><a href="/signup" class="block px-4 py-3 hover:bg-purple-200">Register</a></li>
-      {% else %}
-      <li><a href="/logout" class="block px-4 py-3 hover:bg-purple-100">Logout</a></li>
-      {% endif %}
-
-    </ul>
+  {% if not current_user.is_authenticated %}
+  <li><a href="/login" class="block px-4 py-3 hover:bg-purple-200 dark:hover:bg-gray-700">Login</a></li>
+  <li><a href="/signup" class="block px-4 py-3 hover:bg-purple-200 dark:hover:bg-gray-700">Register</a></li>
+  {% else %}
+  <li><a href="/logout" class="block px-4 py-3 hover:bg-purple-200 dark:hover:bg-gray-700">Logout</a></li>
+  {% endif %}
+</ul>
   </div>
 
 </nav>
