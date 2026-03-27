@@ -2,10 +2,10 @@ from flask import Flask, render_template, request, flash, redirect, abort
 from flask_login import LoginManager, login_user, logout_user, login_required, current_user
 import pymysql
 import datetime
+from zoneinfo import ZoneInfo
 import calendar as cal
 cal.setfirstweekday(cal.SUNDAY)
 from dynaconf import Dynaconf
-
 from flask_mail import Mail, Message
 from apscheduler.schedulers.background import BackgroundScheduler
 
@@ -83,7 +83,7 @@ def index():
 
 
 # ---------------- DOCTORS ----------------
-@app.route("/doctor")
+@app.route("/doctor", methods = ["POST"])
 def doctor():
     connection = connect_db()
     cursor = connection.cursor()
@@ -93,11 +93,12 @@ def doctor():
 
     connection.close()
 
-    return render_template("doctor.html.jinja", doctors=result)
+    return redirect ("/doctor", doctors=result)
 
 
 @app.route("/doctor/<Doctor_id>")
 def doctor_page(Doctor_id):
+   
 
     connection = connect_db()
     cursor = connection.cursor()
@@ -136,6 +137,45 @@ def doctor_page(Doctor_id):
     )
 
 
+@app.route("/doctor/<Doctorr_id>/remove_review", methods= ["POST"])
+@login_required
+def remove_review(Doctorr_id):
+  
+   connection = connect_db()
+   cursor = connection.cursor()
+   cursor.execute("""
+       DELETE FROM `Review`
+       WHERE `DoctorID` =%s AND `UserID`=%s
+        """, (Doctorr_id, current_user.id))
+   
+   connection.close()
+
+   return redirect(f"/doctor/{Doctorr_id}")
+
+@app.route("/doctor/<doc_id>/review", methods=["POST"])
+@login_required
+def review(doc_id):
+
+    comment = request.form["comments"]
+
+    ratings = request.form ["rating"]
+
+
+    connection = connect_db()
+
+    cursor = connection.cursor()
+
+    cursor.execute("""
+    INSERT INTO Review(`UserID`, `Comments`, `Rating`, `DoctorID`)
+    VALUES (%s, %s, %s, %s)
+
+
+""", (current_user.id, comment, ratings, doc_id ))
+    
+    connection.close()
+    
+    return redirect(f"/doctor/{doc_id}")
+     
 # ---------------- APPOINTMENTS ----------------
 @app.route("/appoint")
 @login_required
