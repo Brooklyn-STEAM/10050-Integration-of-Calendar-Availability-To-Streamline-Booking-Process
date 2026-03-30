@@ -267,20 +267,34 @@ def doctorsearch():
 
     search_query = request.args.get("q", "")
     category_filter = request.args.get("category", "")
+    rating_filter = request.args.get("rating", "")
 
     connection = connect_db()
     cursor = connection.cursor()
 
-    sql = "SELECT * FROM Doctor WHERE 1=1"
+    sql = """
+        SELECT d.*, AVG(r.Rating) as avg_rating
+        FROM Doctor d
+        LEFT JOIN Review r ON d.ID = r.DoctorID
+        WHERE 1=1
+    """
     params = []
 
     if search_query:
-        sql += " AND Name LIKE %s"
+        sql += " AND d.Name LIKE %s"
         params.append(f"%{search_query}%")
 
     if category_filter:
-        sql += " AND Category = %s"
+        sql += " AND d.Category = %s"
         params.append(category_filter)
+
+    sql += " GROUP BY d.ID"
+
+    if rating_filter:
+        sql += " HAVING avg_rating >= %s"
+        params.append(float(rating_filter))
+
+    sql += " ORDER BY d.Name"
 
     cursor.execute(sql, params)
     doctors = cursor.fetchall()
@@ -291,9 +305,9 @@ def doctorsearch():
         "doctorsearch.html.jinja",
         doctors=doctors,
         search_query=search_query,
-        category_filter=category_filter
+        category_filter=category_filter,
+        rating_filter=rating_filter
     )
-
 
 @app.route("/calendar")
 @login_required

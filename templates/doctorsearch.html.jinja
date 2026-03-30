@@ -47,6 +47,15 @@
     <form method="get" action="/doctorsearch"
   class="flex flex-col md:flex-row gap-4 mb-8 bg-white p-4 rounded-xl shadow-sm hover:shadow-md transition dark:bg-gray-900 dark:text-white">
 
+<select name="rating"
+  class="w-full md:w-1/4 px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 dark:bg-gray-900 dark:text-white">
+
+  <option value="">Any Rating</option>
+  <option value="4">4+ Stars</option>
+  <option value="3">3+ Stars</option>
+  <option value="2">2+ Stars</option>
+</select>
+
   <input type="text" name="q" value="{{ search_query|default('') }}"
     placeholder="Search doctors..."
     class="w-full px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 dark:bg-gray-900 dark:text-white" />
@@ -58,7 +67,7 @@
     <option value="Cardiology" {% if category_filter=='Cardiology' %}selected{% endif %}>Cardiology</option>
     <option value="Neurology" {% if category_filter=='Neurology' %}selected{% endif %}>Neurology</option>
     <option value="Orthopedic" {% if category_filter=='Orthopedic' %}selected{% endif %}>Orthopedics</option>
-
+    <option value="Pulmonary" {% if category_filter=='Pulmonary' %}selected{% endif %}>Pulmonary</option>
   </select>
 
   <button type="submit"
