@@ -657,13 +657,14 @@ def doctor_dashboard(doctor_id):
         abort(404)
 
     cursor.execute("""
-        SELECT Appointment.ID, Appointment.Date, Appointment.Type, Appointment.Status,
-               User.Name AS PatientName
-        FROM Appointment
-        JOIN User ON User.ID = Appointment.UserID
-        WHERE Appointment.DoctorID=%s
-        ORDER BY Appointment.Date
-    """, (doctor_id,))
+    SELECT Appointment.ID, Appointment.Date, Appointment.Type, Appointment.Status,
+           User.Name AS PatientName
+    FROM Appointment
+    JOIN User ON User.ID = Appointment.UserID
+    WHERE Appointment.DoctorID=%s
+      AND Appointment.Status != 'Cancelled'
+    ORDER BY Appointment.Date
+""", (doctor_id,))
 
     appointments = cursor.fetchall()
 
