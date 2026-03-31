@@ -10,24 +10,22 @@
 
 <body class="bg-purple-30 min-h-screen dark:bg-gray-900 dark:text-white">
 
-
     {% include "components/navbar.html.jinja" %}
 
-
-   {% with messages = get_flashed_messages(with_categories=true) %}
-  {% if messages %}
-    <div class="max-w-5xl mx-auto mt-6 px-4  dark:bg-gray-600 dark:text-white">
-      {% for category, message in messages %}
+    {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+    <div class="max-w-5xl mx-auto mt-6 px-4 dark:bg-gray-600 dark:text-white">
+        {% for category, message in messages %}
         <div class="mb-4 flex items-center justify-between p-4 rounded-lg shadow-sm border
-          {% if category == 'error' %}
-              bg-red-50 border-red-200 text-red-700
-          {% elif category == 'success' %}
-              bg-green-50 border-green-200 text-green-700
-          {% elif category == 'warning' %}
-              bg-yellow-50 border-yellow-200 text-yellow-700
-          {% else %}
-              bg-purple-50 border-purple-200 text-purple-800
-          {% endif %}
+            {% if category == 'error' %}
+                bg-red-50 border-red-200 text-red-700
+            {% elif category == 'success' %}
+                bg-green-50 border-green-200 text-green-700
+            {% elif category == 'warning' %}
+                bg-yellow-50 border-yellow-200 text-yellow-700
+            {% else %}
+                bg-purple-50 border-purple-200 text-purple-800
+            {% endif %}
         ">
             <div class="flex items-center gap-3">
                 {% if category == 'error' %}
@@ -48,113 +46,95 @@
     {% endwith %}
 
     <div class="max-w-7xl mx-auto p-6 dark:bg-gray-900 dark:text-white">
-
         <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
 
-
-            <div class="lg:col-span-4 bg-white p-2 rounded shadow  dark:bg-gray-900 dark:text-white">
+            <!-- Doctor Image -->
+            <div class="lg:col-span-4 bg-white p-2 rounded shadow dark:bg-gray-900 dark:text-white">
                 <img src="{{ doctor['Image'] }}" alt="{{ doctor['Name'] }}" class="w-full rounded-lg object-cover" />
             </div>
 
-
-            <div class="lg:col-span-5 space-y-4 ">
-
+            <!-- Doctor Info -->
+            <div class="lg:col-span-5 space-y-4">
                 <h1 class="text-3xl font-bold text-purple-900 dark:text-white">
                     Dr. {{ doctor['Name'] }}
                 </h1>
-
                 <p class="text-lg text-purple-900 font-semibold dark:text-white">
                     {{ doctor['Category'] }} • {{ doctor['Type'] }}
                 </p>
-
-                <p class="text-black dark:text-white">
-                    📍 {{ doctor['Location'] }}
-                </p>
-
+                <p class="text-black dark:text-white">📍 {{ doctor['Location'] }}</p>
 
                 <div class="flex items-center space-x-2 dark:bg-gray-900 dark:text-white">
                     {% if average_rating %}
                     <p class="text-black font-semibold">
                         Average Rating: {{ average_rating }}/5
                     </p>
-                    <p class="text-gray-500">
-                        ({{ reviews|length }} reviews)
-                    </p>
+                    <p class="text-gray-500">({{ reviews|length }} reviews)</p>
                     {% else %}
-                    <p class="text-gray-500">
-                        Scroll to see reviews from patients ↓
-                    </p>
+                    <p class="text-gray-500">Scroll to see reviews from patients ↓</p>
                     {% endif %}
                 </div>
 
-
                 <div class="bg-white p-4 rounded shadow-sm dark:bg-gray-900 dark:text-white">
-                    <h2 class="text-xl font-semibold text-gray-800 mb-2 dark:text-white">
-                        About
-                    </h2>
+                    <h2 class="text-xl font-semibold text-gray-800 mb-2 dark:text-white">About</h2>
                     <p class="text-gray-700 leading-relaxed dark:text-white">
                         {{ doctor['Description'] }}
                     </p>
                 </div>
 
-
                 <div class="bg-white p-4 rounded shadow-sm dark:bg-gray-900 dark:text-white">
-                    <h2 class="text-xl font-semibold text-gray-800 mb-2 dark:text-white">
-                        Accepted Insurance
-                    </h2>
-                    <p class="text-gray-700 dark:text-white">
-                        {{ doctor['Insurance'] }}
-                    </p>
+                    <h2 class="text-xl font-semibold text-gray-800 mb-2 dark:text-white">Accepted Insurance</h2>
+                    <p class="text-gray-700 dark:text-white">{{ doctor['Insurance'] }}</p>
                 </div>
-
             </div>
 
+            <!-- Booking Section -->
             <div class="lg:col-span-3">
                 <div class="bg-white p-6 rounded shadow space-y-4 dark:bg-gray-600 dark:text-white">
 
-                    <h2 class="text-xl font-semibold text-purple-800 dark:text-white">
-                        Book an Appointment
-                    </h2>
+                    <h2 class="text-xl font-semibold text-purple-800 dark:text-white">Book an Appointment</h2>
+                    <p class="text-purple-800 font-semibold dark:text-white">Accepting New Patients</p>
 
-                    <p class="text-purple-800 font-semibold dark:text-white">
-                        Accepting New Patients
-                    </p>
-
-                    <form method="post" action="/doctor/{{ doctor['ID'] }}/book" class="space-y-3 ">
-
+                    <!-- Date selector -->
+                    <form method="get" action="" class="space-y-3">
                         <div>
-                            <label class="block mb-1 text-sm font-medium text-gray-600">
-                                Select Date
-                            </label>
-                            <input type="date" name="date" required
+                            <label class="block mb-1 text-sm font-medium text-gray-600">Select Date</label>
+                            <input type="date" name="date" value="{{ selected_date }}" required
                                 class="w-full px-3 py-2 border border-purple-300 rounded-md focus:outline-none focus:ring-1 focus:ring-[#e6af6c]" />
                         </div>
+                        <button type="submit"
+                            class="px-4 py-2 bg-purple-700 text-white rounded hover:bg-purple-800">Check Availability</button>
+                    </form>
 
-                        <div>
-                            <label class="block mb-1 text-sm font-medium text-gray-600">
-                                Select Time
-                            </label>
-                            <input type="time" name="time" required
-                                class="w-full px-3 py-2 border border-purple-300 rounded-md focus:outline-none focus:ring-1 focus:ring-[#e6af6c]" />
+                    <!-- Available Slots -->
+                    {% if available_slots %}
+                    <div class="mt-4">
+                        <h3 class="font-semibold">Available Times:</h3>
+                        <div class="flex flex-wrap gap-2 mt-2">
+                            {% for slot in available_slots %}
+                            <form method="post" action="/doctor/{{ doctor['ID'] }}/book">
+                                <input type="hidden" name="date" value="{{ selected_date }}">
+                                <input type="hidden" name="time" value="{{ slot }}">
+                                <input type="hidden" name="visit_type" value="General">
+
+                                <button class="px-3 py-1 bg-purple-600 text-white rounded hover:bg-purple-700">
+                                    {{ slot }}
+                                </button>
+                            </form>
+                            {% endfor %}
                         </div>
+                    </div>
+                    {% endif %}
 
+                    <!-- Visit Type Selector -->
+                    <form method="post" action="/doctor/{{ doctor['ID'] }}/book" class="space-y-3 mt-3">
                         <div>
-                            <label class="block mb-1 text-sm font-medium text-gray-600">
-                                Visit Type
-                            </label>
+                            <label class="block mb-1 text-sm font-medium text-gray-600">Visit Type</label>
                             <select name="visit_type"
                                 class="w-full px-3 py-2 border border-purple-300 rounded-md focus:outline-none focus:ring-1 focus:ring-[#e6af6c]">
                                 <option value="In-Person">In-Person</option>
                                 <option value="Virtual">Virtual</option>
                             </select>
                         </div>
-
-                        <button
-                            class="w-full py-2 bg-purple-700 text-white rounded-full font-semibold hover:bg-purple-800 transition">
-                            Confirm Appointment
-                        </button>
-
-
                     </form>
 
                 </div>
@@ -163,22 +143,17 @@
         </div>
     </div>
 
-
+    <!-- Reviews Section -->
     <div class="max-w-4xl mx-auto p-6 mt-12 dark:bg-gray-900 dark:text-white">
         <div class="bg-white rounded shadow p-6 dark:bg-gray-900 dark:text-white">
 
-            <h2 class="text-2xl font-bold text-gray-900 mb-6 text-center dark:text-white">
-                Patient Reviews
-            </h2>
-
+            <h2 class="text-2xl font-bold text-gray-900 mb-6 text-center dark:text-white">Patient Reviews</h2>
 
             <form method="post" action="/doctor/{{doctor['ID']}}/review"
                 class="max-w-lg mx-auto bg-white p-6 rounded-lg shadow-md space-y-4 dark:bg-gray-600">
 
                 <div class="w-24">
-                    <label class="block mb-1 text-xs font-medium text-gray-600 dark:bg-gray-600 dark:text-white">
-                        Rating
-                    </label>
+                    <label class="block mb-1 text-xs font-medium text-gray-600 dark:bg-gray-600 dark:text-white">Rating</label>
                     <select name="rating"
                         class="w-full px-2 py-1 text-sm font-semibold border border-gray-300 dark:bg-gray-600 dark:text-white rounded-md bg-white focus:outline-none focus:ring-1 focus:ring-[#e6af6c]">
                         <option value="1">1</option>
@@ -188,113 +163,63 @@
                         <option value="5">5</option>
                     </select>
                 </div>
-               
 
                 <div>
-                    <label class="block text-gray-800 font-semibold mb-2 dark:text-white">
-                        Your Name
-                    </label>
+                    <label class="block text-gray-800 font-semibold mb-2 dark:text-white">Your Name</label>
                     <input type="text" name="name" required
                         class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-[#e6af6c]" />
                 </div>
 
                 <div>
-                    <label class="block text-gray-800 font-semibold mb-2 dark:text-white">
-                        Your Review
-                    </label>
+                    <label class="block text-gray-800 font-semibold mb-2 dark:text-white">Your Review</label>
                     <textarea name="comments" required rows="4"
-                        class="w-full  dark:text-white border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-[#e6af6c]"></textarea>
+                        class="w-full dark:text-white border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-[#e6af6c]"></textarea>
                 </div>
 
-                <button type="submit">
-                    <p
-                        class="w-full px-6 py-2 bg-purple-700 text-white border border-purple-300 rounded-full font-semibold hover:bg-purple-800 transition-colors">
-                        Submit Review
+                <button type="submit" class="w-full px-6 py-2 bg-purple-700 text-white border border-purple-300 rounded-full font-semibold hover:bg-purple-800 transition-colors">
+                    Submit Review
                 </button>
-                </p>
             </form>
 
-
-            <h2 class="text-2xl font-bold text-gray-800 mt-10 mb-4 text-center dark:text-white">
-                Reviews
-            </h2>
+            <h2 class="text-2xl font-bold text-gray-800 mt-10 mb-4 text-center dark:text-white">Reviews</h2>
 
             <div class="max-w-lg mx-auto space-y-4 dark:text-white">
                 {% for review in reviews %}
-                
                 <div class="border border-gray-200 p-4 rounded-lg shadow-sm bg-white">
-                
-                
-                    <p class="font-semibold text-gray-700">
-                        {{ review["Name"] }}
-                    </p>
-                    <p class="text-gray-600 mt-1">
-                        {{ review["Comments"] }}
-                    </p>
-                    <p class="text-sm text-gray-500 mt-2">
-                        Rating: {{ review["Rating"] }}/5
-                    </p>
+                    <p class="font-semibold text-gray-700">{{ review["Name"] }}</p>
+                    <p class="text-gray-600 mt-1">{{ review["Comments"] }}</p>
+                    <p class="text-sm text-gray-500 mt-2">Rating: {{ review["Rating"] }}/5</p>
                     <p class="text-sm text-gray-400 mt-1">
-                        Posted on: {{ review["timestamp"].strftime('%m/%d/%Y %I:%M %p')}}
-
-
-                    <form method="POST" action="/doctor/{{review['DoctorID']}}/remove_review">
-               <button class="border" type="submit">Remove</button>
-               </form>
-
-
+                        Posted on: {{ review["timestamp"].strftime('%m/%d/%Y %I:%M %p') }}
+                        <form method="POST" action="/doctor/{{review['DoctorID']}}/remove_review">
+                            <button class="border" type="submit">Remove</button>
+                        </form>
                     </p>
                 </div>
                 {% else %}
-                <p class="text-center text-gray-500 dark:text-white">
-                    No reviews yet.
-                </p>
+                <p class="text-center text-gray-500 dark:text-white">No reviews yet.</p>
                 {% endfor %}
-
-
-                
-
-
-                
-    
-
-               
             </div>
 
         </div>
     </div>
 
-    
+    <script>
+        const toggle = document.getElementById("theme-toggle");
 
+        if (localStorage.getItem("theme") === "dark") {
+            document.documentElement.classList.add("dark");
+        }
 
+        toggle.textContent = document.documentElement.classList.contains("dark") ? "☀️" : "🌙";
 
-
-
-
-<script>
-  const toggle = document.getElementById("theme-toggle");
-
-  // Load saved theme
-  if (localStorage.getItem("theme") === "dark") {
-    document.documentElement.classList.add("dark");
-  }
-
-  // Set icon on load
-  toggle.textContent = document.documentElement.classList.contains("dark") ? "☀️" : "🌙";
-
-  toggle.addEventListener("click", () => {
-    document.documentElement.classList.toggle("dark");
-
-    if (document.documentElement.classList.contains("dark")) {
-      localStorage.setItem("theme", "dark");
-      toggle.textContent = "☀️";
-    } else {
-      localStorage.setItem("theme", "light");
-      toggle.textContent = "🌙";
-    }
-  });
-</script>
+        toggle.addEventListener("click", () => {
+            document.documentElement.classList.toggle("dark");
+            localStorage.setItem("theme", document.documentElement.classList.contains("dark") ? "dark" : "light");
+            toggle.textContent = document.documentElement.classList.contains("dark") ? "☀️" : "🌙";
+        });
+    </script>
 
 </body>
 
-</html >
+</html>

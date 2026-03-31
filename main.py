@@ -42,6 +42,18 @@ def connect_db():
     )
     return conn
 
+def generate_time_slots(start_hour=9, end_hour=17, interval=20):
+    slots = []
+    current = datetime.datetime.combine(datetime.date.today(), datetime.time(start_hour, 0))
+
+    end_time = datetime.datetime.combine(datetime.date.today(), datetime.time(end_hour, 0))
+
+    while current < end_time:
+        slots.append(current.strftime("%H:%M"))
+        current += datetime.timedelta(minutes=interval)
+
+    return slots
+
 
 # ---------------- USER CLASS ----------------
 class User:
@@ -95,14 +107,13 @@ def doctor():
 
     return redirect ("/doctor", doctors=result)
 
-
 @app.route("/doctor/<Doctor_id>")
 def doctor_page(Doctor_id):
-   
 
     connection = connect_db()
     cursor = connection.cursor()
 
+    # ---------------- GET DOCTOR ----------------
     cursor.execute("SELECT * FROM Doctor WHERE ID = %s", (Doctor_id,))
     doctor = cursor.fetchone()
 
@@ -110,6 +121,7 @@ def doctor_page(Doctor_id):
         connection.close()
         abort(404)
 
+    # ---------------- GET REVIEWS ----------------
     cursor.execute("""
         SELECT * FROM Review
         JOIN User ON User.ID = Review.UserID
@@ -117,6 +129,7 @@ def doctor_page(Doctor_id):
     """, (Doctor_id,))
     reviews = cursor.fetchall()
 
+    # ---------------- GET BLOCKED DATES ----------------
     cursor.execute("""
         SELECT DATE(AvailableDate) AS blocked_date
         FROM DoctorAvailability
@@ -127,15 +140,45 @@ def doctor_page(Doctor_id):
         for row in cursor.fetchall()
     ]
 
+    # ---------------- TIME SLOT LOGIC ----------------
+    selected_date = request.args.get("date")
+    available_slots = []
+
+    if selected_date:
+
+        # If doctor is unavailable that day
+        if selected_date in blocked_dates:
+            available_slots = []
+
+        else:
+            # Generate 1-hour slots (9AM → 4PM)
+            all_slots = [f"{hour:02d}:00" for hour in range(9, 17)]
+
+            # Get already booked times (FIXED %%)
+            cursor.execute("""
+                SELECT DATE_FORMAT(Date, '%%H:%%i') as booked_time
+                FROM Appointment
+                WHERE DoctorID = %s
+                AND DATE(Date) = %s
+                AND Status != 'Cancelled'
+            """, (Doctor_id, selected_date))
+
+            booked = [row["booked_time"] for row in cursor.fetchall()]
+
+            # Remove booked slots
+            available_slots = [slot for slot in all_slots if slot not in booked]
+
     connection.close()
 
+    # ---------------- RENDER ----------------
     return render_template(
         "doctor.html.jinja",
         doctor=doctor,
         reviews=reviews,
-        blocked_dates=blocked_dates
+        blocked_dates=blocked_dates,
+        available_slots=available_slots,
+        selected_date=selected_date
     )
-
 
 @app.route("/doctor/<Doctorr_id>/remove_review", methods= ["POST"])
 @login_required
