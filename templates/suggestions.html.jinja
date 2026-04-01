@@ -6,25 +6,25 @@
     <link rel="shortcut icon" href="/static/images/logotab.png" type="image/x-icon">
 </head>
 
-<body class="bg-gray-100 p-10">
+<body class="bg-gray-100 p-10  dark:bg-gray-900 dark:text-white">
 
-<h1 class="text-2xl font-bold mb-6 text-center">
+<h1 class="text-2xl font-bold mb-6 text-center dark:text-white">
     Available Doctors on {{ selected_date }}
 </h1>
 
 <div class="max-w-3xl mx-auto space-y-4">
 
     {% for doctor in doctors %}
-        <div class="bg-white p-4 rounded-lg shadow">
-            <h2 class="text-lg font-semibold">
+        <div class="bg-white p-4 rounded-lg shadow dark:bg-gray-600 dark:text-white">
+            <h2 class="text-lg font-semibold dark:bg-gray-600 dark:text-white">
                 Dr. {{ doctor.Name }}
             </h2>
-            <p class="text-sm text-gray-600">
+            <p class="text-sm text-gray-600 dark:bg-gray-600 dark:text-white">
                 {{ doctor.Category }} • {{ doctor.Location }}
             </p>
 
             <a href="/doctor/{{ doctor.ID }}"
-               class="inline-block mt-2 text-purple-700 hover:underline">
+               class="inline-block mt-2 text-purple-700 hover:underline dark:bg-gray-600 dark:text-indigo-400 ">
                View Profile
             </a>
         </div>
