@@ -113,15 +113,12 @@ def doctor_page(Doctor_id):
     connection = connect_db()
     cursor = connection.cursor()
 
-    # ---------------- GET DOCTOR ----------------
     cursor.execute("SELECT * FROM Doctor WHERE ID = %s", (Doctor_id,))
     doctor = cursor.fetchone()
 
     if doctor is None:
         connection.close()
         abort(404)
-
-    # ---------------- GET REVIEWS ----------------
     cursor.execute("""
         SELECT * FROM Review
         JOIN User ON User.ID = Review.UserID
@@ -129,7 +126,6 @@ def doctor_page(Doctor_id):
     """, (Doctor_id,))
     reviews = cursor.fetchall()
 
-    # ---------------- GET BLOCKED DATES ----------------
     cursor.execute("""
         SELECT DATE(AvailableDate) AS blocked_date
         FROM DoctorAvailability
@@ -140,21 +136,17 @@ def doctor_page(Doctor_id):
         for row in cursor.fetchall()
     ]
 
-    # ---------------- TIME SLOT LOGIC ----------------
     selected_date = request.args.get("date")
     available_slots = []
 
     if selected_date:
 
-        # If doctor is unavailable that day
         if selected_date in blocked_dates:
             available_slots = []
 
         else:
-            # Generate 1-hour slots (9AM → 4PM)
             all_slots = [f"{hour:02d}:00" for hour in range(9, 17)]
 
-            # Get already booked times (FIXED %%)
             cursor.execute("""
                 SELECT DATE_FORMAT(Date, '%%H:%%i') as booked_time
                 FROM Appointment
@@ -165,12 +157,11 @@ def doctor_page(Doctor_id):
 
             booked = [row["booked_time"] for row in cursor.fetchall()]
 
-            # Remove booked slots
+
             available_slots = [slot for slot in all_slots if slot not in booked]
 
     connection.close()
 
-    # ---------------- RENDER ----------------
     return render_template(
         "doctor.html.jinja",
         doctor=doctor,
