@@ -305,12 +305,50 @@ def suggest_doctors():
         category_filter=category
     )
 # ---------------- BOOK APPOINTMENT ----------------
+
+SYMPTOM_MAP = {
+    # ---------------- NEUROLOGY ----------------
+    "headache": ["Neurology"],
+    "migraine": ["Neurology"],
+    "dizziness": ["Neurology"],
+    "seizure": ["Neurology"],
+    "memory loss": ["Neurology"],
+    "numbness": ["Neurology"],
+    "tingling": ["Neurology"],
+
+    # ---------------- ORTHOPEDICS ----------------
+    "bone pain": ["Orthopedic"],
+    "fracture": ["Orthopedic"],
+    "joint pain": ["Orthopedic"],
+    "back pain": ["Orthopedic"],
+    "knee pain": ["Orthopedic"],
+    "shoulder pain": ["Orthopedic"],
+    "sprain": ["Orthopedic"],
+
+    # ---------------- CARDIOLOGY ----------------
+    "chest pain": ["Cardiology"],
+    "heart pain": ["Cardiology"],
+    "palpitations": ["Cardiology"],
+    "high blood pressure": ["Cardiology"],
+    "hypertension": ["Cardiology"],
+    "shortness of breath": ["Cardiology"],
+
+    # ---------------- PULMONOLOGY ----------------
+    "cough": ["Pulmonary"],
+    "breathing": ["Pulmonary"],
+    "shortness of breath": ["Pulmonary"],
+    "asthma": ["Pulmonary"],
+    "wheezing": ["Pulmonary"],
+    "lung pain": ["Pulmonary"],
+}
+
 @app.route("/doctorsearch", methods=["GET"])
 def doctorsearch():
 
     search_query = request.args.get("q", "")
     category_filter = request.args.get("category", "")
     rating_filter = request.args.get("rating", "")
+    symptom_input = request.args.get("symptoms", "").lower()
 
     connection = connect_db()
     cursor = connection.cursor()
@@ -331,6 +369,19 @@ def doctorsearch():
         sql += " AND d.Category = %s"
         params.append(category_filter)
 
+    # -------- SYMPTOM FILTER --------
+    if symptom_input:
+        matched_categories = set()
+
+        for keyword, categories in SYMPTOM_MAP.items():
+            if keyword in symptom_input:
+                matched_categories.update(categories)
+
+        if matched_categories:
+            placeholders = ", ".join(["%s"] * len(matched_categories))
+            sql += f" AND d.Category IN ({placeholders})"
+            params.extend(list(matched_categories))
+
     sql += " GROUP BY d.ID"
 
     if rating_filter:
@@ -349,9 +400,9 @@ def doctorsearch():
         doctors=doctors,
         search_query=search_query,
         category_filter=category_filter,
-        rating_filter=rating_filter
+        rating_filter=rating_filter,
+        symptom_input=symptom_input
     )
-
 @app.route("/calendar")
 @login_required
 def calendar_view():
