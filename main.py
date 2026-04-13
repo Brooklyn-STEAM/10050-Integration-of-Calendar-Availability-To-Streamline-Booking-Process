@@ -107,6 +107,30 @@ def doctor():
 
     return redirect ("/doctor", doctors=result)
 
+@app.route("/doctor/<int:doctor_id>/reply_review", methods=["POST"])
+def reply_review(doctor_id):
+    review_id = request.form.get("review_id")
+    reply = request.form.get("reply")
+
+    if not review_id or not reply:
+        flash("Reply cannot be empty", "error")
+        return redirect(f"/doctor/{doctor_id}")
+
+    connection = connect_db()
+    cursor = connection.cursor()
+
+    cursor.execute("""
+        UPDATE Review
+        SET Reply = %s
+        WHERE ID = %s AND DoctorID = %s
+    """, (reply, review_id, doctor_id))
+
+    connection.commit()
+    connection.close()
+
+    flash("Reply added successfully!", "success")
+    return redirect(f"/doctor/{doctor_id}")
+
 @app.route("/doctor/<Doctor_id>")
 def doctor_page(Doctor_id):
 
@@ -123,10 +147,10 @@ def doctor_page(Doctor_id):
 
     # ---------------- GET REVIEWS ----------------
     cursor.execute("""
-        SELECT * FROM Review
-        JOIN User ON User.ID = Review.UserID
-        WHERE Review.DoctorID = %s
-    """, (Doctor_id,))
+    SELECT * FROM Review
+    JOIN User ON User.ID = Review.UserID
+    WHERE Review.DoctorID = %s
+""", (Doctor_id,))
     reviews = cursor.fetchall()
 
     # ---------------- GET BLOCKED DATES ----------------
@@ -791,13 +815,24 @@ def doctor_appointments(doctor_id):
 
     appointments = cursor.fetchall()
 
+    cursor.execute("""
+    SELECT Review.*, User.Name AS PatientName
+    FROM Review
+    JOIN User ON User.ID = Review.UserID
+    WHERE Review.DoctorID = %s
+    ORDER BY Review.ID DESC
+""", (doctor_id,))
+
+    reviews = cursor.fetchall()
+
     connection.close()
 
     return render_template(
-        "doctorappoint.html.jinja",
-        doctor=doctor,
-        appointments=appointments
-    )
+    "doctorappoint.html.jinja",
+    doctor=doctor,
+    appointments=appointments,
+    reviews=reviews
+)
 
 
 @app.route("/doctor/<int:doctor_id>/calendar")
