@@ -428,6 +428,7 @@ def calendar_view():
     )
 
 
+
 @app.route("/doctor/<Doctor_id>/book", methods=["POST"])
 @login_required
 def book_appointment(Doctor_id):
@@ -440,15 +441,21 @@ def book_appointment(Doctor_id):
         flash("Please provide date, time, and visit type.")
         return redirect(f"/doctor/{Doctor_id}")
 
-    start_datetime = datetime.datetime.strptime(
-        f"{date} {time}", "%Y-%m-%d %H:%M"
-    )
+    try:
+        start_datetime = datetime.datetime.strptime(
+            f"{date} {time}", "%Y-%m-%d %H:%M"
+        )
+    except ValueError:
+        flash("Invalid date or time format.")
+        return redirect(f"/doctor/{Doctor_id}")
+
     end_datetime = start_datetime + datetime.timedelta(minutes=20)
-    
+
     now = datetime.datetime.now()
     if start_datetime <= now:
         flash("You cannot book an appointment in the past.")
         return redirect(f"/doctor/{Doctor_id}")
+
     connection = connect_db()
     cursor = connection.cursor()
 
@@ -487,10 +494,29 @@ def book_appointment(Doctor_id):
     """, (Doctor_id, current_user.id, start_datetime, visit_type, "Scheduled"))
 
     connection.commit()
+
+    cursor.execute("SELECT Name, Email FROM User WHERE ID = %s", (current_user.id,))
+    user = cursor.fetchone()
+
+    cursor.execute("SELECT Name FROM Doctor WHERE ID = %s", (Doctor_id,))
+    doctor = cursor.fetchone()
+
     connection.close()
 
+    try:
+        send_confirmation_email(
+            user["Email"],
+            doctor["Name"],
+            start_datetime,
+            user["Name"],
+            visit_type
+        )
+    except Exception as e:
+        print(f"Error sending confirmation email: {e}")
+
     flash("Appointment successfully booked!")
-    return redirect("/appoint")
+    return redirect("/thanks")
+
 
 
 
@@ -1089,7 +1115,40 @@ def check_appointment_reminders():
         )
 
 
+# ---------------- CONFIRMATION EMAIL ----------------------
+def send_confirmation_email(email, doctor_name, appointment_time, patient_name, visit_type):
+    with app.app_context():
+        msg = Message(
+            subject="BookWell Appointment Confirmation",
+            recipients=[email],
+        )
 
+        msg.body = f"""
+Dear {patient_name},
+
+Your appointment has been successfully scheduled with BookWell. Please find your appointment details below:
+
+Doctor: Dr. {doctor_name}
+Date: {appointment_time.strftime('%Y-%m-%d')}
+Time: {appointment_time.strftime('%H:%M')}
+Visit Type: {visit_type}
+
+We recommend arriving at least 5–10 minutes early to ensure a smooth check-in process.
+
+If you need to reschedule or cancel your appointment, you can do so by logging into your BookWell account.
+
+If you have any questions or need assistance, feel free to contact our support team.
+
+Thank you for choosing BookWell for your healthcare needs.
+
+Warm regards,  
+The BookWell Team
+"""
+        try:
+            mail.send(msg)
+            print("Confirmation email sent successfully.")
+        except Exception as e:
+            print(f"Failed to send confirmation email: {e}")
 
 
 
