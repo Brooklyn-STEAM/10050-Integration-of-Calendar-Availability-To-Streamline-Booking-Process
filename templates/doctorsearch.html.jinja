@@ -42,6 +42,12 @@
 
 
   <div class="max-w-6xl mx-auto px-4 py-8 page-fade">
+  {% if recommended_categories %}
+<div style="margin: 10px 0; padding:10px; background:hwb(269 22% 5%); border-radius:8px;">
+    <strong>Recommended Specialty:</strong>
+    {{ recommended_categories | join(", ") }}
+</div>
+{% endif %}
 
 
     <form method="get" action="/doctorsearch"
@@ -56,10 +62,22 @@
   <option value="2">2+ Stars</option>
 </select>
 
-  <input type="text" name="symptoms" placeholder="Enter symptoms (e.g. headache, skin rash)" value="{{ symptom_input }}"
-    class="w-full px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 dark:bg-gray-900 dark:text-white" />
+ <input type="text" id="symptoms" name="symptoms"
+       list="symptom-list"
+       placeholder="Enter symptoms (e.g. chest pain, seizure)"
+       value="{{ symptom_input or '' }}"
+       class="w-full px-4 py-2 border border-gray-200 rounded-lg">
+
+<datalist id="symptom-list">
+  {% for symptom in SYMPTOM_MAP.keys() %}
+    <option value="{{ symptom }}">
+  {% endfor %}
+</datalist>
+
+<div id="suggestion" style="margin-top:8px; font-weight:bold; color:#f2eeeb;"></div>
+
   <select name="category"
-    class="w-full md:w-1/3 px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 dark:bg-gray-900 dark:text-white">
+  class="w-full md:w-1/3 px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 dark:bg-gray-900 dark:text-white">
 
     <option value="">All Categories</option>
     <option value="Cardiology" {% if category_filter=='Cardiology' %}selected{% endif %}>Cardiology</option>
@@ -102,29 +120,31 @@
 
   </div>
 
-  <script>
-  const toggle = document.getElementById("theme-toggle");
+ <script id="symptom-js">
+const symptomMap = {{ SYMPTOM_MAP | tojson }};
 
-  // Load saved theme
-  if (localStorage.getItem("theme") === "dark") {
-    document.documentElement.classList.add("dark");
-  }
+const input = document.getElementById("symptoms");
+const suggestionBox = document.getElementById("suggestion");
 
+input.addEventListener("input", function () {
+    const value = input.value.toLowerCase();
+    let matchedCategories = new Set();
 
-  toggle.textContent = document.documentElement.classList.contains("dark") ? "☀️" : "🌙";
-
-  toggle.addEventListener("click", () => {
-    document.documentElement.classList.toggle("dark");
-
-    if (document.documentElement.classList.contains("dark")) {
-      localStorage.setItem("theme", "dark");
-      toggle.textContent = "☀️";
-    } else {
-      localStorage.setItem("theme", "light");
-      toggle.textContent = "🌙";
+    for (const keyword in symptomMap) {
+        if (value.includes(keyword)) {
+            symptomMap[keyword].forEach(cat => matchedCategories.add(cat));
+        }
     }
-  });
+
+    if (matchedCategories.size > 0) {
+        suggestionBox.innerText = "Recommended: " + [...matchedCategories].join(", ");
+    } else {
+        suggestionBox.innerText = "";
+    }
+});
 </script>
+
+
 
 </body>
 

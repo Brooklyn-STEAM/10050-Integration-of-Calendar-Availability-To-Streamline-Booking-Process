@@ -393,10 +393,10 @@ def doctorsearch():
         sql += " AND d.Category = %s"
         params.append(category_filter)
 
-    # -------- SYMPTOM FILTER --------
-    if symptom_input:
-        matched_categories = set()
+    # -------- SYMPTOM FILTER + RECOMMENDATION --------
+    matched_categories = set()
 
+    if symptom_input:
         for keyword, categories in SYMPTOM_MAP.items():
             if keyword in symptom_input:
                 matched_categories.update(categories)
@@ -419,14 +419,20 @@ def doctorsearch():
 
     connection.close()
 
+    # Convert to list for template use
+    recommended_categories = list(matched_categories)
+
     return render_template(
         "doctorsearch.html.jinja",
         doctors=doctors,
         search_query=search_query,
         category_filter=category_filter,
         rating_filter=rating_filter,
-        symptom_input=symptom_input
+        symptom_input=symptom_input,
+        recommended_categories=recommended_categories,
+        SYMPTOM_MAP=SYMPTOM_MAP 
     )
+
 @app.route("/calendar")
 @login_required
 def calendar_view():
