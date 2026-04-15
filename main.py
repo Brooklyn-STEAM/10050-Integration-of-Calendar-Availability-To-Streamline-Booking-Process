@@ -8,6 +8,7 @@ cal.setfirstweekday(cal.SUNDAY)
 from dynaconf import Dynaconf
 from flask_mail import Mail, Message
 from apscheduler.schedulers.background import BackgroundScheduler
+from collections import Counter
 
 app = Flask(__name__)
 
@@ -356,6 +357,11 @@ SYMPTOM_MAP = {
     "high blood pressure": ["Cardiology"],
     "hypertension": ["Cardiology"],
     "shortness of breath": ["Cardiology"],
+    "Palpitation": ["Cardiology"],
+    "Fainting": ["Cardiology"],
+     "Swelling": ["Cardiology"],
+     "Back pain": ["Cardiology"],
+
 
     # ---------------- PULMONOLOGY ----------------
     "cough": ["Pulmonary"],
@@ -365,6 +371,49 @@ SYMPTOM_MAP = {
     "wheezing": ["Pulmonary"],
     "lung pain": ["Pulmonary"],
 }
+SPECIALIST_GUIDE = {
+    "Cardiology": {
+        "urgency": "high",
+        "message": "Possible heart-related issue. Seek care within 24 hours or immediately if severe."
+    },
+    "Pulmonary": {
+        "urgency": "medium",
+        "message": "Breathing-related symptoms detected. Schedule a visit soon."
+    },
+    "Neurology": {
+        "urgency": "medium",
+        "message": "Neurological symptoms detected. Consider seeing a specialist listed below."
+    },
+    "Orthopedic": {
+        "urgency": "low",
+        "message": "Musculoskeletal issue likely. Book a routine appointment."
+    }
+}
+def analyze_symptoms(user_input):
+    symptoms = [s.strip().lower() for s in user_input.split(",")]
+
+    matches = []
+
+    for symptom in symptoms:
+        for key in SYMPTOM_MAP:
+            if key in symptom:
+                matches.extend(SYMPTOM_MAP[key])
+
+    if not matches:
+        return {
+            "specialist": "General Physician",
+            "urgency": "low",
+            "message": "Symptoms unclear. Consider a general consultation."
+        }
+
+    most_common = Counter(matches).most_common(1)[0][0]
+    guide = SPECIALIST_GUIDE.get(most_common)
+
+    return {
+        "specialist": most_common,
+        "urgency": guide["urgency"],
+        "message": guide["message"]
+    }
 
 @app.route("/doctorsearch", methods=["GET"])
 def doctorsearch():
@@ -373,6 +422,9 @@ def doctorsearch():
     category_filter = request.args.get("category", "")
     rating_filter = request.args.get("rating", "")
     symptom_input = request.args.get("symptoms", "").lower()
+    result = None
+    if symptom_input:
+        result = analyze_symptoms(symptom_input)
 
     connection = connect_db()
     cursor = connection.cursor()
@@ -430,7 +482,9 @@ def doctorsearch():
         rating_filter=rating_filter,
         symptom_input=symptom_input,
         recommended_categories=recommended_categories,
-        SYMPTOM_MAP=SYMPTOM_MAP 
+        SYMPTOM_MAP=SYMPTOM_MAP,
+        result=result
+
     )
 
 @app.route("/calendar")
