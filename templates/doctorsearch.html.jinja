@@ -48,11 +48,9 @@
     {% if result.urgency == 'high' %}
       bg-red-50 border-red-200 text-red-900
       dark:bg-red-950/30 dark:border-red-800 dark:text-red-200
-
     {% elif result.urgency == 'medium' %}
       bg-yellow-50 border-yellow-200 text-yellow-900
       dark:bg-yellow-950/30 dark:border-yellow-800 dark:text-yellow-200
-
     {% else %}
       bg-green-50 border-green-200 text-green-900
       dark:bg-green-950/30 dark:border-green-800 dark:text-green-200
@@ -69,6 +67,27 @@
     <p class="text-xs mt-2 opacity-70">
       This is not medical advice. If symptoms are severe, seek emergency care.
     </p>
+
+    
+    {% if result.urgency == 'high' %}
+      <div class="mt-4 flex gap-3">
+
+        <form method="POST" action="/auto-book">
+          <input type="hidden" name="category" value="{{ result.specialist }}">
+          <button type="submit"
+            class="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition">
+            Yes, book now
+          </button>
+        </form>
+
+        <button onclick="this.parentElement.style.display='none'"
+          class="bg-gray-200 dark:bg-gray-700 px-4 py-2 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600">
+          No
+        </button>
+
+      </div>
+    {% endif %}
+
   </div>
 {% endif %}
 

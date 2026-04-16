@@ -487,6 +487,48 @@ def doctorsearch():
 
     )
 
+# ------------ EMERGENCY BOOK ----------------
+@app.route("/auto-book", methods=["POST"])
+@login_required
+def auto_book():
+
+    category = request.form.get("category")
+
+    connection = connect_db()
+    cursor = connection.cursor()
+
+    # Find earliest available doctor in that category
+    cursor.execute("""
+        SELECT d.ID
+        FROM Doctor d
+        WHERE d.Category = %s
+        LIMIT 1
+    """, (category,))
+
+    doctor = cursor.fetchone()
+
+    if not doctor:
+        connection.close()
+        flash("No available doctors found.")
+        return redirect("/doctorsearch")
+
+    doctor_id = doctor["ID"]
+
+    # Find next available time (simple version: next hour)
+    now = datetime.datetime.now()
+    next_time = now + datetime.timedelta(hours=1)
+
+    cursor.execute("""
+        INSERT INTO Appointment (DoctorID, UserID, Date, Type, Status)
+        VALUES (%s, %s, %s, %s, %s)
+    """, (doctor_id, current_user.id, next_time, "Emergency", "Scheduled"))
+
+    connection.commit()
+    connection.close()
+
+    flash("Emergency appointment booked successfully.")
+    return redirect("/appoint")
+
 @app.route("/calendar")
 @login_required
 def calendar_view():
