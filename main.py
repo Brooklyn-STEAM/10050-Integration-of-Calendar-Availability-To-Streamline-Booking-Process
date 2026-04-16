@@ -493,31 +493,84 @@ def auto_book():
     connection = connect_db()
     cursor = connection.cursor()
 
-    # Find earliest available doctor in that category
+    # Get all doctors in that category
     cursor.execute("""
-        SELECT d.ID
-        FROM Doctor d
-        WHERE d.Category = %s
-        LIMIT 1
+        SELECT ID, Name
+        FROM Doctor
+        WHERE Category = %s
     """, (category,))
+    doctors = cursor.fetchall()
 
-    doctor = cursor.fetchone()
+    now = datetime.datetime.now()
+    best_option = None
 
-    if not doctor:
-        connection.close()
-        flash("No available doctors found.")
+    for doc in doctors:
+        doctor_id = doc["ID"]
+
+        # Check next 3 days
+        for i in range(3):
+            date = (now + datetime.timedelta(days=i)).date()
+
+            # Your existing time slots
+            slots = [f"{hour:02d}:00" for hour in range(9, 17)]
+
+            for slot in slots:
+                slot_time = datetime.datetime.strptime(
+                    f"{date} {slot}", "%Y-%m-%d %H:%M"
+                )
+
+                if slot_time <= now:
+                    continue
+
+                # Check if slot already booked
+                cursor.execute("""
+                    SELECT * FROM Appointment
+                    WHERE DoctorID = %s
+                    AND Date = %s
+                    AND Status != 'Cancelled'
+                """, (doctor_id, slot_time))
+
+                if not cursor.fetchone():
+                    best_option = {
+                        "doctor_id": doctor_id,
+                        "doctor_name": doc["Name"],
+                        "time": slot_time
+                    }
+                    break
+
+            if best_option:
+                break
+        if best_option:
+            break
+
+    connection.close()
+
+    # ❌ No available slot
+    if not best_option:
+        flash("No available doctors found soon.")
         return redirect("/doctorsearch")
 
-    doctor_id = doctor["ID"]
+    # ✅ SHOW preview instead of booking
+    return render_template(
+        "preview_booking.html.jinja",
+        option=best_option,
+        category=category
+    )
 
-    # Find next available time (simple version: next hour)
-    now = datetime.datetime.now()
-    next_time = now + datetime.timedelta(hours=1)
+@app.route("/confirm-auto-book", methods=["POST"])
+@login_required
+def confirm_auto_book():
+
+    doctor_id = request.form.get("doctor_id")
+    time = request.form.get("time")
+
+    connection = connect_db()
+    cursor = connection.cursor()
 
     cursor.execute("""
         INSERT INTO Appointment (DoctorID, UserID, Date, Type, Status)
         VALUES (%s, %s, %s, %s, %s)
-    """, (doctor_id, current_user.id, next_time, "Emergency", "Scheduled"))
+    """, (doctor_id, current_user.id, time, "Emergency", "Scheduled"))
 
     connection.commit()
     connection.close()
