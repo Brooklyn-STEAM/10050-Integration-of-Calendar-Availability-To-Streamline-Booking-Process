@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -7,52 +8,68 @@
     <link rel="shortcut icon" href="/static/images/logotab.png" type="image/x-icon">
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
     <style>
-@keyframes fadeUp {
-  from {
-    opacity: 0;
-    transform: translateY(10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
+        @keyframes fadeUp {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
 
 
-.calendar-wrap {
-  animation: fadeUp 0.6s ease forwards;
-}
+        .calendar-wrap {
+            animation: fadeUp 0.6s ease forwards;
+        }
 
 
-.day-cell {
-  opacity: 0;
-  animation: fadeUp 0.4s ease forwards;
-}
+        .day-cell {
+            opacity: 0;
+            animation: fadeUp 0.4s ease forwards;
+        }
 
 
-.day-cell:hover {
-  transform: translateY(-2px);
-  transition: all 0.2s ease;
-}
-</style>
+        .day-cell:hover {
+            transform: translateY(-2px);
+            transition: all 0.2s ease;
+        }
+    </style>
 </head>
 
 <body class="bg-gray-100 min-h-screen flex flex-col dark:bg-gray-900 dark:text-white">
-
-    {% include "components/navbar.html.jinja" %}
+   {% include "components/navbar.html.jinja" %}
 
     <section class="px-4 py-10 flex-grow">
 
-        <!-- TITLE -->
-        <h1 class="text-3xl font-bold text-center mb-10 text-gray-800  dark:text-white">
-            {{ month_name }} {{ year }}
-        </h1>
+        <div class="flex justify-between items-center mb-6">
 
+    <!-- PREVIOUS -->
+    <a href="/calendar?month={{ month - 1 }}&year={{ year }}"
+       class="px-4 py-2 bg-white rounded hover:bg-gray-300 text-black ">
+        ← Prev
+    </a>
+
+    <!-- TITLE -->
+    <h1 class="text-3xl font-bold text-gray-800 dark:text-white">
+        {{ month_name }} {{ year }}
+    </h1>
+
+    <!-- NEXT -->
+    <a href="/calendar?month={{ month + 1 }}&year={{ year }}"
+      class="px-4 py-2 bg-white rounded hover:bg-gray-300 text-black ">
+        Next →
+    </a>
+
+</div>
         <!-- CALENDAR -->
         <div class="max-w-5xl mx-auto">
 
             <!-- Days of week -->
-            <div class="hidden lg:grid grid-cols-7 gap-2 text-center text-sm font-semibold text-gray-600 dark:text-white mb-2">
+            <div
+                class="hidden lg:grid grid-cols-7 gap-2 text-center text-sm font-semibold text-gray-600 dark:text-white mb-2">
                 <div>Sun</div>
                 <div>Mon</div>
                 <div>Tue</div>
@@ -67,12 +84,13 @@
                 {% for week in calendar %}
                 {% for day in week %}
                 {% if day == 0 %}
-                    <div></div>
+                <div></div>
                 {% else %}
 
                 {% set full_date = year ~ "-" ~ "%02d"|format(month) ~ "-" ~ "%02d"|format(day) %}
 
-                <div class="bg-white border border-gray-200 rounded-lg p-2 min-h-[110px] shadow-sm hover:shadow-md transition relative">
+                <div
+                    class="bg-white border border-gray-200 rounded-lg p-2 min-h-[110px] shadow-sm hover:shadow-md transition relative">
 
                     <!-- Day -->
                     <div class="text-sm font-bold
@@ -87,21 +105,60 @@
 
                     <!-- Events -->
                     {% if full_date in events %}
-                        <div class="mt-1 space-y-1 max-h-20 overflow-y-auto">
-                            {% for appt in events[full_date] %}
-                                <div class="text-xs px-2 py-1 rounded
-                                    {% if appt.Status == 'Cancelled' %}
-                                        bg-red-100 text-red-700
-                                    {% elif appt.Status == 'Personal' %}
-                                        bg-purple-100 text-purple-700
-                                    {% else %}
-                                        bg-blue-100 text-blue-700
-                                    {% endif %}
-                                ">
-                                    {{ appt.Type }}
-                                </div>
-                            {% endfor %}
+                    <div class="mt-1 space-y-1 max-h-20 overflow-y-auto">
+                        {% for appt in events[full_date] %}
+
+                        <div class="flex flex-col gap-2 p-2 rounded-md border shadow-sm
+                        {% if appt.Source == 'personal' %}
+                        bg-purple-100 border-purple-400
+                        {% else %}
+                        bg-blue-100 border-blue-400
+                        {% endif %}
+                        ">
+
+                            <!-- Event Title -->
+                            <div class="text-sm font-semibold
+                            {% if appt.Source == 'personal' %}
+                            text-purple-800
+                            {% else %}
+                            text-blue-800
+                            {% endif %}
+                             ">  
+                                {{ appt.Type }}
+                            </div>
+
+                            <!-- Label -->
+                            <div class="text-[10px] font-medium opacity-70">
+                                {% if appt.Source == 'personal' %}
+                                🟣 Personal Event
+                                {% else %}
+                                🔵 Appointment
+                                {% endif %}
+                            </div>
+
+                            <!-- Google Calendar Button -->
+                            <a target="_blank" href="https://www.google.com/calendar/render?action=TEMPLATE
+                            &text={{ appt.Type | urlencode }}
+                            &dates={{ appt.Date.strftime('%Y%m%dT%H%M%S') }}/{{ (appt.Date + timedelta(minutes=30)).strftime('%Y%m%dT%H%M%S') }}
+                            &details=BookWell Event
+                            &location=BookWell" class="inline-flex items-center gap-1 mt-1 px-2 py-1 text-[10px] rounded-md text-white transition
+                            {% if appt.Source == 'personal' %}
+                            bg-purple-600 hover:bg-purple-700
+                            {% elif appt.Source == 'appointment' %}
+                            bg-blue-600 hover:bg-blue-700
+                            {% else %}
+                            bg-gray-500
+                            {% endif %}
+                            ">
+
+                                📅 Add {{ appt.Type }}
+
+                            </a>
+
                         </div>
+
+                        {% endfor %}
+                    </div>
                     {% endif %}
 
                 </div>
@@ -122,17 +179,14 @@
 
                 <form method="POST" action="/add-event" class="space-y-4">
 
-                    <input type="text" name="title" placeholder="Event name"
-                        class="w-full border px-4 py-2 rounded-lg" required>
+                    <input type="text" name="title" placeholder="Event name" class="w-full border px-4 py-2 rounded-lg"
+                        required>
 
-                    <input type="date" name="date"
-                        class="w-full border px-4 py-2 rounded-lg " required>
+                    <input type="date" name="date" class="w-full border px-4 py-2 rounded-lg " required>
 
-                    <input type="time" name="time"
-                        class="w-full border px-4 py-2 rounded-lg" required>
+                    <input type="time" name="time" class="w-full border px-4 py-2 rounded-lg" required>
 
-                    <button type="submit"
-                        class="w-full bg-purple-700 text-white py-2 rounded-lg hover:bg-purple-800">
+                    <button type="submit" class="w-full bg-purple-700 text-white py-2 rounded-lg hover:bg-purple-800">
                         Add Event
                     </button>
 
@@ -145,19 +199,16 @@
 
                 <form method="POST" action="/suggdoctors" class="space-y-4">
 
-                    <input type="date" name="date" required
-                        class="w-full border px-4 py-2 rounded-lg">
+                    <input type="date" name="date" required class="w-full border px-4 py-2 rounded-lg">
 
-                    <select name="category"
-                        class="w-full border px-4 py-2 rounded-lg">
+                    <select name="category" class="w-full border px-4 py-2 rounded-lg">
                         <option value="">All Categories</option>
                         <option value="Cardiology">Cardiology</option>
                         <option value="Neurology">Neurology</option>
                         <option value="Orthopedics">Orthopedics</option>
                     </select>
 
-                    <button type="submit"
-                        class="w-full bg-green-600 text-white py-2 rounded-lg hover:bg-green-700">
+                    <button type="submit" class="w-full bg-green-600 text-white py-2 rounded-lg hover:bg-green-700">
                         Suggest Doctors
                     </button>
 
@@ -172,28 +223,27 @@
         © 2026 — Book fast. Smart care, no cast
     </footer>
     <script>
-  const toggle = document.getElementById("theme-toggle");
+        const toggle = document.getElementById("theme-toggle");
 
-  // Load saved theme
-  if (localStorage.getItem("theme") === "dark") {
-    document.documentElement.classList.add("dark");
-  }
+        if (localStorage.getItem("theme") === "dark") {
+            document.documentElement.classList.add("dark");
+        }
 
-  // Set icon on load
-  toggle.textContent = document.documentElement.classList.contains("dark") ? "☀️" : "🌙";
+        toggle.textContent = document.documentElement.classList.contains("dark") ? "☀️" : "🌙";
 
-  toggle.addEventListener("click", () => {
-    document.documentElement.classList.toggle("dark");
+        toggle.addEventListener("click", () => {
+            document.documentElement.classList.toggle("dark");
 
-    if (document.documentElement.classList.contains("dark")) {
-      localStorage.setItem("theme", "dark");
-      toggle.textContent = "☀️";
-    } else {
-      localStorage.setItem("theme", "light");
-      toggle.textContent = "🌙";
-    }
-  });
-</script>
+            if (document.documentElement.classList.contains("dark")) {
+                localStorage.setItem("theme", "dark");
+                toggle.textContent = "☀️";
+            } else {
+                localStorage.setItem("theme", "light");
+                toggle.textContent = "🌙";
+            }
+        });
+    </script>
 
 </body>
+
 </html>
