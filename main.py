@@ -185,14 +185,20 @@ def appoint():
     cursor = connection.cursor()
 
     cursor.execute("""
-        SELECT Appointment.ID, Appointment.Date, Appointment.Type, Appointment.Status,
-               Doctor.Name AS DoctorName, Doctor.Location AS Location
+        SELECT 
+            Appointment.ID, 
+            Appointment.Date, 
+            Appointment.Type, 
+            Appointment.Status,
+            Doctor.ID AS DoctorID,          -- ✅ IMPORTANT
+            Doctor.Name AS DoctorName, 
+            Doctor.Location AS Location
         FROM Appointment
         JOIN Doctor ON Doctor.ID = Appointment.DoctorID
         WHERE UserID = %s
         AND (
-        Status != 'Cancelled'
-        OR Date >= NOW() - INTERVAL 1 DAY
+            Status != 'Cancelled'
+            OR Date >= NOW() - INTERVAL 1 DAY
         )
         ORDER BY Appointment.Date ASC
     """, (current_user.id,))
@@ -498,6 +504,16 @@ def add_event():
 
     flash("Event added successfully!")
     return redirect("/calendar")
+    
+
+
+
+    
+
+
+
+
+
 
 # ---------------- LOGIN ----------------
 @app.route("/login", methods=["GET", "POST"])
@@ -703,24 +719,24 @@ def doctor_appointments(doctor_id):
 
             flash("Appointment cancelled")
 
-        elif action == "reschedule":
+        # elif action == "reschedule":
 
-            new_date = request.form.get("new_date")
-            new_time = request.form.get("new_time")
+        #     new_date = request.form.get("new_date")
+        #     new_time = request.form.get("new_time")
 
-            if new_date and new_time:
+        #     if new_date and new_time:
 
-                new_datetime = f"{new_date} {new_time}"
+        #         new_datetime = f"{new_date} {new_time}"
 
-                cursor.execute("""
-                    UPDATE Appointment
-                    SET Date=%s, Status='Scheduled'
-                    WHERE ID=%s AND DoctorID=%s
-                """, (new_datetime, appointment_id, doctor_id))
+        #         cursor.execute("""
+        #             UPDATE Appointment
+        #             SET Date=%s, Status='Scheduled'
+        #             WHERE ID=%s AND DoctorID=%s
+        #         """, (new_datetime, appointment_id, doctor_id))
 
-                flash("Appointment rescheduled")
+        #         flash("Appointment rescheduled")
 
-        connection.commit()
+        # connection.commit()
 
     cursor.execute("""
         SELECT Appointment.ID, Appointment.Date, Appointment.Type, Appointment.Status,
@@ -740,6 +756,8 @@ def doctor_appointments(doctor_id):
         doctor=doctor,
         appointments=appointments
     )
+
+
 
 
 @app.route("/doctor/<int:doctor_id>/calendar")
