@@ -7,6 +7,7 @@ import calendar as cal
 cal.setfirstweekday(cal.SUNDAY)
 from dynaconf import Dynaconf
 from flask_mail import Mail, Message
+from datetime import timedelta
 from apscheduler.schedulers.background import BackgroundScheduler
 
 app = Flask(__name__)
@@ -383,21 +384,33 @@ def calendar_view():
     connection = connect_db()
     cursor = connection.cursor()
 
+    # ✅ Get month/year from URL (fallback to today)
     today = datetime.date.today()
-    year = today.year
-    month = today.month
 
+    year = request.args.get("year", type=int) or today.year
+    month = request.args.get("month", type=int) or today.month
+
+    # ✅ Handle overflow (month 13 → next year)
+    if month > 12:
+        month = 1
+        year += 1
+    elif month < 1:
+        month = 12
+        year -= 1
+
+    # ---------------- APPOINTMENTS ----------------
     cursor.execute("""
         SELECT ID, Date, Type, Status
         FROM Appointment
         WHERE UserID = %s
         AND MONTH(Date) = %s
         AND YEAR(Date) = %s
+        AND Status != 'Cancelled'
     """, (current_user.id, month, year))
 
     appointments = cursor.fetchall()
 
- 
+    # ---------------- PERSONAL EVENTS ----------------
     cursor.execute("""
         SELECT Title, EventDate
         FROM PersonalEvent
@@ -412,32 +425,47 @@ def calendar_view():
 
     events = {}
 
-
-    for appt in appointments:
-
-        if isinstance(appt["Date"], str):
-            appt["Date"] = datetime.datetime.strptime(
-                appt["Date"], "%Y-%m-%d %H:%M:%S"
-            )
-
-        date_key = appt["Date"].strftime("%Y-%m-%d")
-
-        events.setdefault(date_key, []).append(appt)
-
+    # PERSONAL EVENTS
     for event in personal_events:
+        event_date = event["EventDate"]
 
-        if isinstance(event["EventDate"], str):
-            event["EventDate"] = datetime.datetime.strptime(
-                event["EventDate"], "%Y-%m-%d %H:%M:%S"
+        if isinstance(event_date, str):
+            event_date = datetime.datetime.strptime(
+                event_date, "%Y-%m-%d %H:%M:%S"
             )
 
-        date_key = event["EventDate"].strftime("%Y-%m-%d")
+        key = event_date.strftime("%Y-%m-%d")
 
-        events.setdefault(date_key, []).append({
+        events.setdefault(key, []).append({
             "Type": event["Title"],
-            "Status": "Personal"
+            "Status": "Personal",
+            "Date": event_date,
+            "Source": "personal"
         })
 
+    # APPOINTMENTS
+    for appt in appointments:
+        appt_date = appt["Date"]
+
+        if isinstance(appt_date, str):
+            appt_date = datetime.datetime.strptime(
+                appt_date, "%Y-%m-%d %H:%M:%S"
+            )
+
+        key = appt_date.strftime("%Y-%m-%d")
+
+        events.setdefault(key, []).append({
+            "Type": appt["Type"],
+            "Status": appt["Status"],
+            "Date": appt_date,
+            "Source": "appointment"
+        })
+
+    # ✅ SORT EVENTS BY TIME
+    for date in events:
+        events[date].sort(key=lambda x: x["Date"])
+
+    # ---------------- CALENDAR ----------------
     month_calendar = cal.monthcalendar(year, month)
     month_name = cal.month_name[month]
 
@@ -448,9 +476,9 @@ def calendar_view():
         year=year,
         month=month,
         month_name=month_name,
-        today=today.strftime("%Y-%m-%d")
+        today=today.strftime("%Y-%m-%d"),
+        timedelta=timedelta
     )
-
 
 
 @app.route("/doctor/<Doctor_id>/book", methods=["POST"])
@@ -542,21 +570,21 @@ def book_appointment(Doctor_id):
     return redirect("/thanks")
 
 
-
-
-
 @app.route("/appoint/<int:appointment_id>/cancel", methods=["POST"])
 @login_required
 def cancel_appointment(appointment_id):
+
     connection = connect_db()
     cursor = connection.cursor()
+
     cursor.execute("""
-        UPDATE `Appointment`
-        SET `Status` = 'Cancelled'
-        WHERE `ID` = %s AND `UserID` = %s
+        DELETE FROM Appointment
+        WHERE ID = %s AND UserID = %s
     """, (appointment_id, current_user.id))
 
+    connection.commit()
     connection.close()
+
     flash("Appointment has been cancelled.")
     return redirect("/appoint")
 
@@ -584,24 +612,40 @@ def add_event():
     date = request.form.get("date")
     time = request.form.get("time")
 
+    # ---------------- VALIDATION ----------------
     if not title or not date or not time:
         flash("Please fill all fields")
         return redirect("/calendar")
 
-    event_datetime = datetime.datetime.strptime(
-        f"{date} {time}", "%Y-%m-%d %H:%M"
-    )
+    # ---------------- SAFE DATETIME PARSE ----------------
+    try:
+        event_datetime = datetime.datetime.strptime(
+            f"{date} {time}", "%Y-%m-%d %H:%M"
+        )
+    except ValueError:
+        flash("Invalid date or time format")
+        return redirect("/calendar")
 
+    # ---------------- DATABASE INSERT ----------------
     connection = connect_db()
     cursor = connection.cursor()
 
-    cursor.execute("""
-        INSERT INTO PersonalEvent (UserID, Title, EventDate)
-        VALUES (%s, %s, %s)
-    """, (current_user.id, title, event_datetime))
+    try:
+        cursor.execute("""
+            INSERT INTO PersonalEvent (UserID, Title, EventDate)
+            VALUES (%s, %s, %s)
+        """, (current_user.id, title, event_datetime))
 
-    connection.commit()
-    connection.close()
+        connection.commit()
+
+    except Exception as e:
+        connection.rollback()
+        print("ERROR inserting event:", e)
+        flash("Failed to add event")
+        return redirect("/calendar")
+
+    finally:
+        connection.close()
 
     flash("Event added successfully!")
     return redirect("/calendar")
@@ -865,9 +909,18 @@ def doctor_appointments(doctor_id):
 def doctor_calendar(doctor_id):
 
     today = datetime.date.today()
-    year = today.year
-    month = today.month
-    month_name = cal.month_name[month]  # ✅ FIX
+
+    year = request.args.get("year", type=int) or today.year
+    month = request.args.get("month", type=int) or today.month
+
+    if month > 12:
+        month = 1
+        year += 1
+    elif month < 1:
+        month = 12
+        year -= 1
+
+    month_name = cal.month_name[month]
 
     connection = connect_db()
     cursor = connection.cursor()
@@ -876,8 +929,9 @@ def doctor_calendar(doctor_id):
     doctor = cursor.fetchone()
 
     cursor.execute("""
-        SELECT Date,Type,Status
+        SELECT Date, Type, Status, User.Name AS PatientName
         FROM Appointment
+        JOIN User ON User.ID = Appointment.UserID
         WHERE DoctorID=%s
         AND MONTH(Date)=%s
         AND YEAR(Date)=%s
@@ -892,14 +946,24 @@ def doctor_calendar(doctor_id):
     """, (doctor_id,))
 
     blocked = cursor.fetchall()
-
     connection.close()
 
     events = {}
 
     for appt in appointments:
-        key = appt["Date"].strftime("%Y-%m-%d")
+        appt_date = appt["Date"]
+
+        if isinstance(appt_date, str):
+            appt_date = datetime.datetime.strptime(
+                appt_date, "%Y-%m-%d %H:%M:%S"
+            )
+
+        key = appt_date.strftime("%Y-%m-%d")
         events.setdefault(key, []).append(appt)
+
+    # ✅ SORT EVENTS
+    for date in events:
+        events[date].sort(key=lambda x: x["Date"])
 
     blocked_dates = [
         b["AvailableDate"].strftime("%Y-%m-%d")
@@ -916,7 +980,8 @@ def doctor_calendar(doctor_id):
         blocked_dates=blocked_dates,
         year=year,
         month=month,
-        month_name=month_name 
+        month_name=month_name,
+        today=today.strftime("%Y-%m-%d")
     )
 
 
