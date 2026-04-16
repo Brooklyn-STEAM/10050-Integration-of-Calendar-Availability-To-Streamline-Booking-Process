@@ -74,10 +74,11 @@
 
         <form method="POST" action="/auto-book">
           <input type="hidden" name="category" value="{{ result.specialist }}">
-          <button type="submit"
-            class="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition">
-            Yes, book now
-          </button>
+        <button type="submit"
+  onclick="this.innerHTML='⏳ Finding...'; setTimeout(() => this.disabled=true, 100);"
+  class="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition disabled:opacity-50">
+  Yes, find earliest appointment
+</button>
         </form>
 
         <button onclick="this.parentElement.style.display='none'"
