@@ -95,14 +95,36 @@
     <form method="get" action="/doctorsearch"
   class="flex flex-col md:flex-row gap-4 mb-8 bg-white p-4 rounded-xl shadow-sm hover:shadow-md transition dark:bg-gray-900 dark:text-white">
 
-<select name="rating"
-  class="w-full md:w-1/4 px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 dark:bg-gray-900 dark:text-white">
+<input
+    type="text"
+    name="insurance"
+    list="insurance-list"
+    placeholder="Enter insurance (e.g. Aetna, Blue Cross)"
+    value="{{ insurance_filter or '' }}"
+    class="w-full md:w-1/4 px-4 py-2 border border-gray-300 rounded-xl shadow-sm
+           focus:outline-none focus:ring-2 focus:ring-purple-500"
+/>
 
-  <option value="">Any Rating</option>
-  <option value="4">4+ Stars</option>
-  <option value="3">3+ Stars</option>
-  <option value="2">2+ Stars</option>
-</select>
+<datalist id="insurance-list">
+    <option value="Aetna">
+    <option value="Amida Care">
+    <option value="Blue Cross">
+    <option value="BCBS Health Plus">
+    <option value="Medicaid">
+    <option value="Medicare">
+    <option value="Centerlight">
+    <option value="Elderplan">
+    <option value="EmblemHealth">
+    <option value="Longevity Health Plan">
+    <option value="First Health">
+    <option value="Magnacare">
+    <option value="Multiplan">
+    <option value="Oxford">
+    <option value="Railroad Medicare">
+    <option value="HIP">
+    <option value="Fidelis Care">
+    <option value="Humana">
+</datalist>
 
 
 
@@ -123,7 +145,6 @@
       <option value="{{ symptom }}">
     {% endfor %}
   </datalist>
-
 
 
 <div id="suggestion" style="margin-top:8px; font-weight:bold; color:#f2eeeb;"></div>

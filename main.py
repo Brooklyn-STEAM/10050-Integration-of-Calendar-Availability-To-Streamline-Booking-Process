@@ -421,8 +421,9 @@ def doctorsearch():
 
     search_query = request.args.get("q", "")
     category_filter = request.args.get("category", "")
-    rating_filter = request.args.get("rating", "")
+    insurance_filter = request.args.get("insurance", "").strip().lower()
     symptom_input = request.args.get("symptoms", "").lower()
+
     result = None
     if symptom_input:
         result = analyze_symptoms(symptom_input)
@@ -446,7 +447,11 @@ def doctorsearch():
         sql += " AND d.Category = %s"
         params.append(category_filter)
 
-    # -------- SYMPTOM FILTER + RECOMMENDATION --------
+    if insurance_filter:
+        sql += " AND LOWER(d.Insurance) LIKE %s"
+        params.append(f"%{insurance_filter}%")
+
+    # -------- SYMPTOM FILTER --------
     matched_categories = set()
 
     if symptom_input:
@@ -459,33 +464,23 @@ def doctorsearch():
             sql += f" AND d.Category IN ({placeholders})"
             params.extend(list(matched_categories))
 
-    sql += " GROUP BY d.ID"
-
-    if rating_filter:
-        sql += " HAVING avg_rating >= %s"
-        params.append(float(rating_filter))
-
-    sql += " ORDER BY d.Name"
+    # ✅ IMPORTANT: group + sort at the end
+    sql += " GROUP BY d.ID ORDER BY d.Name"
 
     cursor.execute(sql, params)
     doctors = cursor.fetchall()
 
     connection.close()
 
-    # Convert to list for template use
-    recommended_categories = list(matched_categories)
-
     return render_template(
         "doctorsearch.html.jinja",
         doctors=doctors,
         search_query=search_query,
         category_filter=category_filter,
-        rating_filter=rating_filter,
         symptom_input=symptom_input,
-        recommended_categories=recommended_categories,
+        recommended_categories=list(matched_categories),
         SYMPTOM_MAP=SYMPTOM_MAP,
         result=result
-
     )
 
 # ------------ EMERGENCY BOOK ----------------
