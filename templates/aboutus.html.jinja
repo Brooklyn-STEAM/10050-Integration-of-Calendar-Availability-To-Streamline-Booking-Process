@@ -8,7 +8,7 @@
   <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
 </head>
 
-<body class="bg-purple-100">
+<body class="bg-gray-100">
 
   {% include "components/navbar.html.jinja" %}
   <br>
@@ -32,11 +32,12 @@
   <br>
 
 
+{# <div class="md:ml-50 md: gap-15"> #}
 
+  <main class="lg:flex flex-row lg:flex justify-center lg:gap-5 lg:text-center lg:w-full ">
+  
 
-  <main class=" overflow-x-scroll  lg:flex flex-row lg:flex justify-center lg:gap-5 lg:text-center lg:w-full  ">
-
-    <div class=" bg-violet-200   lg: py-4 lg: px-5 lg: rounded-lg lg: w-96 lg:ml-2 ">
+    <div class=" bg-violet-200  lg: py-4 lg: px-5 lg: rounded-lg lg:w-96 lg:ml-2  ">
 
       <br>
 
@@ -60,7 +61,7 @@
     <br>
 
 
-    <div class="  bg-violet-200 lg: py-8 lg: px-8 lg: rounded-lg w-96">
+    <div class="bg-violet-200 lg: py-8 lg: px-8 lg: rounded-lg lg:w-96">
 
       <p class="font-medium text-3xl underline text-center">Sanah</p>
       <br>
@@ -87,7 +88,7 @@
     <br>
 
 
-    <div class="  bg-violet-200 py-8 px-8 rounded-lg w-96  ">
+    <div class="  bg-violet-200 py-8 px-8 lg: rounded-lg lg:w-96  ">
       <p class="font-medium text-3xl underline text-center">Jahmere</p>
       <br>
       <img class="mr-0 justify-self-center   rounded-lg" src="/static/members/jahmere.jpeg" width="190"
@@ -112,5 +113,6 @@
 
 
   </main>
+  {# </div>  #}
 
 </body>
