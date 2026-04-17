@@ -7,49 +7,72 @@
   <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
 </head>
 
-<body class="min-h-screen bg-gray-100 dark:bg-gray-950 flex items-center justify-center">
+<body class="min-h-screen bg-white dark:bg-black flex items-center justify-center">
 
-  <div class="w-full max-w-md p-6 rounded-xl shadow-lg
-              bg-white text-gray-900
-              dark:bg-gray-900 dark:text-gray-100
-              border border-gray-200 dark:border-gray-700 transition">
+  <div class="text-center max-w-lg px-6">
 
-    <!-- Title -->
-    <h2 class="text-xl font-semibold mb-4">
-      Earliest Available Appointment
-    </h2>
+    
+    <div class="flex justify-center mb-6">
+      <div class="w-20 h-20 rounded-full bg-green-100 dark:bg-green-400 flex items-center justify-center">
+        <span class="text-4xl">✔</span>
+      </div>
+    </div>
 
-    <!-- Doctor -->
-    <p class="mb-2">
-      <strong>Doctor:</strong> Dr. {{ option.doctor_name }}
+    
+    <h1 class="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white mb-3">
+      Appointment Ready
+    </h1>
+
+   
+    <p class="text-gray-500 dark:text-gray-400 mb-8">
+      Your earliest available urgent appointment has been found.
     </p>
 
-    <!-- Time -->
-    <p class="mb-6">
-      <strong>Time:</strong> {{ option.time.strftime("%Y-%m-%d %H:%M") }}
-    </p>
+    
+    <div class="bg-gray-100 dark:bg-gray-900 rounded-2xl p-6 text-left shadow-sm mb-8">
 
-    <!-- Actions -->
-    <div class="flex gap-3">
+      <p class="text-sm text-gray-500 dark:text-gray-400 mb-1">
+        Doctor
+      </p>
+      <p class="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+        Dr. {{ option.doctor_name }}
+      </p>
 
-      <!-- Confirm booking -->
+      <p class="text-sm text-gray-500 dark:text-gray-400 mb-1">
+        Appointment Time
+      </p>
+      <p class="text-lg font-semibold text-gray-900 dark:text-white">
+        {{ option.time.strftime("%A, %B %d at %I:%M %p") }}
+      </p>
+
+    </div>
+
+   
+    <div class="flex flex-col gap-3">
+
+      <!-- Confirm -->
       <form method="POST" action="/confirm-auto-book">
         <input type="hidden" name="doctor_id" value="{{ option.doctor_id }}">
         <input type="hidden" name="time" value="{{ option.time.strftime('%Y-%m-%d %H:%M:%S') }}">
 
         <button type="submit"
-          class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg transition">
-          Confirm Booking
+          class="w-full bg-black text-white dark:bg-white dark:text-black py-3 rounded-full font-semibold hover:opacity-90 transition">
+          Confirm Appointment
         </button>
       </form>
 
       <!-- Cancel -->
       <a href="/doctorsearch"
-         class="bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-white px-4 py-2 rounded-lg hover:opacity-80 transition">
-        Cancel
+         class="w-full border border-gray-300 dark:border-gray-700 py-3 rounded-full font-semibold text-gray-900 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-800 transition">
+        Choose Another Option
       </a>
 
     </div>
+
+   
+    <p class="text-xs text-gray-400 mt-6">
+      You can reschedule or cancel anytime from your appointments page.
+    </p>
 
   </div>
 
