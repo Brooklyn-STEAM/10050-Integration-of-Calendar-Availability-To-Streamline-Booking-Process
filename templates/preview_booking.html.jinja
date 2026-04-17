@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="shortcut icon" href="/static/images/logotab.png" type="image/x-icon">
+  <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+</head>
+
+<body class="min-h-screen bg-gray-100 dark:bg-gray-950 flex items-center justify-center">
+
+  <div class="w-full max-w-md p-6 rounded-xl shadow-lg
+              bg-white text-gray-900
+              dark:bg-gray-900 dark:text-gray-100
+              border border-gray-200 dark:border-gray-700 transition">
+
+    <!-- Title -->
+    <h2 class="text-xl font-semibold mb-4">
+      Earliest Available Appointment
+    </h2>
+
+    <!-- Doctor -->
+    <p class="mb-2">
+      <strong>Doctor:</strong> Dr. {{ option.doctor_name }}
+    </p>
+
+    <!-- Time -->
+    <p class="mb-6">
+      <strong>Time:</strong> {{ option.time.strftime("%Y-%m-%d %H:%M") }}
+    </p>
+
+    <!-- Actions -->
+    <div class="flex gap-3">
+
+      <!-- Confirm booking -->
+      <form method="POST" action="/confirm-auto-book">
+        <input type="hidden" name="doctor_id" value="{{ option.doctor_id }}">
+        <input type="hidden" name="time" value="{{ option.time.strftime('%Y-%m-%d %H:%M:%S') }}">
+
+        <button type="submit"
+          class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg transition">
+          Confirm Booking
+        </button>
+      </form>
+
+      <!-- Cancel -->
+      <a href="/doctorsearch"
+         class="bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-white px-4 py-2 rounded-lg hover:opacity-80 transition">
+        Cancel
+      </a>
+
+    </div>
+
+  </div>
+
+</body>
+</html>

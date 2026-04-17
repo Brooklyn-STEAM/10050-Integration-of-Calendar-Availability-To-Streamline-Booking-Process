@@ -37,28 +37,127 @@
 </style>
 </head>
 
-<body>
+<body class="dark:bg-gray-900 dark:text-white">
   {% include "components/navbar.html.jinja"%}
 
 
-  <div class="max-w-6xl mx-auto px-4 py-8 page-fade">
+  
+
+{% if result %}
+  <div class="mb-6 p-4 rounded-xl border transition-all duration-300
+    {% if result.urgency == 'high' %}
+      bg-red-50 border-red-200 text-red-900
+      dark:bg-red-950/30 dark:border-red-800 dark:text-red-200
+    {% elif result.urgency == 'medium' %}
+      bg-yellow-50 border-yellow-200 text-yellow-900
+      dark:bg-yellow-950/30 dark:border-yellow-800 dark:text-yellow-200
+    {% else %}
+      bg-green-50 border-green-200 text-green-900
+      dark:bg-green-950/30 dark:border-green-800 dark:text-green-200
+    {% endif %}">
+
+    <p class="font-semibold text-lg">
+      Recommended Specialist: {{ result.specialist }}
+    </p>
+
+    <p class="text-sm mt-1 opacity-90">
+      {{ result.message }}
+    </p>
+
+    <p class="text-xs mt-2 opacity-70">
+      This is not medical advice. If symptoms are severe, seek emergency care.
+    </p>
+
+    
+    {% if result.urgency == 'high' %}
+      <div class="mt-4 flex gap-3">
+
+        <form method="POST" action="/auto-book">
+          <input type="hidden" name="category" value="{{ result.specialist }}">
+        <button type="submit"
+  onclick="this.innerHTML='⏳ Finding...'; setTimeout(() => this.disabled=true, 100);"
+  class="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition disabled:opacity-50">
+  Yes, find earliest appointment
+</button>
+        </form>
+
+        <button onclick="this.parentElement.style.display='none'"
+          class="bg-gray-200 dark:bg-gray-700 px-4 py-2 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600">
+          No
+        </button>
+
+      </div>
+    {% endif %}
+
+  </div>
+{% endif %}
 
 
     <form method="get" action="/doctorsearch"
-  class="flex flex-col md:flex-row gap-4 mb-8 bg-white p-4 rounded-xl shadow-sm hover:shadow-md transition">
+  class="flex flex-col md:flex-row gap-4 mb-8 bg-white p-4 rounded-xl shadow-sm hover:shadow-md transition dark:bg-gray-900 dark:text-white">
 
-  <input type="text" name="q" value="{{ search_query|default('') }}"
-    placeholder="Search doctors..."
-    class="w-full px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500" />
+<input
+    type="text"
+    name="insurance"
+    list="insurance-list"
+    placeholder="Enter insurance (e.g. Aetna, Blue Cross)"
+    value="{{ insurance_filter or '' }}"
+    class="w-full md:w-1/4 px-4 py-2 border border-gray-300 rounded-xl shadow-sm
+           focus:outline-none focus:ring-2 focus:ring-purple-500"
+/>
+
+<datalist id="insurance-list">
+    <option value="Aetna">
+    <option value="Amida Care">
+    <option value="Blue Cross">
+    <option value="BCBS Health Plus">
+    <option value="Medicaid">
+    <option value="Medicare">
+    <option value="Centerlight">
+    <option value="Elderplan">
+    <option value="EmblemHealth">
+    <option value="Longevity Health Plan">
+    <option value="First Health">
+    <option value="Magnacare">
+    <option value="Multiplan">
+    <option value="Oxford">
+    <option value="Railroad Medicare">
+    <option value="HIP">
+    <option value="Fidelis Care">
+    <option value="Humana">
+</datalist>
+
+
+
+  <input
+    type="text"
+    id="symptoms"
+    name="symptoms"
+    list="symptom-list"
+    placeholder="Enter symptoms (e.g. chest pain, seizure)"
+    value="{{ symptom_input or '' }}"
+    class="w-full px-4 py-2 border border-gray-300 rounded-xl shadow-sm
+           focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500
+           transition duration-200"
+  >
+
+  <datalist id="symptom-list">
+    {% for symptom in SYMPTOM_MAP.keys() %}
+      <option value="{{ symptom }}">
+    {% endfor %}
+  </datalist>
+
+
+<div id="suggestion" style="margin-top:8px; font-weight:bold; color:#f2eeeb;"></div>
 
   <select name="category"
-    class="w-full md:w-1/3 px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500">
+  class="w-full md:w-1/3 px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 dark:bg-gray-900 dark:text-white">
 
     <option value="">All Categories</option>
     <option value="Cardiology" {% if category_filter=='Cardiology' %}selected{% endif %}>Cardiology</option>
     <option value="Neurology" {% if category_filter=='Neurology' %}selected{% endif %}>Neurology</option>
     <option value="Orthopedic" {% if category_filter=='Orthopedic' %}selected{% endif %}>Orthopedics</option>
-
+    <option value="Pulmonary" {% if category_filter=='Pulmonary' %}selected{% endif %}>Pulmonary</option>
   </select>
 
   <button type="submit"
@@ -69,22 +168,22 @@
 </form>
 
 
-   <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-8">
+   <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-8 dark:bg-gray-900">
       {% for doctor in doctors %}
      <a href="/doctor/{{ doctor['ID'] }}" class="group card">
   <div class="bg-white shadow-md rounded-xl p-6 flex flex-col items-center
-              transition duration-300 hover:scale-105 hover:shadow-xl">
+              transition duration-300 hover:scale-105 hover:shadow-xl dark:bg-gray-900 dark:text-white">
           <img src="{{ doctor['Image'] }}" alt="{{ doctor['Name'] }}"
-             class="w-32 h-32 object-cover rounded-full border-4 border-purple-500 group-hover:scale-110 transition duration-300" />
+             class="w-32 h-32 object-cover rounded-full border-4 border-purple-500 group-hover:scale-110 transition duration-300 " />
 
-          <div class="flex-1 mt-4 space-y-2">
-            <h2 class="text-xl font-semibold text-gray-800">
+          <div class="flex-1 mt-4 space-y-2 dark:bg-gray-900 dark:text-white">
+            <h2 class="text-xl font-semibold text-gray-800 dark:bg-gray-900 dark:text-white">
               {{ doctor['Name'] }}
             </h2>
 
 
 
-            <p class="text-sm text-gray-500 mt-2">
+            <p class="text-sm text-gray-500 mt-2 dark:text-white">
               {{ doctor['Category'] }}
             </p>
           </div>
@@ -94,6 +193,32 @@
     </div>
 
   </div>
+
+ <script id="symptom-js">
+const symptomMap = {{ SYMPTOM_MAP | tojson }};
+
+const input = document.getElementById("symptoms");
+const suggestionBox = document.getElementById("suggestion");
+
+input.addEventListener("input", function () {
+    const value = input.value.toLowerCase();
+    let matchedCategories = new Set();
+
+    for (const keyword in symptomMap) {
+        if (value.includes(keyword)) {
+            symptomMap[keyword].forEach(cat => matchedCategories.add(cat));
+        }
+    }
+
+    if (matchedCategories.size > 0) {
+        suggestionBox.innerText = "Recommended: " + [...matchedCategories].join(", ");
+    } else {
+        suggestionBox.innerText = "";
+    }
+});
+</script>
+
+
 
 </body>
 

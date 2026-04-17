@@ -7,7 +7,9 @@ import calendar as cal
 cal.setfirstweekday(cal.SUNDAY)
 from dynaconf import Dynaconf
 from flask_mail import Mail, Message
+from datetime import timedelta
 from apscheduler.schedulers.background import BackgroundScheduler
+from collections import Counter
 
 app = Flask(__name__)
 
@@ -41,6 +43,18 @@ def connect_db():
         cursorclass=pymysql.cursors.DictCursor
     )
     return conn
+
+def generate_time_slots(start_hour=9, end_hour=17, interval=20):
+    slots = []
+    current = datetime.datetime.combine(datetime.date.today(), datetime.time(start_hour, 0))
+
+    end_time = datetime.datetime.combine(datetime.date.today(), datetime.time(end_hour, 0))
+
+    while current < end_time:
+        slots.append(current.strftime("%H:%M"))
+        current += datetime.timedelta(minutes=interval)
+
+    return slots
 
 
 # ---------------- USER CLASS ----------------
@@ -95,6 +109,29 @@ def doctor():
 
     return redirect ("/doctor", doctors=result)
 
+@app.route("/doctor/<int:doctor_id>/reply_review", methods=["POST"])
+def reply_review(doctor_id):
+    review_id = request.form.get("review_id")
+    reply = request.form.get("reply")
+
+    if not review_id or not reply:
+        flash("Reply cannot be empty", "error")
+        return redirect(f"/doctor/{doctor_id}")
+
+    connection = connect_db()
+    cursor = connection.cursor()
+
+    cursor.execute("""
+        UPDATE Review
+        SET Reply = %s
+        WHERE ID = %s AND DoctorID = %s
+    """, (reply, review_id, doctor_id))
+
+    connection.commit()
+    connection.close()
+
+    flash("Reply added successfully!", "success")
+    return redirect(f"/doctor/{doctor_id}")
 
 @app.route("/doctor/<Doctor_id>")
 def doctor_page(Doctor_id):
@@ -103,6 +140,7 @@ def doctor_page(Doctor_id):
     connection = connect_db()
     cursor = connection.cursor()
 
+    # ---------------- GET DOCTOR ----------------
     cursor.execute("SELECT * FROM Doctor WHERE ID = %s", (Doctor_id,))
     doctor = cursor.fetchone()
 
@@ -110,13 +148,15 @@ def doctor_page(Doctor_id):
         connection.close()
         abort(404)
 
+    # ---------------- GET REVIEWS ----------------
     cursor.execute("""
-        SELECT * FROM Review
-        JOIN User ON User.ID = Review.UserID
-        WHERE Review.DoctorID = %s
-    """, (Doctor_id,))
+    SELECT * FROM Review
+    JOIN User ON User.ID = Review.UserID
+    WHERE Review.DoctorID = %s
+""", (Doctor_id,))
     reviews = cursor.fetchall()
 
+    # ---------------- GET BLOCKED DATES ----------------
     cursor.execute("""
         SELECT DATE(AvailableDate) AS blocked_date
         FROM DoctorAvailability
@@ -127,15 +167,45 @@ def doctor_page(Doctor_id):
         for row in cursor.fetchall()
     ]
 
+    # ---------------- TIME SLOT LOGIC ----------------
+    selected_date = request.args.get("date")
+    available_slots = []
+
+    if selected_date:
+
+        # If doctor is unavailable that day
+        if selected_date in blocked_dates:
+            available_slots = []
+
+        else:
+            # Generate 1-hour slots (9AM → 4PM)
+            all_slots = [f"{hour:02d}:00" for hour in range(9, 17)]
+
+            # Get already booked times (FIXED %%)
+            cursor.execute("""
+                SELECT DATE_FORMAT(Date, '%%H:%%i') as booked_time
+                FROM Appointment
+                WHERE DoctorID = %s
+                AND DATE(Date) = %s
+                AND Status != 'Cancelled'
+            """, (Doctor_id, selected_date))
+
+            booked = [row["booked_time"] for row in cursor.fetchall()]
+
+            # Remove booked slots
+            available_slots = [slot for slot in all_slots if slot not in booked]
+
     connection.close()
 
+    # ---------------- RENDER ----------------
     return render_template(
         "doctor.html.jinja",
         doctor=doctor,
         reviews=reviews,
-        blocked_dates=blocked_dates
+        blocked_dates=blocked_dates,
+        available_slots=available_slots,
+        selected_date=selected_date
     )
-
 
 @app.route("/doctor/<Doctorr_id>/remove_review", methods= ["POST"])
 @login_required
@@ -268,25 +338,141 @@ def suggest_doctors():
         category_filter=category
     )
 # ---------------- BOOK APPOINTMENT ----------------
+
+SYMPTOM_MAP = {
+    # ---------------- NEUROLOGY ----------------
+    "headache": ["Neurology"],
+    "migraine": ["Neurology"],
+    "dizziness": ["Neurology"],
+    "seizure": ["Neurology"],
+    "memory loss": ["Neurology"],
+    "numbness": ["Neurology"],
+    "tingling": ["Neurology"],
+
+    # ---------------- ORTHOPEDICS ----------------
+    "bone pain": ["Orthopedic"],
+    "fracture": ["Orthopedic"],
+    "joint pain": ["Orthopedic"],
+    "back pain": ["Orthopedic"],
+    "knee pain": ["Orthopedic"],
+    "shoulder pain": ["Orthopedic"],
+    "sprain": ["Orthopedic"],
+
+    # ---------------- CARDIOLOGY ----------------
+    "chest pain": ["Cardiology"],
+    "heart pain": ["Cardiology"],
+    "palpitations": ["Cardiology"],
+    "high blood pressure": ["Cardiology"],
+    "hypertension": ["Cardiology"],
+    "shortness of breath": ["Cardiology"],
+    "Palpitation": ["Cardiology"],
+    "Fainting": ["Cardiology"],
+     "Swelling": ["Cardiology"],
+     "Back pain": ["Cardiology"],
+
+
+    # ---------------- PULMONOLOGY ----------------
+    "cough": ["Pulmonary"],
+    "breathing": ["Pulmonary"],
+    "shortness of breath": ["Pulmonary"],
+    "asthma": ["Pulmonary"],
+    "wheezing": ["Pulmonary"],
+    "lung pain": ["Pulmonary"],
+}
+SPECIALIST_GUIDE = {
+    "Cardiology": {
+        "urgency": "high",
+        "message": "Possible heart-related issue. Seek care within 24 hours or immediately if severe."
+    },
+    "Pulmonary": {
+        "urgency": "medium",
+        "message": "Breathing-related symptoms detected. Schedule a visit soon."
+    },
+    "Neurology": {
+        "urgency": "medium",
+        "message": "Neurological symptoms detected. Consider seeing a specialist listed below."
+    },
+    "Orthopedic": {
+        "urgency": "low",
+        "message": "Musculoskeletal issue likely. Book a routine appointment."
+    }
+}
+def analyze_symptoms(user_input):
+    symptoms = [s.strip().lower() for s in user_input.split(",")]
+
+    matches = []
+
+    for symptom in symptoms:
+        for key in SYMPTOM_MAP:
+            if key in symptom:
+                matches.extend(SYMPTOM_MAP[key])
+
+    if not matches:
+        return {
+            "specialist": "General Physician",
+            "urgency": "low",
+            "message": "Symptoms unclear. Consider a general consultation."
+        }
+
+    most_common = Counter(matches).most_common(1)[0][0]
+    guide = SPECIALIST_GUIDE.get(most_common)
+
+    return {
+        "specialist": most_common,
+        "urgency": guide["urgency"],
+        "message": guide["message"]
+    }
+
 @app.route("/doctorsearch", methods=["GET"])
 def doctorsearch():
 
     search_query = request.args.get("q", "")
     category_filter = request.args.get("category", "")
+    insurance_filter = request.args.get("insurance", "").strip().lower()
+    symptom_input = request.args.get("symptoms", "").lower()
+
+    result = None
+    if symptom_input:
+        result = analyze_symptoms(symptom_input)
 
     connection = connect_db()
     cursor = connection.cursor()
 
-    sql = "SELECT * FROM Doctor WHERE 1=1"
+    sql = """
+        SELECT d.*, AVG(r.Rating) as avg_rating
+        FROM Doctor d
+        LEFT JOIN Review r ON d.ID = r.DoctorID
+        WHERE 1=1
+    """
     params = []
 
     if search_query:
-        sql += " AND Name LIKE %s"
+        sql += " AND d.Name LIKE %s"
         params.append(f"%{search_query}%")
 
     if category_filter:
-        sql += " AND Category = %s"
+        sql += " AND d.Category = %s"
         params.append(category_filter)
+
+    if insurance_filter:
+        sql += " AND LOWER(d.Insurance) LIKE %s"
+        params.append(f"%{insurance_filter}%")
+
+    # -------- SYMPTOM FILTER --------
+    matched_categories = set()
+
+    if symptom_input:
+        for keyword, categories in SYMPTOM_MAP.items():
+            if keyword in symptom_input:
+                matched_categories.update(categories)
+
+        if matched_categories:
+            placeholders = ", ".join(["%s"] * len(matched_categories))
+            sql += f" AND d.Category IN ({placeholders})"
+            params.extend(list(matched_categories))
+
+    # ✅ IMPORTANT: group + sort at the end
+    sql += " GROUP BY d.ID ORDER BY d.Name"
 
     cursor.execute(sql, params)
     doctors = cursor.fetchall()
@@ -297,9 +483,107 @@ def doctorsearch():
         "doctorsearch.html.jinja",
         doctors=doctors,
         search_query=search_query,
-        category_filter=category_filter
+        category_filter=category_filter,
+        symptom_input=symptom_input,
+        recommended_categories=list(matched_categories),
+        SYMPTOM_MAP=SYMPTOM_MAP,
+        result=result
     )
 
+# ------------ EMERGENCY BOOK ----------------
+@app.route("/auto-book", methods=["POST"])
+@login_required
+def auto_book():
+
+    category = request.form.get("category")
+
+    connection = connect_db()
+    cursor = connection.cursor()
+
+    # Get all doctors in that category
+    cursor.execute("""
+        SELECT ID, Name
+        FROM Doctor
+        WHERE Category = %s
+    """, (category,))
+    doctors = cursor.fetchall()
+
+    now = datetime.datetime.now()
+    best_option = None
+
+    for doc in doctors:
+        doctor_id = doc["ID"]
+
+        # Check next 3 days
+        for i in range(3):
+            date = (now + datetime.timedelta(days=i)).date()
+
+            # Your existing time slots
+            slots = [f"{hour:02d}:00" for hour in range(9, 17)]
+
+            for slot in slots:
+                slot_time = datetime.datetime.strptime(
+                    f"{date} {slot}", "%Y-%m-%d %H:%M"
+                )
+
+                if slot_time <= now:
+                    continue
+
+                # Check if slot already booked
+                cursor.execute("""
+                    SELECT * FROM Appointment
+                    WHERE DoctorID = %s
+                    AND Date = %s
+                    AND Status != 'Cancelled'
+                """, (doctor_id, slot_time))
+
+                if not cursor.fetchone():
+                    best_option = {
+                        "doctor_id": doctor_id,
+                        "doctor_name": doc["Name"],
+                        "time": slot_time
+                    }
+                    break
+
+            if best_option:
+                break
+        if best_option:
+            break
+
+    connection.close()
+
+    # ❌ No available slot
+    if not best_option:
+        flash("No available doctors found soon.")
+        return redirect("/doctorsearch")
+
+    # ✅ SHOW preview instead of booking
+    return render_template(
+        "preview_booking.html.jinja",
+        option=best_option,
+        category=category
+    )
+
+@app.route("/confirm-auto-book", methods=["POST"])
+@login_required
+def confirm_auto_book():
+
+    doctor_id = request.form.get("doctor_id")
+    time = request.form.get("time")
+
+    connection = connect_db()
+    cursor = connection.cursor()
+
+    cursor.execute("""
+        INSERT INTO Appointment (DoctorID, UserID, Date, Type, Status)
+        VALUES (%s, %s, %s, %s, %s)
+    """, (doctor_id, current_user.id, time, "Emergency", "Scheduled"))
+
+    connection.commit()
+    connection.close()
+
+    flash("Emergency appointment booked successfully.")
+    return redirect("/appoint")
 
 @app.route("/calendar")
 @login_required
@@ -308,21 +592,33 @@ def calendar_view():
     connection = connect_db()
     cursor = connection.cursor()
 
+    # ✅ Get month/year from URL (fallback to today)
     today = datetime.date.today()
-    year = today.year
-    month = today.month
 
+    year = request.args.get("year", type=int) or today.year
+    month = request.args.get("month", type=int) or today.month
+
+    # ✅ Handle overflow (month 13 → next year)
+    if month > 12:
+        month = 1
+        year += 1
+    elif month < 1:
+        month = 12
+        year -= 1
+
+    # ---------------- APPOINTMENTS ----------------
     cursor.execute("""
         SELECT ID, Date, Type, Status
         FROM Appointment
         WHERE UserID = %s
         AND MONTH(Date) = %s
         AND YEAR(Date) = %s
+        AND Status != 'Cancelled'
     """, (current_user.id, month, year))
 
     appointments = cursor.fetchall()
 
- 
+    # ---------------- PERSONAL EVENTS ----------------
     cursor.execute("""
         SELECT Title, EventDate
         FROM PersonalEvent
@@ -337,32 +633,47 @@ def calendar_view():
 
     events = {}
 
-
-    for appt in appointments:
-
-        if isinstance(appt["Date"], str):
-            appt["Date"] = datetime.datetime.strptime(
-                appt["Date"], "%Y-%m-%d %H:%M:%S"
-            )
-
-        date_key = appt["Date"].strftime("%Y-%m-%d")
-
-        events.setdefault(date_key, []).append(appt)
-
+    # PERSONAL EVENTS
     for event in personal_events:
+        event_date = event["EventDate"]
 
-        if isinstance(event["EventDate"], str):
-            event["EventDate"] = datetime.datetime.strptime(
-                event["EventDate"], "%Y-%m-%d %H:%M:%S"
+        if isinstance(event_date, str):
+            event_date = datetime.datetime.strptime(
+                event_date, "%Y-%m-%d %H:%M:%S"
             )
 
-        date_key = event["EventDate"].strftime("%Y-%m-%d")
+        key = event_date.strftime("%Y-%m-%d")
 
-        events.setdefault(date_key, []).append({
+        events.setdefault(key, []).append({
             "Type": event["Title"],
-            "Status": "Personal"
+            "Status": "Personal",
+            "Date": event_date,
+            "Source": "personal"
         })
 
+    # APPOINTMENTS
+    for appt in appointments:
+        appt_date = appt["Date"]
+
+        if isinstance(appt_date, str):
+            appt_date = datetime.datetime.strptime(
+                appt_date, "%Y-%m-%d %H:%M:%S"
+            )
+
+        key = appt_date.strftime("%Y-%m-%d")
+
+        events.setdefault(key, []).append({
+            "Type": appt["Type"],
+            "Status": appt["Status"],
+            "Date": appt_date,
+            "Source": "appointment"
+        })
+
+    # ✅ SORT EVENTS BY TIME
+    for date in events:
+        events[date].sort(key=lambda x: x["Date"])
+
+    # ---------------- CALENDAR ----------------
     month_calendar = cal.monthcalendar(year, month)
     month_name = cal.month_name[month]
 
@@ -373,7 +684,8 @@ def calendar_view():
         year=year,
         month=month,
         month_name=month_name,
-        today=today.strftime("%Y-%m-%d")
+        today=today.strftime("%Y-%m-%d"),
+        timedelta=timedelta
     )
 
 
@@ -389,15 +701,21 @@ def book_appointment(Doctor_id):
         flash("Please provide date, time, and visit type.")
         return redirect(f"/doctor/{Doctor_id}")
 
-    start_datetime = datetime.datetime.strptime(
-        f"{date} {time}", "%Y-%m-%d %H:%M"
-    )
+    try:
+        start_datetime = datetime.datetime.strptime(
+            f"{date} {time}", "%Y-%m-%d %H:%M"
+        )
+    except ValueError:
+        flash("Invalid date or time format.")
+        return redirect(f"/doctor/{Doctor_id}")
+
     end_datetime = start_datetime + datetime.timedelta(minutes=20)
-    
+
     now = datetime.datetime.now()
     if start_datetime <= now:
         flash("You cannot book an appointment in the past.")
         return redirect(f"/doctor/{Doctor_id}")
+
     connection = connect_db()
     cursor = connection.cursor()
 
@@ -436,26 +754,45 @@ def book_appointment(Doctor_id):
     """, (Doctor_id, current_user.id, start_datetime, visit_type, "Scheduled"))
 
     connection.commit()
+
+    cursor.execute("SELECT Name, Email FROM User WHERE ID = %s", (current_user.id,))
+    user = cursor.fetchone()
+
+    cursor.execute("SELECT Name FROM Doctor WHERE ID = %s", (Doctor_id,))
+    doctor = cursor.fetchone()
+
     connection.close()
 
+    try:
+        send_confirmation_email(
+            user["Email"],
+            doctor["Name"],
+            start_datetime,
+            user["Name"],
+            visit_type
+        )
+    except Exception as e:
+        print(f"Error sending confirmation email: {e}")
+
     flash("Appointment successfully booked!")
-    return redirect("/appoint")
-
-
+    return redirect("/thanks")
 
 
 @app.route("/appoint/<int:appointment_id>/cancel", methods=["POST"])
 @login_required
 def cancel_appointment(appointment_id):
+
     connection = connect_db()
     cursor = connection.cursor()
+
     cursor.execute("""
-        UPDATE `Appointment`
-        SET `Status` = 'Cancelled'
-        WHERE `ID` = %s AND `UserID` = %s
+        DELETE FROM Appointment
+        WHERE ID = %s AND UserID = %s
     """, (appointment_id, current_user.id))
 
+    connection.commit()
     connection.close()
+
     flash("Appointment has been cancelled.")
     return redirect("/appoint")
 
@@ -483,24 +820,40 @@ def add_event():
     date = request.form.get("date")
     time = request.form.get("time")
 
+    # ---------------- VALIDATION ----------------
     if not title or not date or not time:
         flash("Please fill all fields")
         return redirect("/calendar")
 
-    event_datetime = datetime.datetime.strptime(
-        f"{date} {time}", "%Y-%m-%d %H:%M"
-    )
+    # ---------------- SAFE DATETIME PARSE ----------------
+    try:
+        event_datetime = datetime.datetime.strptime(
+            f"{date} {time}", "%Y-%m-%d %H:%M"
+        )
+    except ValueError:
+        flash("Invalid date or time format")
+        return redirect("/calendar")
 
+    # ---------------- DATABASE INSERT ----------------
     connection = connect_db()
     cursor = connection.cursor()
 
-    cursor.execute("""
-        INSERT INTO PersonalEvent (UserID, Title, EventDate)
-        VALUES (%s, %s, %s)
-    """, (current_user.id, title, event_datetime))
+    try:
+        cursor.execute("""
+            INSERT INTO PersonalEvent (UserID, Title, EventDate)
+            VALUES (%s, %s, %s)
+        """, (current_user.id, title, event_datetime))
 
-    connection.commit()
-    connection.close()
+        connection.commit()
+
+    except Exception as e:
+        connection.rollback()
+        print("ERROR inserting event:", e)
+        flash("Failed to add event")
+        return redirect("/calendar")
+
+    finally:
+        connection.close()
 
     flash("Event added successfully!")
     return redirect("/calendar")
@@ -673,13 +1026,14 @@ def doctor_dashboard(doctor_id):
         abort(404)
 
     cursor.execute("""
-        SELECT Appointment.ID, Appointment.Date, Appointment.Type, Appointment.Status,
-               User.Name AS PatientName
-        FROM Appointment
-        JOIN User ON User.ID = Appointment.UserID
-        WHERE Appointment.DoctorID=%s
-        ORDER BY Appointment.Date
-    """, (doctor_id,))
+    SELECT Appointment.ID, Appointment.Date, Appointment.Type, Appointment.Status,
+           User.Name AS PatientName
+    FROM Appointment
+    JOIN User ON User.ID = Appointment.UserID
+    WHERE Appointment.DoctorID=%s
+      AND Appointment.Status != 'Cancelled'
+    ORDER BY Appointment.Date
+""", (doctor_id,))
 
     appointments = cursor.fetchall()
 
@@ -749,13 +1103,24 @@ def doctor_appointments(doctor_id):
 
     appointments = cursor.fetchall()
 
+    cursor.execute("""
+    SELECT Review.*, User.Name AS PatientName
+    FROM Review
+    JOIN User ON User.ID = Review.UserID
+    WHERE Review.DoctorID = %s
+    ORDER BY Review.ID DESC
+""", (doctor_id,))
+
+    reviews = cursor.fetchall()
+
     connection.close()
 
     return render_template(
-        "doctorappoint.html.jinja",
-        doctor=doctor,
-        appointments=appointments
-    )
+    "doctorappoint.html.jinja",
+    doctor=doctor,
+    appointments=appointments,
+    reviews=reviews
+)
 
 
 
@@ -764,9 +1129,18 @@ def doctor_appointments(doctor_id):
 def doctor_calendar(doctor_id):
 
     today = datetime.date.today()
-    year = today.year
-    month = today.month
-    month_name = cal.month_name[month]  # ✅ FIX
+
+    year = request.args.get("year", type=int) or today.year
+    month = request.args.get("month", type=int) or today.month
+
+    if month > 12:
+        month = 1
+        year += 1
+    elif month < 1:
+        month = 12
+        year -= 1
+
+    month_name = cal.month_name[month]
 
     connection = connect_db()
     cursor = connection.cursor()
@@ -775,8 +1149,9 @@ def doctor_calendar(doctor_id):
     doctor = cursor.fetchone()
 
     cursor.execute("""
-        SELECT Date,Type,Status
+        SELECT Date, Type, Status, User.Name AS PatientName
         FROM Appointment
+        JOIN User ON User.ID = Appointment.UserID
         WHERE DoctorID=%s
         AND MONTH(Date)=%s
         AND YEAR(Date)=%s
@@ -791,14 +1166,24 @@ def doctor_calendar(doctor_id):
     """, (doctor_id,))
 
     blocked = cursor.fetchall()
-
     connection.close()
 
     events = {}
 
     for appt in appointments:
-        key = appt["Date"].strftime("%Y-%m-%d")
+        appt_date = appt["Date"]
+
+        if isinstance(appt_date, str):
+            appt_date = datetime.datetime.strptime(
+                appt_date, "%Y-%m-%d %H:%M:%S"
+            )
+
+        key = appt_date.strftime("%Y-%m-%d")
         events.setdefault(key, []).append(appt)
+
+    # ✅ SORT EVENTS
+    for date in events:
+        events[date].sort(key=lambda x: x["Date"])
 
     blocked_dates = [
         b["AvailableDate"].strftime("%Y-%m-%d")
@@ -815,7 +1200,8 @@ def doctor_calendar(doctor_id):
         blocked_dates=blocked_dates,
         year=year,
         month=month,
-        month_name=month_name 
+        month_name=month_name,
+        today=today.strftime("%Y-%m-%d")
     )
 
 
@@ -1049,7 +1435,40 @@ def check_appointment_reminders():
         )
 
 
+# ---------------- CONFIRMATION EMAIL ----------------------
+def send_confirmation_email(email, doctor_name, appointment_time, patient_name, visit_type):
+    with app.app_context():
+        msg = Message(
+            subject="BookWell Appointment Confirmation",
+            recipients=[email],
+        )
 
+        msg.body = f"""
+Dear {patient_name},
+
+Your appointment has been successfully scheduled with BookWell. Please find your appointment details below:
+
+Doctor: Dr. {doctor_name}
+Date: {appointment_time.strftime('%Y-%m-%d')}
+Time: {appointment_time.strftime('%H:%M')}
+Visit Type: {visit_type}
+
+We recommend arriving at least 5–10 minutes early to ensure a smooth check-in process.
+
+If you need to reschedule or cancel your appointment, you can do so by logging into your BookWell account.
+
+If you have any questions or need assistance, feel free to contact our support team.
+
+Thank you for choosing BookWell for your healthcare needs.
+
+Warm regards,  
+The BookWell Team
+"""
+        try:
+            mail.send(msg)
+            print("Confirmation email sent successfully.")
+        except Exception as e:
+            print(f"Failed to send confirmation email: {e}")
 
 
 
