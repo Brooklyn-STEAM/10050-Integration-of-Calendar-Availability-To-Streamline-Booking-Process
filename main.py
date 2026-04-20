@@ -9,7 +9,9 @@ from dynaconf import Dynaconf
 from flask_mail import Mail, Message
 from datetime import timedelta
 from apscheduler.schedulers.background import BackgroundScheduler
+import re
 from collections import Counter
+from flask import jsonify
 
 app = Flask(__name__)
 
@@ -390,32 +392,80 @@ SPECIALIST_GUIDE = {
         "message": "Musculoskeletal issue likely. Book a routine appointment."
     }
 }
+
+def extract_keywords(text):
+    text = text.lower()
+    return re.findall(r'\b\w+\b', text)
+
+EMERGENCY_KEYWORDS = [
+    "chest pain",
+    "can't breathe",
+    "cannot breathe",
+    "severe bleeding",
+    "stroke",
+    "fainting",
+    "unconscious"
+]
+
 def analyze_symptoms(user_input):
-    symptoms = [s.strip().lower() for s in user_input.split(",")]
+    user_input = user_input.lower()
 
-    matches = []
+    # ---------------- EMERGENCY CHECK ----------------
+    for keyword in EMERGENCY_KEYWORDS:
+        if keyword in user_input:
+            return {
+                "specialists": [
+                    {"name": "Emergency Care", "confidence": 1.0}
+                ],
+                "urgency": "critical",
+                "message": "⚠️ This may be an emergency. Seek immediate medical attention immediately."
+            }
 
-    for symptom in symptoms:
-        for key in SYMPTOM_MAP:
-            if key in symptom:
-                matches.extend(SYMPTOM_MAP[key])
+    words = extract_keywords(user_input)
+    category_scores = Counter()
 
-    if not matches:
+    # ---------------- MATCH SYMPTOMS ----------------
+    for symptom, categories in SYMPTOM_MAP.items():
+        symptom_lower = symptom.lower()
+        symptom_words = symptom_lower.split()
+
+        # Match full phrase OR partial words
+        if symptom_lower in user_input or any(word in words for word in symptom_words):
+            for category in categories:
+                category_scores[category] += 1
+
+    # ---------------- NO MATCH ----------------
+    if not category_scores:
         return {
-            "specialist": "General Physician",
+            "specialists": [
+                {"name": "General Physician", "confidence": 0.3}
+            ],
             "urgency": "low",
             "message": "Symptoms unclear. Consider a general consultation."
         }
 
-    most_common = Counter(matches).most_common(1)[0][0]
-    guide = SPECIALIST_GUIDE.get(most_common)
+    # ---------------- RANK RESULTS ----------------
+    total = sum(category_scores.values())
+
+    ranked = [
+        {
+            "name": category,
+            "confidence": round(score / total, 2)
+        }
+        for category, score in category_scores.most_common()
+    ]
+
+    top_category = ranked[0]["name"]
+    guide = SPECIALIST_GUIDE.get(top_category, {
+        "urgency": "low",
+        "message": "Consider consulting a doctor."
+    })
 
     return {
-        "specialist": most_common,
+        "specialists": ranked,
         "urgency": guide["urgency"],
         "message": guide["message"]
     }
-
 @app.route("/doctorsearch", methods=["GET"])
 def doctorsearch():
 
@@ -424,10 +474,18 @@ def doctorsearch():
     insurance_filter = request.args.get("insurance", "").strip().lower()
     symptom_input = request.args.get("symptoms", "").lower()
 
+    # ---------------- AI RESULT ----------------
     result = None
     if symptom_input:
         result = analyze_symptoms(symptom_input)
 
+    matched_categories = set()
+
+    if result and "specialists" in result:
+        top_specialists = result["specialists"][:2]
+        matched_categories = {spec["name"] for spec in top_specialists}
+
+    # ---------------- DATABASE ----------------
     connection = connect_db()
     cursor = connection.cursor()
 
@@ -451,20 +509,12 @@ def doctorsearch():
         sql += " AND LOWER(d.Insurance) LIKE %s"
         params.append(f"%{insurance_filter}%")
 
-    # -------- SYMPTOM FILTER --------
-    matched_categories = set()
+    # ✅ AI FILTER
+    if matched_categories:
+        placeholders = ", ".join(["%s"] * len(matched_categories))
+        sql += f" AND d.Category IN ({placeholders})"
+        params.extend(list(matched_categories))
 
-    if symptom_input:
-        for keyword, categories in SYMPTOM_MAP.items():
-            if keyword in symptom_input:
-                matched_categories.update(categories)
-
-        if matched_categories:
-            placeholders = ", ".join(["%s"] * len(matched_categories))
-            sql += f" AND d.Category IN ({placeholders})"
-            params.extend(list(matched_categories))
-
-    # ✅ IMPORTANT: group + sort at the end
     sql += " GROUP BY d.ID ORDER BY d.Name"
 
     cursor.execute(sql, params)
@@ -479,10 +529,9 @@ def doctorsearch():
         category_filter=category_filter,
         symptom_input=symptom_input,
         recommended_categories=list(matched_categories),
-        SYMPTOM_MAP=SYMPTOM_MAP,
-        result=result
+        result=result,
+         SYMPTOM_MAP=SYMPTOM_MAP
     )
-
 # ------------ EMERGENCY BOOK ----------------
 @app.route("/auto-book", methods=["POST"])
 @login_required
@@ -577,6 +626,24 @@ def confirm_auto_book():
 
     flash("Emergency appointment booked successfully.")
     return redirect("/appoint")
+
+@app.route("/chat-symptoms", methods=["POST"])
+def chat_symptoms():
+    data = request.get_json()
+    message = data.get("message", "")
+
+    result = analyze_symptoms(message)
+
+    top = result["specialists"][0]["name"]
+    urgency = result["urgency"]
+
+    reply = f"I recommend seeing a {top}. {result['message']}"
+
+    return jsonify({
+        "reply": reply,
+        "category": top,
+        "show_booking": urgency in ["high", "critical"]
+    })
 
 @app.route("/calendar")
 @login_required
