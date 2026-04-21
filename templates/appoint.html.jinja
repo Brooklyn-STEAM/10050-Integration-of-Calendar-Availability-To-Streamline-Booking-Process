@@ -1,10 +1,8 @@
 <!doctype html>
 <html lang="en">
-
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <link rel="shortcut icon" href="/static/images/logotab.png" type="image/x-icon">
   <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
   <title>My Appointments</title>
 </head>
@@ -76,59 +74,39 @@
           </p>
         </div>
 
-        <div class="flex gap-3 mt-2 md:mt-0">
+        <div class="flex gap-3 flex-wrap">
 
           {% if appointment["Status"] == "Scheduled" %}
-          <form action="/appoint/{{ appointment['ID'] }}/cancel" method="POST">
-            <button type="submit" class="bg-purple-900 hover:bg-purple-700 text-white px-4 py-2 rounded-lg transition">
-              Cancel
-            </button>
-          </form>
+            <form action="/appoint/{{ appointment['ID'] }}/cancel" method="POST">
+              <button class="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600">
+                Cancel
+              </button>
+            </form>
           {% endif %}
 
           {% if appointment["Status"] == "Scheduled" %}
-          <form action="/appoint/{{ appointment['ID'] }}/attend" method="POST">
-            <button type="submit" class="bg-purple-900 hover:bg-purple-700 text-white px-4 py-2 rounded-lg transition">
-              Mark as Attended
-            </button>
-          </form>
+            <form action="/appoint/{{ appointment['ID'] }}/attend" method="POST">
+              <button class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700">
+                Mark as Attended
+              </button>
+            </form>
+          {% endif %}
+
+          {% if appointment["Status"] in ["Scheduled", "Confirmed"] %}
+
+            <a href="/doctor/{{ appointment['DoctorID'] }}"
+               class="bg-purple-900 text-white px-4 py-2 rounded-lg hover:bg-purple-700">
+              Reschedule
+            </a>
           {% endif %}
 
         </div>
 
       </div>
 
-    </div>
-    {% endfor %}
+      {% endfor %}
     {% endif %}
 
-
   </main>
-
-<script>
-  const toggle = document.getElementById("theme-toggle");
-
-  // Load saved theme
-  if (localStorage.getItem("theme") === "dark") {
-    document.documentElement.classList.add("dark");
-  }
-
-  // Set icon on load
-  toggle.textContent = document.documentElement.classList.contains("dark") ? "☀️" : "🌙";
-
-  toggle.addEventListener("click", () => {
-    document.documentElement.classList.toggle("dark");
-
-    if (document.documentElement.classList.contains("dark")) {
-      localStorage.setItem("theme", "dark");
-      toggle.textContent = "☀️";
-    } else {
-      localStorage.setItem("theme", "light");
-      toggle.textContent = "🌙";
-    }
-  });
-</script>
-
 </body>
-
 </html>
