@@ -39,7 +39,7 @@
 
     <div class="bg-white dark:bg-gray-800 rounded-xl shadow-md mb-8 p-6">
 
-      <!-- HEADER -->
+
       <div class="flex flex-col md:flex-row md:justify-between md:items-center border-b border-purple-200 pb-4 mb-4 gap-4">
 
         <div>
@@ -66,7 +66,6 @@
 
       </div>
 
-      <!-- DETAILS -->
       <div class="flex flex-col md:flex-row md:justify-between gap-6 mb-6">
 
         <div>
@@ -86,10 +85,8 @@
 
       </div>
 
-      <!-- ACTION BUTTONS -->
       <div class="flex gap-3 flex-wrap">
 
-        {# CANCEL + ATTEND ONLY IF SCHEDULED #}
         {% if appointment["Status"] == "Scheduled" %}
 
           <form action="/appoint/{{ appointment['ID'] }}/cancel" method="POST">
@@ -106,7 +103,6 @@
 
         {% endif %}
 
-        {# RESCHEDULE ONLY AFTER FINAL STATE #}
         {% if appointment["Status"] in ["Cancelled", "Confirmed"] %}
 
           <a href="/doctor/{{ appointment['DoctorID'] }}"
