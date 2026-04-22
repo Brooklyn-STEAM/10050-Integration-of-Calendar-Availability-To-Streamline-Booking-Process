@@ -12,6 +12,7 @@ from apscheduler.schedulers.background import BackgroundScheduler
 import re
 from collections import Counter
 from flask import jsonify
+from flask import session
 
 app = Flask(__name__)
 
@@ -228,23 +229,21 @@ def remove_review(Doctorr_id):
 def review(doc_id):
 
     comment = request.form["comments"]
-
-    ratings = request.form ["rating"]
-
+    ratings = request.form["rating"]
 
     connection = connect_db()
-
     cursor = connection.cursor()
 
     cursor.execute("""
-    INSERT INTO Review(`UserID`, `Comments`, `Rating`, `DoctorID`)
-    VALUES (%s, %s, %s, %s)
+        INSERT INTO Review(`UserID`, `Comments`, `Rating`, `DoctorID`)
+        VALUES (%s, %s, %s, %s)
+    """, (current_user.id, comment, ratings, doc_id))
 
-
-""", (current_user.id, comment, ratings, doc_id ))
-    
+    connection.commit()
     connection.close()
-    
+
+    flash("Your review was submitted successfully!", "success")  
+
     return redirect(f"/doctor/{doc_id}")
      
 # ---------------- APPOINTMENTS ----------------
@@ -630,20 +629,86 @@ def confirm_auto_book():
 @app.route("/chat-symptoms", methods=["POST"])
 def chat_symptoms():
     data = request.get_json()
-    message = data.get("message", "")
+    message = data.get("message", "").lower()
 
+    # ---------------- INIT MEMORY ----------------
+    if "chat" not in session:
+        session["chat"] = {
+            "pain_location": None,
+            "duration": None
+        }
+
+    chat = session["chat"]
+
+    # ---------------- STORE ANSWERS ----------------
+    # detect location
+    if any(loc in message for loc in ["chest", "head", "back", "leg", "arm"]):
+        chat["pain_location"] = message
+
+    # detect duration
+    if any(word in message for word in ["day", "days", "week", "weeks", "month"]):
+        chat["duration"] = message
+
+    session["chat"] = chat
+
+    # ---------------- ASK ONLY IF MISSING ----------------
+    if "pain" in message and not chat["pain_location"]:
+        return jsonify({
+            "reply": "Where exactly is the pain located (chest, head, back, etc.)?",
+            "show_booking": False
+        })
+
+    if not chat["duration"]:
+        return jsonify({
+            "reply": "How long have you been experiencing this?",
+            "show_booking": False
+        })
+
+    # ---------------- NOW DO REAL ANALYSIS ----------------
     result = analyze_symptoms(message)
 
-    top = result["specialists"][0]["name"]
-    urgency = result["urgency"]
+    top_specialist = result["specialists"][0]["name"]
 
-    reply = f"I recommend seeing a {top}. {result['message']}"
+    # ---------------- GET DOCTOR ----------------
+    connection = connect_db()
+    cursor = connection.cursor()
+
+    cursor.execute("""
+        SELECT ID, Name
+        FROM Doctor
+        WHERE Category = %s
+        LIMIT 1
+    """, (top_specialist,))
+
+    doctor = cursor.fetchone()
+    connection.close()
+
+    doctor_text = ""
+    doctor_id = None
+
+    if doctor:
+        doctor_text = f"I can connect you with Dr. {doctor['Name']}."
+        doctor_id = doctor["ID"]
+
+    reply = (
+        f"I understand what you're experiencing. "
+        f"Based on what you shared, this could be related to {top_specialist.lower()} concerns. "
+        f"{result['message']} "
+        f"{doctor_text} "
+        f"Would you like me to find the earliest appointment?"
+    )
 
     return jsonify({
         "reply": reply,
-        "category": top,
-        "show_booking": urgency in ["high", "critical"]
+        "category": top_specialist,
+        "doctor_id": doctor_id,
+        "show_booking": True
     })
+
+@app.route("/reset-chat")
+def reset_chat():
+    session.pop("chat", None)
+    return "ok"
 
 @app.route("/calendar")
 @login_required
@@ -939,14 +1004,15 @@ def login():
         connection.close()
 
         if result is None:
-            flash("No account found")
+            flash("No account found", "error")
 
         elif password != result["Password"]:
-            flash("Wrong password")
+            flash("Wrong password", "error")
 
         else:
             login_user(User(result))
-            return redirect("/")
+            flash(f"Welcome back, {result['Name']}!", "success")  # ✅ ADD THIS
+            return redirect("/calendar")
 
     return render_template("login.html.jinja")
 
