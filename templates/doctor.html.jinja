@@ -218,7 +218,7 @@
             {% for review in reviews %}
             <div class="border border-gray-200 p-4 rounded-lg shadow-sm bg-white dark:bg-gray-800 dark:border-gray-700">
 
-            <p class="font-semibold">
+                <p class="font-semibold">
   {{ review["Name"][0] + ('*' * (review["Name"]|length - 1)) }}
 </p>
                 <p class="text-gray-600 mt-1">{{ review["Comments"] }}</p>
@@ -255,6 +255,7 @@
 
         </div>
     </div>
+    
 
 </body>
 </html>
