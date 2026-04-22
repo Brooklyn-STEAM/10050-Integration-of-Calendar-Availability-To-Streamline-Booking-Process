@@ -1190,6 +1190,12 @@ def doctor_appointments(doctor_id):
 )
 
 
+@app.route("/appoint/<int:DoctoR_id>/reschedule_appointment")
+@login_required
+def reschedule(DoctoR_id): 
+    return redirect(f"/doctor/{DoctoR_id}")
+
+
 
 
 @app.route("/doctor/<int:doctor_id>/calendar")
