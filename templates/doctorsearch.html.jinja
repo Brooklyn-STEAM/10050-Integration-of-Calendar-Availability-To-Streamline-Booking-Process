@@ -165,7 +165,7 @@
   </datalist>
 
 
-<div id="suggestion" style="margin-top:8px; font-weight:bold; color:#f2eeeb;"></div>
+<div id="suggestion" style="margin-top:8px; font-weight:bold; color:#ab43f0 dark:color:#f2eeeb;"></div>
 
   <select name="category"
   class="w-full md:w-1/3 px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 dark:bg-gray-900 dark:text-white">
@@ -217,6 +217,7 @@
     <div class="text-sm text-gray-500 dark:text-white">
       🤖 Hello! Describe your symptoms and I’ll help you find the right doctor.
     </div>
+   
 
   </div>
 
@@ -230,7 +231,14 @@
       class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700">
       Send
     </button>
+
+    <button onclick="resetChat()" 
+          class="mb-2 px-3 py-1 bg-gray-300 dark:bg-gray-700 rounded">
+          New Chat
+        </button>
   </div>
+
+   
 
 </div>
 
@@ -267,6 +275,27 @@ input.addEventListener("input", function () {
 </html>
 
 <script>
+window.addEventListener("load", () => {
+  fetch("/reset-chat");
+});
+function resetChat() {
+  fetch("/reset-chat")
+    .then(() => {
+      const box = document.getElementById("chat-box");
+
+      box.innerHTML = `
+        <button onclick="resetChat()" 
+          class="mb-2 px-3 py-1 bg-gray-300 dark:bg-gray-700 rounded">
+          New Chat
+        </button>
+      `;
+
+      addMessage("Hi 👋 I'm here to help. What symptoms are you experiencing?", "bot");
+    });
+}
+let typingIndicator = null;
+
+// ---------------- ADD MESSAGE ----------------
 function addMessage(text, sender="user") {
   const box = document.getElementById("chat-box");
 
@@ -275,16 +304,55 @@ function addMessage(text, sender="user") {
     ? "text-right"
     : "text-left text-gray-700 dark:text-gray-300";
 
-  msg.innerHTML = `<span class="inline-block px-3 py-2 rounded-lg ${
-    sender === "user"
-      ? "bg-blue-600 text-white"
-      : "bg-gray-200 dark:bg-gray-700"
-  }">${text}</span>`;
+  msg.innerHTML = `
+    <div class="inline-block px-4 py-2 rounded-xl max-w-[80%] ${
+      sender === "user"
+        ? "bg-blue-600 text-white"
+        : "bg-gray-200 dark:bg-gray-700"
+    }">
+      ${text}
+    </div>
+  `;
 
   box.appendChild(msg);
   box.scrollTop = box.scrollHeight;
 }
 
+// ---------------- TYPING ----------------
+function showTyping() {
+  const box = document.getElementById("chat-box");
+
+  typingIndicator = document.createElement("div");
+
+  typingIndicator.innerHTML = `
+    <div class="inline-block px-4 py-2 rounded-xl bg-gray-200 dark:bg-gray-700">
+      <span class="flex gap-1">
+        <span class="w-2 h-2 bg-gray-500 rounded-full animate-bounce"></span>
+        <span class="w-2 h-2 bg-gray-500 rounded-full animate-bounce delay-150"></span>
+        <span class="w-2 h-2 bg-gray-500 rounded-full animate-bounce delay-300"></span>
+      </span>
+    </div>
+  `;
+
+  box.appendChild(typingIndicator);
+  box.scrollTop = box.scrollHeight;
+}
+
+function hideTyping() {
+  if (typingIndicator) {
+    typingIndicator.remove();
+    typingIndicator = null;
+  }
+}
+
+// ---------------- FORMAT RESPONSE ----------------
+function formatBotReply(text) {
+  return text
+    .replace(/\n/g, "<br>")
+    .replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>");
+}
+
+// ---------------- SEND MESSAGE ----------------
 function sendMessage() {
   const input = document.getElementById("chat-input");
   const text = input.value.trim();
@@ -293,6 +361,8 @@ function sendMessage() {
 
   addMessage(text, "user");
   input.value = "";
+
+  showTyping();
 
   fetch("/chat-symptoms", {
     method: "POST",
@@ -303,19 +373,47 @@ function sendMessage() {
   })
   .then(res => res.json())
   .then(data => {
-    addMessage(data.reply, "bot");
 
+    hideTyping();
+
+    // 🧠 BOT RESPONSE
+    addMessage(formatBotReply(data.reply), "bot");
+
+    // 👨‍⚕️ DOCTOR LINK
+    if (data.doctor_id) {
+      addMessage(
+        `<a href="/doctor/${data.doctor_id}" class="text-blue-600 underline hover:text-blue-800">
+          View recommended doctor
+        </a>`,
+        "bot"
+      );
+    }
+
+    // 🚨 BOOK BUTTON
     if (data.show_booking) {
       addMessage(
         `<form method="POST" action="/auto-book">
           <input type="hidden" name="category" value="${data.category}">
-          <button class="mt-2 bg-red-600 text-white px-3 py-2 rounded">
+          <button class="mt-2 bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700">
             Find earliest appointment
           </button>
         </form>`,
         "bot"
       );
     }
+
+  })
+  .catch(() => {
+    hideTyping();
+    addMessage("Something went wrong. Try again.", "bot");
   });
 }
+
+// ---------------- ENTER TO SEND ----------------
+document.getElementById("chat-input").addEventListener("keypress", function(e) {
+  if (e.key === "Enter") {
+    e.preventDefault();
+    sendMessage();
+  }
+});
 </script>
