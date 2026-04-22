@@ -138,12 +138,10 @@ def reply_review(doctor_id):
 
 @app.route("/doctor/<Doctor_id>")
 def doctor_page(Doctor_id):
-   
 
     connection = connect_db()
     cursor = connection.cursor()
 
-    # ---------------- GET DOCTOR ----------------
     cursor.execute("SELECT * FROM Doctor WHERE ID = %s", (Doctor_id,))
     doctor = cursor.fetchone()
 
@@ -151,42 +149,49 @@ def doctor_page(Doctor_id):
         connection.close()
         abort(404)
 
-    # ---------------- GET REVIEWS ----------------
     cursor.execute("""
-    SELECT * FROM Review
-    JOIN User ON User.ID = Review.UserID
-    WHERE Review.DoctorID = %s
-""", (Doctor_id,))
+        SELECT Review.*, User.Name
+        FROM Review
+        JOIN User ON User.ID = Review.UserID
+        WHERE Review.DoctorID = %s
+        ORDER BY Review.ID DESC
+    """, (Doctor_id,))
     reviews = cursor.fetchall()
 
-    # ---------------- GET BLOCKED DATES ----------------
+    cursor.execute("""
+        SELECT AVG(Rating) AS avg_rating
+        FROM Review
+        WHERE DoctorID = %s
+    """, (Doctor_id,))
+    avg_result = cursor.fetchone()
+
+    average_rating = None
+    if avg_result and avg_result["avg_rating"]:
+        average_rating = round(avg_result["avg_rating"], 1)
+
     cursor.execute("""
         SELECT DATE(AvailableDate) AS blocked_date
         FROM DoctorAvailability
         WHERE DoctorID = %s AND Booked = 1
     """, (Doctor_id,))
+
     blocked_dates = [
         row["blocked_date"].strftime("%Y-%m-%d")
         for row in cursor.fetchall()
     ]
 
-    # ---------------- TIME SLOT LOGIC ----------------
     selected_date = request.args.get("date")
     available_slots = []
 
     if selected_date:
 
-        # If doctor is unavailable that day
         if selected_date in blocked_dates:
             available_slots = []
-
         else:
-            # Generate 1-hour slots (9AM → 4PM)
             all_slots = [f"{hour:02d}:00" for hour in range(9, 17)]
 
-            # Get already booked times (FIXED %%)
             cursor.execute("""
-                SELECT DATE_FORMAT(Date, '%%H:%%i') as booked_time
+                SELECT DATE_FORMAT(Date, '%%H:%%i') AS booked_time
                 FROM Appointment
                 WHERE DoctorID = %s
                 AND DATE(Date) = %s
@@ -195,16 +200,17 @@ def doctor_page(Doctor_id):
 
             booked = [row["booked_time"] for row in cursor.fetchall()]
 
-            # Remove booked slots
-            available_slots = [slot for slot in all_slots if slot not in booked]
+            available_slots = [
+                slot for slot in all_slots if slot not in booked
+            ]
 
     connection.close()
 
-    # ---------------- RENDER ----------------
     return render_template(
         "doctor.html.jinja",
         doctor=doctor,
         reviews=reviews,
+        average_rating=average_rating,
         blocked_dates=blocked_dates,
         available_slots=available_slots,
         selected_date=selected_date
