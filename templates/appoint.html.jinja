@@ -1,25 +1,29 @@
 <!doctype html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="shortcut icon" href="/static/images/logotab.png" type="image/x-icon">
   <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
   <title>My Appointments</title>
 </head>
 
 <body class="bg-purple-50 text-gray-800 dark:bg-gray-900 dark:text-white">
 
-  {% include "components/navbar.html.jinja" %}
 
-  <main class="max-w-6xl mx-auto px-6 py-12">
+{% include "components/navbar.html.jinja" %}
 
-    <h1 class="text-3xl font-semibold mb-8 border-b border-purple-200 pb-4 text-[#57068c] dark:text-white ">
-      My Appointments
-    </h1>
+<main class="max-w-6xl mx-auto px-6 py-12">
 
-    {% if appointments|length == 0 %}
-    <div class="text-center py-20 bg-white rounded-xl shadow-md">
-      <p class="text-lg mb-6 text-gray-600">
+  <h1 class="text-3xl font-semibold mb-8 border-b border-purple-200 pb-4 text-[#57068c] dark:text-white">
+    My Appointments
+  </h1>
+
+  {% if appointments|length == 0 %}
+
+    <div class="text-center py-20 bg-white dark:bg-gray-800 rounded-xl shadow-md">
+      <p class="text-lg mb-6 text-gray-600 dark:text-gray-300">
         You don’t have any appointments scheduled yet.
       </p>
 
@@ -29,84 +33,93 @@
       </a>
     </div>
 
-    {% else %}
-    {% for appointment in appointments %}
-    <div class="bg-white dark:bg-gray-500 dark:text-white rounded-xl shadow-md mb-8 p-6 hover:shadow-lg transition">
+  {% else %}
 
-      <div
-        class="flex flex-col md:flex-row md:justify-between md:items-center border-b border-purple-200 pb-4 mb-4 gap-4">
+    {% for appointment in appointments %}
+
+    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-md mb-8 p-6">
+
+
+      <div class="flex flex-col md:flex-row md:justify-between md:items-center border-b border-purple-200 pb-4 mb-4 gap-4">
+
         <div>
           <p class="font-semibold text-lg text-[#57068c] dark:text-white">
             Appointment #{{ loop.index }}
           </p>
-          <p class="text-sm text-gray-500 dark:text-white">
+          <p class="text-sm text-gray-500 dark:text-gray-300">
             Dr. {{ appointment["DoctorName"] }}
           </p>
         </div>
 
-        <span class="px-4 py-1 rounded-full text-sm font-medium 
+        <span class="px-4 py-1 rounded-full text-sm font-medium
           {% if appointment['Status'] == 'Confirmed' %}
             bg-green-100 text-green-700
-          {% elif appointment['Status'] == 'Pending' %}
+          {% elif appointment['Status'] == 'Scheduled' %}
             bg-yellow-100 text-yellow-700
           {% elif appointment['Status'] == 'Cancelled' %}
-            bg-gray-100 text-gray-700
+            bg-gray-200 text-gray-700
           {% else %}
-            bg-red-100 text-red-700
+            bg-blue-100 text-blue-700
           {% endif %}">
           {{ appointment["Status"] }}
         </span>
+
       </div>
 
-      <div class="flex flex-col md:flex-row md:justify-center gap-6">
+      <div class="flex flex-col md:flex-row md:justify-between gap-6 mb-6">
 
         <div>
           <p class="font-medium">Date & Time</p>
-          <p class="text-sm text-gray-600 dark:text-white">
-            {{ appointment["Date"].strftime("%B %d, %Y") }} at {{ appointment["Date"].strftime("%H:%M") }}
+          <p class="text-sm text-gray-600 dark:text-gray-300">
+            {{ appointment["Date"].strftime("%B %d, %Y") }}
+            at {{ appointment["Date"].strftime("%H:%M") }}
           </p>
         </div>
 
         <div>
           <p class="font-medium">Location</p>
-          <p class="text-sm text-gray-600 dark:text-white">
+          <p class="text-sm text-gray-600 dark:text-gray-300">
             {{ appointment["Location"] }}
           </p>
         </div>
 
-        <div class="flex gap-3 flex-wrap">
+      </div>
 
-          {% if appointment["Status"] == "Scheduled" %}
-            <form action="/appoint/{{ appointment['ID'] }}/cancel" method="POST">
-              <button class="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600">
-                Cancel
-              </button>
-            </form>
-          {% endif %}
+      <div class="flex gap-3 flex-wrap">
 
-          {% if appointment["Status"] == "Scheduled" %}
-            <form action="/appoint/{{ appointment['ID'] }}/attend" method="POST">
-              <button class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700">
-                Mark as Attended
-              </button>
-            </form>
-          {% endif %}
+        {% if appointment["Status"] == "Scheduled" %}
 
-          {% if appointment["Status"] in ["Scheduled", "Confirmed"] %}
+          <form action="/appoint/{{ appointment['ID'] }}/cancel" method="POST">
+            <button class="bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700">
+              Cancel
+            </button>
+          </form>
 
-            <a href="/doctor/{{ appointment['DoctorID'] }}"
-               class="bg-purple-900 text-white px-4 py-2 rounded-lg hover:bg-purple-700">
-              Reschedule
-            </a>
-          {% endif %}
+          <form action="/appoint/{{ appointment['ID'] }}/attend" method="POST">
+            <button class="bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700">
+              Mark as Attended
+            </button>
+          </form>
 
-        </div>
+        {% endif %}
+
+        {% if appointment["Status"] in ["Cancelled", "Confirmed"] %}
+
+          <a href="/doctor/{{ appointment['DoctorID'] }}"
+            class="bg-purple-700 text-white px-4 py-2 rounded-lg hover:bg-purple-800">
+            Reschedule
+          </a>
+
+        {% endif %}
 
       </div>
 
-      {% endfor %}
-    {% endif %}
+    </div>
 
-  </main>
+    {% endfor %}
+  {% endif %}
+
+</main>
+
 </body>
 </html>
