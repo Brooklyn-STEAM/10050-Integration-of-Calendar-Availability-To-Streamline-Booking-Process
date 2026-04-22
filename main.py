@@ -931,7 +931,8 @@ def cancel_appointment(appointment_id):
     connection.commit()
     connection.close()
 
-    flash("Appointment has been cancelled.")
+    flash("Appointment has been cancelled.", "success")
+
     return redirect("/appoint")
 
 @app.route("/appoint/<int:appointment_id>/attend", methods=["POST"])
