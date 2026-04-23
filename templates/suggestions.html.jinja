@@ -15,21 +15,48 @@
 <div class="max-w-3xl mx-auto space-y-4">
 
     {% for doctor in doctors %}
-        <div class="bg-white p-4 rounded-lg shadow dark:bg-gray-600 dark:text-white">
-            <h2 class="text-lg font-semibold dark:bg-gray-600 dark:text-white">
+    <div class="bg-white p-4 rounded-lg shadow flex items-center gap-4 dark:bg-gray-600 dark:text-white">
+
+        <img src="{{ doctor.Image }}"
+             alt="Doctor Image"
+             class="w-14 h-14 rounded-full object-cover border">
+
+        <div class="flex-1">
+
+            <h2 class="text-lg font-semibold">
                 Dr. {{ doctor.Name }}
             </h2>
-            <p class="text-sm text-gray-600 dark:bg-gray-600 dark:text-white">
+
+            <p class="text-sm text-gray-600 dark:text-white">
                 {{ doctor.Category }} • {{ doctor.Location }}
             </p>
 
+            <div class="flex items-center gap-1 mt-1">
+                {% set rating = doctor.avg_rating or 0 %}
+
+                {% for i in range(1, 6) %}
+                    {% if rating >= i %}
+                        <span class="text-purple-400">★</span>
+                    {% elif rating >= i - 0.5 %}
+                        <span class="text-purple-400">★</span>
+                    {% else %}
+                        <span class="text-gray-300">★</span>
+                    {% endif %}
+                {% endfor %}
+
+                <span class="text-sm text-gray-500 ml-2">
+                    ({{ "%.1f"|format(rating) }})
+                </span>
+            </div>
+
             <a href="/doctor/{{ doctor.ID }}"
-               class="inline-block mt-2 text-purple-700 hover:underline dark:bg-gray-600 dark:text-indigo-400 ">
+               class="inline-block mt-2 text-purple-700 hover:underline dark:text-indigo-400">
                View Profile
             </a>
-        </div>
-    {% endfor %}
 
+        </div>
+    </div>
+{% endfor %}
 </div>
 
 </body>
