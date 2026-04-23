@@ -307,7 +307,7 @@ def appoint():
             Appointment.Date, 
             Appointment.Type, 
             Appointment.Status,
-            Doctor.ID AS DoctorID,          -- ✅ IMPORTANT
+            Doctor.ID AS DoctorID,         
             Doctor.Name AS DoctorName, 
             Doctor.Location AS Location
         FROM Appointment
@@ -562,7 +562,6 @@ def doctorsearch():
         sql += " AND LOWER(d.Insurance) LIKE %s"
         params.append(f"%{insurance_filter}%")
 
-    # ✅ AI FILTER
     if matched_categories:
         placeholders = ", ".join(["%s"] * len(matched_categories))
         sql += f" AND d.Category IN ({placeholders})"
@@ -647,12 +646,11 @@ def auto_book():
 
     connection.close()
 
-    # ❌ No available slot
+
     if not best_option:
         flash("No available doctors found soon.")
         return redirect("/doctorsearch")
 
-    # ✅ SHOW preview instead of booking
     return render_template(
         "preview_booking.html.jinja",
         option=best_option,
@@ -771,13 +769,11 @@ def calendar_view():
     connection = connect_db()
     cursor = connection.cursor()
 
-    # ✅ Get month/year from URL (fallback to today)
     today = datetime.date.today()
 
     year = request.args.get("year", type=int) or today.year
     month = request.args.get("month", type=int) or today.month
 
-    # ✅ Handle overflow (month 13 → next year)
     if month > 12:
         month = 1
         year += 1
@@ -848,7 +844,6 @@ def calendar_view():
             "Source": "appointment"
         })
 
-    # ✅ SORT EVENTS BY TIME
     for date in events:
         events[date].sort(key=lambda x: x["Date"])
 
@@ -950,15 +945,6 @@ def add_event():
     return redirect("/calendar")
     
 
-
-
-    
-
-
-
-
-
-
 # ---------------- LOGIN ----------------
 @app.route("/login", methods=["GET", "POST"])
 def login():
@@ -987,7 +973,7 @@ def login():
 
         else:
             login_user(User(result))
-            flash(f"Welcome back, {result['Name']}!", "success")  # ✅ ADD THIS
+            flash(f"Welcome back, {result['Name']}!", "success")  
             return redirect("/calendar")
 
     return render_template("login.html.jinja")
@@ -1165,24 +1151,7 @@ def doctor_appointments(doctor_id):
 
             flash("Appointment cancelled")
 
-        # elif action == "reschedule":
-
-        #     new_date = request.form.get("new_date")
-        #     new_time = request.form.get("new_time")
-
-        #     if new_date and new_time:
-
-        #         new_datetime = f"{new_date} {new_time}"
-
-        #         cursor.execute("""
-        #             UPDATE Appointment
-        #             SET Date=%s, Status='Scheduled'
-        #             WHERE ID=%s AND DoctorID=%s
-        #         """, (new_datetime, appointment_id, doctor_id))
-
-        #         flash("Appointment rescheduled")
-
-        # connection.commit()
+       
 
     cursor.execute("""
         SELECT Appointment.ID, Appointment.Date, Appointment.Type, Appointment.Status,
@@ -1273,7 +1242,7 @@ def doctor_calendar(doctor_id):
         key = appt_date.strftime("%Y-%m-%d")
         events.setdefault(key, []).append(appt)
 
-    # ✅ SORT EVENTS
+
     for date in events:
         events[date].sort(key=lambda x: x["Date"])
 
