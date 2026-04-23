@@ -252,6 +252,27 @@
             </div>
            
             {% endfor %}
+        </div>
+
+        <!-- Delete button -->
+        <form method="POST" action="/doctor/{{ review['DoctorID'] }}/remove_review" class="flex-shrink-0">
+            <button type="submit" class="text-sm text-red-600 hover:text-red-800">
+                Delete
+            </button>
+        </form>
+
+    </div>
+
+    <!-- Doctor reply -->
+    {% if review["Reply"] %}
+    <div class="p-3 bg-purple-50 border-l-4 border-purple-400 rounded dark:bg-gray-700">
+        <p class="text-sm font-semibold">Doctor Response:</p>
+        <p class="text-sm">{{ review["Reply"] }}</p>
+    </div>
+    {% endif %}
+
+</div> 
+{% endfor %}
 
         </div>
     </div>
