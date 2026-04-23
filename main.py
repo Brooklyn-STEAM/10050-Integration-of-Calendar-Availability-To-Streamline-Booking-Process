@@ -47,14 +47,15 @@ def connect_db():
     )
     return conn
 
-def generate_time_slots(start_hour=9, end_hour=17, interval=20):
+def generate_time_slots(start_hour=9, end_hour=17, interval=60, date=None):
     slots = []
-    current = datetime.datetime.combine(datetime.date.today(), datetime.time(start_hour, 0))
+    base_date = date or datetime.date.today()
 
-    end_time = datetime.datetime.combine(datetime.date.today(), datetime.time(end_hour, 0))
+    current = datetime.datetime.combine(base_date, datetime.time(start_hour, 0))
+    end_time = datetime.datetime.combine(base_date, datetime.time(end_hour, 0))
 
     while current < end_time:
-        slots.append(current.strftime("%H:%M"))
+        slots.append(current)
         current += datetime.timedelta(minutes=interval)
 
     return slots
@@ -136,73 +137,64 @@ def reply_review(doctor_id):
     flash("Reply added successfully!", "success")
     return redirect(f"/doctor/{doctor_id}")
 
-@app.route("/doctor/<Doctor_id>")
-def doctor_page(Doctor_id):
+@app.route("/doctor/<int:doctor_id>")
+def doctor_page(doctor_id):
 
     connection = connect_db()
     cursor = connection.cursor()
 
-    cursor.execute("SELECT * FROM Doctor WHERE ID = %s", (Doctor_id,))
+    # ---------------- DOCTOR ----------------
+    cursor.execute("SELECT * FROM Doctor WHERE ID=%s", (doctor_id,))
     doctor = cursor.fetchone()
 
-    if doctor is None:
+    if not doctor:
         connection.close()
         abort(404)
 
+    # ---------------- REVIEWS ----------------
     cursor.execute("""
         SELECT Review.*, User.Name
         FROM Review
         JOIN User ON User.ID = Review.UserID
         WHERE Review.DoctorID = %s
         ORDER BY Review.ID DESC
-    """, (Doctor_id,))
+    """, (doctor_id,))
     reviews = cursor.fetchall()
 
+    # ---------------- AVERAGE RATING ----------------
     cursor.execute("""
         SELECT AVG(Rating) AS avg_rating
         FROM Review
         WHERE DoctorID = %s
-    """, (Doctor_id,))
+    """, (doctor_id,))
     avg_result = cursor.fetchone()
 
-    average_rating = None
-    if avg_result and avg_result["avg_rating"]:
-        average_rating = round(avg_result["avg_rating"], 1)
+    average_rating = round(avg_result["avg_rating"], 1) if avg_result and avg_result["avg_rating"] else None
 
-    cursor.execute("""
-        SELECT DATE(AvailableDate) AS blocked_date
-        FROM DoctorAvailability
-        WHERE DoctorID = %s AND Booked = 1
-    """, (Doctor_id,))
-
-    blocked_dates = [
-        row["blocked_date"].strftime("%Y-%m-%d")
-        for row in cursor.fetchall()
-    ]
-
+    # ---------------- USER INPUT ----------------
     selected_date = request.args.get("date")
+    visit_type = request.args.get("visit_type", "In-Person")
+
     available_slots = []
 
     if selected_date:
 
-        if selected_date in blocked_dates:
-            available_slots = []
-        else:
-            all_slots = [f"{hour:02d}:00" for hour in range(9, 17)]
+        all_slots = generate_time_slots(9, 17, 60, datetime.datetime.strptime(selected_date, "%Y-%m-%d").date())
 
-            cursor.execute("""
-                SELECT DATE_FORMAT(Date, '%%H:%%i') AS booked_time
-                FROM Appointment
-                WHERE DoctorID = %s
-                AND DATE(Date) = %s
-                AND Status != 'Cancelled'
-            """, (Doctor_id, selected_date))
+        cursor.execute("""
+            SELECT Date AS booked_time
+            FROM Appointment
+            WHERE DoctorID = %s
+            AND DATE(Date) = %s
+            AND Status != 'Cancelled'
+        """, (doctor_id, selected_date))
 
-            booked = [row["booked_time"] for row in cursor.fetchall()]
+        booked = [
+    row["booked_time"].strftime("%H:%M")
+    for row in cursor.fetchall()
+]
 
-            available_slots = [
-                slot for slot in all_slots if slot not in booked
-            ]
+        available_slots = [slot for slot in all_slots if slot not in booked]
 
     connection.close()
 
@@ -211,10 +203,58 @@ def doctor_page(Doctor_id):
         doctor=doctor,
         reviews=reviews,
         average_rating=average_rating,
-        blocked_dates=blocked_dates,
-        available_slots=available_slots,
-        selected_date=selected_date
+        selected_date=selected_date,
+        visit_type=visit_type,
+        available_slots=available_slots
     )
+
+@app.route("/doctor/<int:doctor_id>/book", methods=["POST"])
+@login_required
+def book_appointment(doctor_id):
+
+    date = request.form.get("date")
+    time = request.form.get("time")
+    visit_type = request.form.get("visit_type", "In-Person")
+
+    if not date or not time:
+        flash("Please select date and time.", "error")
+        return redirect(f"/doctor/{doctor_id}")
+
+    start_datetime = datetime.datetime.strptime(
+    f"{date} {time}", "%Y-%m-%d %H:%M"
+)
+
+    if start_datetime <= datetime.datetime.now():
+        flash("You cannot book a past time.", "error")
+        return redirect(f"/doctor/{doctor_id}")
+
+    connection = connect_db()
+    cursor = connection.cursor()
+
+    # ---------------- CHECK CONFLICT ----------------
+    cursor.execute("""
+        SELECT * FROM Appointment
+        WHERE DoctorID=%s
+        AND Date=%s
+        AND Status != 'Cancelled'
+    """, (doctor_id, start_datetime))
+
+    if cursor.fetchone():
+        connection.close()
+        flash("Slot already booked.", "error")
+        return redirect(f"/doctor/{doctor_id}")
+
+    # ---------------- INSERT ----------------
+    cursor.execute("""
+        INSERT INTO Appointment (DoctorID, UserID, Date, Type, Status)
+        VALUES (%s, %s, %s, %s, %s)
+    """, (doctor_id, current_user.id, start_datetime, visit_type, "Scheduled"))
+
+    connection.commit()
+    connection.close()
+
+    flash("Appointment booked successfully!", "success")
+    return redirect("/appoint")
 
 @app.route("/doctor/<Doctorr_id>/remove_review", methods= ["POST"])
 @login_required
@@ -312,22 +352,23 @@ def suggest_doctors():
 
     # Base query
     query = """
-        SELECT * FROM Doctor d
-        WHERE d.ID NOT IN (
-            SELECT DoctorID
-            FROM DoctorAvailability
-            WHERE AvailableDate = %s AND Booked = 1
-        )
-    """
+    SELECT d.*, AVG(r.Rating) AS avg_rating
+    FROM Doctor d
+    LEFT JOIN Review r ON d.ID = r.DoctorID
+    WHERE d.ID NOT IN (
+        SELECT DoctorID
+        FROM DoctorAvailability
+        WHERE AvailableDate = %s AND Booked = 1
+    )
+"""
 
     params = [date_obj]
 
-    # ✅ Add category filter if selected
     if category:
-        query += " AND d.Category = %s"
-        params.append(category)
+      query += " AND d.Category = %s"
+      params.append(category)
 
-    query += " ORDER BY d.Name"
+    query += " GROUP BY d.ID ORDER BY d.Name"
 
     cursor.execute(query, tuple(params))
     doctors = cursor.fetchall()
@@ -825,95 +866,6 @@ def calendar_view():
         today=today.strftime("%Y-%m-%d"),
         timedelta=timedelta
     )
-
-
-@app.route("/doctor/<Doctor_id>/book", methods=["POST"])
-@login_required
-def book_appointment(Doctor_id):
-
-    date = request.form.get("date")
-    time = request.form.get("time")
-    visit_type = request.form.get("visit_type")
-
-    if not date or not time or not visit_type:
-        flash("Please provide date, time, and visit type.")
-        return redirect(f"/doctor/{Doctor_id}")
-
-    try:
-        start_datetime = datetime.datetime.strptime(
-            f"{date} {time}", "%Y-%m-%d %H:%M"
-        )
-    except ValueError:
-        flash("Invalid date or time format.")
-        return redirect(f"/doctor/{Doctor_id}")
-
-    end_datetime = start_datetime + datetime.timedelta(minutes=20)
-
-    now = datetime.datetime.now()
-    if start_datetime <= now:
-        flash("You cannot book an appointment in the past.")
-        return redirect(f"/doctor/{Doctor_id}")
-
-    connection = connect_db()
-    cursor = connection.cursor()
-
-    cursor.execute("""
-        SELECT * FROM Appointment
-        WHERE DoctorID = %s
-        AND Status != 'Cancelled'
-        AND Date >= %s
-        AND Date < %s
-    """, (Doctor_id, start_datetime, end_datetime))
-
-    existing = cursor.fetchone()
-
-    if existing:
-        connection.close()
-        flash("Doctor not available at this time.")
-        return redirect(f"/doctor/{Doctor_id}")
-
-    cursor.execute("""
-        SELECT * FROM DoctorAvailability
-        WHERE DoctorID = %s
-        AND DATE(AvailableDate) = %s
-        AND Booked = 1
-    """, (Doctor_id, date))
-
-    blocked = cursor.fetchone()
-
-    if blocked:
-        connection.close()
-        flash("Doctor unavailable on this date.")
-        return redirect(f"/doctor/{Doctor_id}")
-
-    cursor.execute("""
-        INSERT INTO Appointment (DoctorID, UserID, Date, Type, Status)
-        VALUES (%s, %s, %s, %s, %s)
-    """, (Doctor_id, current_user.id, start_datetime, visit_type, "Scheduled"))
-
-    connection.commit()
-
-    cursor.execute("SELECT Name, Email FROM User WHERE ID = %s", (current_user.id,))
-    user = cursor.fetchone()
-
-    cursor.execute("SELECT Name FROM Doctor WHERE ID = %s", (Doctor_id,))
-    doctor = cursor.fetchone()
-
-    connection.close()
-
-    try:
-        send_confirmation_email(
-            user["Email"],
-            doctor["Name"],
-            start_datetime,
-            user["Name"],
-            visit_type
-        )
-    except Exception as e:
-        print(f"Error sending confirmation email: {e}")
-
-    flash("Appointment successfully booked!")
-    return redirect("/thanks")
 
 
 @app.route("/appoint/<int:appointment_id>/cancel", methods=["POST"])

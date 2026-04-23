@@ -4,101 +4,91 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <link rel="shortcut icon" href="/static/images/logotab.png" type="image/x-icon">
+    <link rel="shortcut icon" href="/static/images/logotab.png">
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
 </head>
 
-<body class="bg-purple-30 min-h-screen dark:bg-gray-900 dark:text-white">
+<body class="bg-purple-50 min-h-screen dark:bg-gray-900 dark:text-white">
 
     {% include "components/navbar.html.jinja" %}
 
+    <!-- FLASH MESSAGES -->
     {% with messages = get_flashed_messages(with_categories=true) %}
     {% if messages %}
-    <div class="max-w-5xl mx-auto mt-6 px-4 dark:bg-gray-600 dark:text-white">
+    <div class="max-w-5xl mx-auto mt-6 px-4">
         {% for category, message in messages %}
-        <div class="mb-4 flex items-center justify-between p-4 rounded-lg shadow-sm border
-            {% if category == 'error' %}
-                bg-red-50 border-red-200 text-red-700
-            {% elif category == 'success' %}
-                bg-green-50 border-green-200 text-green-700
-            {% elif category == 'warning' %}
-                bg-yellow-50 border-yellow-200 text-yellow-700
-            {% else %}
-                bg-purple-50 border-purple-200 text-purple-800
-            {% endif %}
-        ">
-            <div class="flex items-center gap-3">
-                {% if category == 'error' %}
-                <span class="text-xl">❌</span>
-                {% elif category == 'success' %}
-                <span class="text-xl">✅</span>
-                {% elif category == 'warning' %}
-                <span class="text-xl">⚠️</span>
-                {% else %}
-                <span class="text-xl">ℹ️</span>
-                {% endif %}
-                <p class="font-medium">{{ message }}</p>
-            </div>
+        <div class="mb-4 p-4 rounded-lg border shadow-sm
+        {% if category == 'error' %} bg-red-50 text-red-700 border-red-200
+        {% elif category == 'success' %} bg-green-50 text-green-700 border-green-200
+        {% else %} bg-purple-50 text-purple-800 border-purple-200 {% endif %}
+        dark:bg-gray-800 dark:border-gray-700 dark:text-white">
+            {{ message }}
         </div>
         {% endfor %}
     </div>
     {% endif %}
     {% endwith %}
 
-    <div class="max-w-7xl mx-auto p-6 dark:bg-gray-900 dark:text-white">
+    <!-- MAIN -->
+    <div class="max-w-7xl mx-auto p-6">
         <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
 
-
-            <div class="lg:col-span-4 bg-white p-2 rounded shadow dark:bg-gray-900 dark:text-white">
-                <img src="{{ doctor['Image'] }}" alt="{{ doctor['Name'] }}" class="w-full rounded-lg object-cover" />
+            <!-- IMAGE -->
+            <div class="lg:col-span-4">
+                <img src="{{ doctor['Image'] }}" class="w-full rounded-xl shadow object-cover">
             </div>
 
+            <!-- INFO -->
             <div class="lg:col-span-5 space-y-4">
 
-                <h1 class="text-3xl font-bold text-purple-900 dark:text-white">
+                <h1 class="text-3xl font-bold text-purple-800 dark:text-purple-300">
                     Dr. {{ doctor['Name'] }}
                 </h1>
 
-                <p class="text-lg text-purple-900 font-semibold dark:text-white">
+                <p class="text-lg text-gray-700 dark:text-gray-300">
                     {{ doctor['Category'] }} • {{ doctor['Type'] }}
                 </p>
 
-                <p class="text-black dark:text-white">📍 {{ doctor['Location'] }}</p>
+                <p class="text-sm text-gray-500 dark:text-gray-400">
+                    📍 {{ doctor['Location'] }}
+                </p>
 
-                <div class="flex items-center space-x-3">
-                    {% if average_rating %}
-
+                <!-- ⭐ RATING -->
+                {% if average_rating %}
+                <div class="flex items-center gap-2">
                     <div class="flex">
                         {% for i in range(1, 6) %}
-                            {% if average_rating >= i %}
-                                <span class="text-white-400 text-lg">★</span>
-                            {% elif average_rating >= i - 0.5 %}
-                                <span class="text-yellow-300 text-lg">★</span>
-                            {% else %}
-                                <span class="text-gray-300 dark:text-gray-600 text-lg">★</span>
-                            {% endif %}
+                        {% if average_rating >= i %}
+                        <span class="text-yellow-400">★</span>
+                        {% elif average_rating >= i - 0.5 %}
+                        <span class="text-yellow-300">★</span>
+                        {% else %}
+                        <span class="text-gray-300 dark:text-gray-600">★</span>
+                        {% endif %}
                         {% endfor %}
                     </div>
-
                     <p class="text-sm text-gray-600 dark:text-gray-300">
                         {{ average_rating }}/5 ({{ reviews|length }} reviews)
                     </p>
-
-                    {% else %}
-                    <p class="text-gray-500 text-sm">No reviews yet</p>
-                    {% endif %}
                 </div>
+                {% else %}
+                <p class="text-gray-400">No reviews yet</p>
+                {% endif %}
 
-                <div class="bg-white p-4 rounded shadow-sm dark:bg-gray-900 dark:text-white">
-                    <h2 class="text-xl font-semibold text-gray-800 mb-2 dark:text-white">About</h2>
-                    <p class="text-gray-700 leading-relaxed dark:text-white">
+                <!-- ABOUT -->
+                <div class="bg-white dark:bg-gray-800 p-4 rounded-xl shadow">
+                    <h2 class="font-semibold mb-2">About</h2>
+                    <p class="text-sm text-gray-600 dark:text-gray-300">
                         {{ doctor['Description'] }}
                     </p>
                 </div>
 
-                <div class="bg-white p-4 rounded shadow-sm dark:bg-gray-900 dark:text-white">
-                    <h2 class="text-xl font-semibold text-gray-800 mb-2 dark:text-white">Accepted Insurance</h2>
-                    <p class="text-gray-700 dark:text-white">{{ doctor['Insurance'] }}</p>
+                <!-- INSURANCE -->
+                <div class="bg-white dark:bg-gray-800 p-4 rounded-xl shadow">
+                    <h2 class="font-semibold mb-2">Insurance</h2>
+                    <p class="text-sm text-gray-600 dark:text-gray-300">
+                        {{ doctor['Insurance'] }}
+                    </p>
                 </div>
 
             </div>
@@ -114,14 +104,22 @@
                         Accepting New Patients
                     </p>
 
-                    <form method="get" action="" class="space-y-3">
+                    <form method="get" class="space-y-3">
                         <div>
-                            <label class="block mb-1 text-sm font-medium text-gray-600">Select Date</label>
+                            <label class="block mb-1 text-sm">Select Date</label>
                             <input type="date" name="date" value="{{ selected_date }}" required
-                                class="w-full px-3 py-2 border border-purple-300 rounded-md focus:outline-none focus:ring-1 focus:ring-[#e6af6c]" />
+                                class="w-full px-3 py-2 border rounded" />
                         </div>
-                        <button type="submit"
-                            class="px-4 py-2 bg-purple-700 text-white rounded hover:bg-purple-800">
+
+                        <div>
+                            <label class="block mb-1 text-sm">Visit Type</label>
+                            <select name="visit_type" class="w-full px-3 py-2 border rounded">
+                                <option value="In-Person">In-Person</option>
+                                <option value="Virtual">Virtual</option>
+                            </select>
+                        </div>
+
+                        <button type="submit" class="px-4 py-2 bg-purple-700 text-white rounded">
                             Check Availability
                         </button>
                     </form>
@@ -133,150 +131,110 @@
                         <div class="flex flex-wrap gap-2 mt-2">
                             {% for slot in available_slots %}
                             <form method="post" action="/doctor/{{ doctor['ID'] }}/book">
+
                                 <input type="hidden" name="date" value="{{ selected_date }}">
-                                <input type="hidden" name="time" value="{{ slot }}">
-                                <input type="hidden" name="visit_type" value="General">
+                               <input type="hidden" name="time" value="{{ slot.strftime('%H:%M') }}">
+                                <input type="hidden" name="visit_type" value="{{ visit_type }}">
 
                                 <button type="submit"
                                     class="px-3 py-1 bg-purple-600 text-white rounded hover:bg-purple-700">
-                                    {{ slot }}
+                                   {{ slot.strftime("%H:%M") }}
                                 </button>
+
                             </form>
                             {% endfor %}
                         </div>
                     </div>
+
+                    {% else %}
+                    <p class="text-sm text-gray-500">
+                        Select a date to see available times.
+                    </p>
                     {% endif %}
-
-                    <form method="post" action="/doctor/{{ doctor['ID'] }}/book" class="space-y-3 mt-3">
-
-                        <div>
-                            <label class="block mb-1 text-sm font-medium text-gray-600">Visit Type</label>
-                            <select name="visit_type"
-                                class="w-full px-3 py-2 border border-purple-300 rounded-md focus:outline-none focus:ring-1 focus:ring-[#e6af6c]">
-                                <option value="In-Person">In-Person</option>
-                                <option value="Virtual">Virtual</option>
-                            </select>
-                        </div>
-
-                    </form>
-
                 </div>
             </div>
+
+    
+
+            </form>
 
         </div>
     </div>
 
-    <div class="max-w-4xl mx-auto p-6 mt-12 dark:bg-gray-900 dark:text-white">
+    </div>
+    </div>
 
-        <div class="bg-white rounded shadow p-6 dark:bg-gray-900 dark:text-white">
+    <!-- REVIEWS -->
+    <div class="max-w-4xl mx-auto p-6 mt-12">
 
-            <h2 class="text-2xl font-bold text-gray-900 mb-6 text-center dark:text-white">
-                Patient Reviews
-            </h2>
+        <div class="bg-white dark:bg-gray-800 p-6 rounded-xl shadow">
 
-            <form method="post" action="/doctor/{{doctor['ID']}}/review"
-                class="max-w-lg mx-auto bg-white p-6 rounded-lg shadow-md space-y-4 dark:bg-gray-600">
+            <h2 class="text-xl font-bold mb-6 text-center">Patient Reviews</h2>
 
-                <div class="w-24">
-                    <label class="block mb-1 text-xs font-medium text-gray-600 dark:text-white">
-                        Rating
-                    </label>
+            <!-- FORM -->
+            <form method="post" action="/doctor/{{doctor['ID']}}/review" class="space-y-4 mb-10">
 
-                    <select name="rating"
-                        class="w-full px-2 py-1 text-sm font-semibold border border-gray-300 dark:bg-gray-600 dark:text-white rounded-md">
-                        <option value="1">1</option>
-                        <option value="2">2</option>
-                        <option value="3">3</option>
-                        <option value="4">4</option>
-                        <option value="5">5</option>
-                    </select>
-                </div>
+                <select name="rating" class="w-full px-3 py-2 border rounded dark:bg-gray-700">
+                    <option value="1">1</option>
+                    <option value="2">2</option>
+                    <option value="3">3</option>
+                    <option value="4">4</option>
+                    <option value="5">5</option>
+                </select>
 
-                <div>
-                    <label class="block text-gray-800 font-semibold mb-2 dark:text-white">Your Name</label>
-                    <input type="text" name="name" required
-                        class="w-full border border-gray-300 rounded-lg px-4 py-2 dark:bg-gray-700" />
-                </div>
+                <input type="text" name="name" placeholder="Your name"
+                    class="w-full px-3 py-2 border rounded dark:bg-gray-700">
 
-                <div>
-                    <label class="block text-gray-800 font-semibold mb-2 dark:text-white">Your Review</label>
-                    <textarea name="comments" rows="4" required
-                        class="w-full border border-gray-300 rounded-lg px-4 py-2 dark:bg-gray-700"></textarea>
-                </div>
+                <textarea name="comments" rows="3" placeholder="Write your review..."
+                    class="w-full px-3 py-2 border rounded dark:bg-gray-700"></textarea>
 
-                <button type="submit"
-                    class="w-full px-6 py-2 bg-purple-700 text-white rounded-full font-semibold hover:bg-purple-800">
+                <button class="w-full bg-purple-700 text-white py-2 rounded">
                     Submit Review
                 </button>
-
             </form>
 
-            <h2 class="text-2xl font-bold text-gray-800 mt-10 mb-4 text-center dark:text-white">
-                Reviews
-            </h2>
-
+            <!-- LIST -->
             {% for review in reviews %}
-            <div class="border border-gray-200 p-4 rounded-lg shadow-sm bg-white dark:bg-gray-800 dark:border-gray-700">
+            <div class="border-b border-gray-200 dark:border-gray-700 py-4">
 
                 <p class="font-semibold">
-  {{ review["Name"][0] + ('*' * (review["Name"]|length - 1)) }}
-</p>
-                <p class="text-gray-600 mt-1">{{ review["Comments"] }}</p>
+                    {{ review["Name"][0] + ('*' * (review["Name"]|length - 1)) }}
+                </p>
 
-                <div class="flex justify-between items-center mt-2">
-                <div class="flex">
+                <p class="text-sm text-gray-600 dark:text-gray-300">
+                    {{ review["Comments"] }}
+                </p>
+
+                <!-- ⭐ REVIEW RATING -->
+                <div class="flex mt-1">
                     {% for i in range(1, 6) %}
-                        {% if review["Rating"] >= i %}
-                            <span class="text-white-400">★</span>
-                        {% else %}
-                            <span class="text-gray-300 dark:text-gray-600">★</span>
-                        {% endif %}
-                        
+                    {% if review["Rating"] >= i %}
+                    <span class="text-p-400">★</span>
+                    {% else %}
+                    <span class="text-gray-300 dark:text-gray-600">★</span>
+                    {% endif %}
                     {% endfor %}
                 </div>
 
-                    
-                      <form method="POST" action="/doctor/{{review['DoctorID']}}/remove_review">
-            <button class="text-sm text-zinc-700 mt-1 flex justify-end" type="submit">Delete</button>
-    </form>
-                    </div>
-                </div>
+                <!-- DELETE -->
+                <form method="POST" action="/doctor/{{review['DoctorID']}}/remove_review">
+                    <button class="text-sm text-red-500 mt-2">Delete</button>
+                </form>
 
+                <!-- REPLY -->
                 {% if review["Reply"] %}
-                <div class="mt-3 p-3 bg-purple-50 border-l-4 border-purple-400 rounded dark:bg-gray-700">
-                    <p class="text-sm font-semibold">Doctor Response:</p>
-                    <p class="text-sm">{{ review["Reply"] }}</p>
+                <div class="mt-2 p-2 bg-purple-100 dark:bg-gray-700 rounded">
+                    <p class="text-xs font-semibold">Doctor Response:</p>
+                    <p class="text-xs">{{ review["Reply"] }}</p>
                 </div>
                 {% endif %}
 
             </div>
-           
             {% endfor %}
-        </div>
-
-        <!-- Delete button -->
-        <form method="POST" action="/doctor/{{ review['DoctorID'] }}/remove_review" class="flex-shrink-0">
-            <button type="submit" class="text-sm text-red-600 hover:text-red-800">
-                Delete
-            </button>
-        </form>
-
-    </div>
-
-    <!-- Doctor reply -->
-    {% if review["Reply"] %}
-    <div class="p-3 bg-purple-50 border-l-4 border-purple-400 rounded dark:bg-gray-700">
-        <p class="text-sm font-semibold">Doctor Response:</p>
-        <p class="text-sm">{{ review["Reply"] }}</p>
-    </div>
-    {% endif %}
-
-</div> 
-{% endfor %}
 
         </div>
     </div>
-    
 
 </body>
+
 </html>
