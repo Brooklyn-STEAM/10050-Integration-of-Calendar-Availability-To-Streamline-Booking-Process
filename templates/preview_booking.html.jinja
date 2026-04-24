@@ -14,25 +14,24 @@
               dark:bg-gray-900 dark:text-gray-100
               border border-gray-200 dark:border-gray-700 transition">
 
-    <!-- Title -->
+
     <h2 class="text-xl font-semibold mb-4">
       Earliest Available Appointment
     </h2>
 
-    <!-- Doctor -->
     <p class="mb-2">
       <strong>Doctor:</strong> Dr. {{ option.doctor_name }}
     </p>
 
-    <!-- Time -->
+
     <p class="mb-6">
       <strong>Time:</strong> {{ option.time.strftime("%Y-%m-%d %H:%M") }}
     </p>
 
-    <!-- Actions -->
+
     <div class="flex gap-3">
 
-      <!-- Confirm booking -->
+
       <form method="POST" action="/confirm-auto-book">
         <input type="hidden" name="doctor_id" value="{{ option.doctor_id }}">
         <input type="hidden" name="time" value="{{ option.time.strftime('%Y-%m-%d %H:%M:%S') }}">
