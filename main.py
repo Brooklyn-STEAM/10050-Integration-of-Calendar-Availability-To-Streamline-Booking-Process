@@ -256,20 +256,24 @@ def book_appointment(doctor_id):
     flash("Appointment booked successfully!", "success")
     return redirect("/appoint")
 
-@app.route("/doctor/<Doctorr_id>/remove_review", methods= ["POST"])
+@app.route("/doctor/<int:doctor_id>/remove_review", methods=["POST"])
 @login_required
-def remove_review(Doctorr_id):
-  
-   connection = connect_db()
-   cursor = connection.cursor()
-   cursor.execute("""
-       DELETE FROM `Review`
-       WHERE `DoctorID` =%s AND `UserID`=%s
-        """, (Doctorr_id, current_user.id))
-   
-   connection.close()
+def remove_review(doctor_id):
 
-   return redirect(f"/doctor/{Doctorr_id}")
+    review_id = request.form.get("review_id")
+
+    connection = connect_db()
+    cursor = connection.cursor()
+
+    cursor.execute("""
+        DELETE FROM Review
+        WHERE ID = %s AND UserID = %s
+    """, (review_id, current_user.id))
+
+    connection.commit()
+    connection.close()
+
+    return redirect(f"/doctor/{doctor_id}")
 
 @app.route("/doctor/<doc_id>/review", methods=["POST"])
 @login_required
