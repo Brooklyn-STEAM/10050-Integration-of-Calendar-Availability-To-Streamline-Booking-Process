@@ -254,7 +254,7 @@ def book_appointment(doctor_id):
     connection.close()
 
     flash("Appointment booked successfully!", "success")
-    return redirect("/appoint")
+    return redirect("/thanks")
 
 @app.route("/doctor/<int:doctor_id>/remove_review", methods=["POST"])
 @login_required
