@@ -178,7 +178,7 @@
                                 {% endif %}
                             </div>
 
-                            <!-- Google Calendar Button -->
+
                             <a target="_blank" href="https://www.google.com/calendar/render?action=TEMPLATE
                             &text={{ appt.Type | urlencode }}
                             &dates={{ appt.Date.strftime('%Y%m%dT%H%M%S') }}/{{ (appt.Date + timedelta(minutes=30)).strftime('%Y%m%dT%H%M%S') }}

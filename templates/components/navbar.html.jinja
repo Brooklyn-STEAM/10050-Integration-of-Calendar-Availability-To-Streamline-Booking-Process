@@ -1,6 +1,6 @@
 <nav class="sticky top-0 z-50 bg-[#57068c]/90 dark:bg-[#2e014d]/90 backdrop-blur-md px-4 md:px-8 py-4 shadow-md flex items-center justify-between font-medium text-white w-full transition-colors">
 
-  <!-- LEFT SIDE -->
+
   <div class="flex items-center gap-3 md:gap-4">
     <img
       src="/static/images/logo.png"
@@ -9,7 +9,7 @@
     >
   </div>
 
-  <!-- CENTER LINKS -->
+
   <div class="hidden md:flex items-center gap-8 text-sm">
     <a href="/" class="hover:text-[#e0c3ff] transition">Homepage</a>
     <a href="/appoint" class="hover:text-[#e0c3ff] transition">Appointments</a>
@@ -24,7 +24,7 @@
     </a>
   </div>
 
-  <!-- RIGHT SIDE -->
+
   <div class="flex items-center gap-4">
 
     {% if current_user.is_authenticated %}
@@ -33,7 +33,7 @@
     </span>
     {% endif %}
 
-    <!-- hamburger -->
+
     <div class="relative">
       <button onclick="document.getElementById('menu').classList.toggle('hidden')"
               class="flex items-center hover:text-[#e0c3ff] transition">

@@ -22,7 +22,7 @@
   animation: fadeUp 0.8s ease forwards;
 }
 
-/* Cards */
+
 .card {
   opacity: 0;
   transform: translateY(20px);
@@ -59,12 +59,10 @@
       dark:bg-green-950/30 dark:border-green-800 dark:text-green-200
     {% endif %}">
 
-    <!-- 🔥 TOP SPECIALIST -->
     <p class="font-semibold text-lg">
       Recommended Specialist: {{ result.specialists[0].name }}
     </p>
 
-    <!-- 🔥 CONFIDENCE LIST -->
     <div class="mt-2 text-sm space-y-1">
       {% for spec in result.specialists %}
         <p>
@@ -73,17 +71,14 @@
       {% endfor %}
     </div>
 
-    <!-- MESSAGE -->
     <p class="text-sm mt-3 opacity-90">
       {{ result.message }}
     </p>
 
-    <!-- DISCLAIMER -->
     <p class="text-xs mt-2 opacity-70">
       This is not medical advice. If symptoms are severe, seek emergency care.
     </p>
 
-    <!-- 🚨 HIGH / CRITICAL ACTION -->
     {% if result.urgency in ['high', 'critical'] %}
       <div class="mt-4 flex gap-3">
 
@@ -318,7 +313,6 @@ function addMessage(text, sender="user") {
   box.scrollTop = box.scrollHeight;
 }
 
-// ---------------- TYPING ----------------
 function showTyping() {
   const box = document.getElementById("chat-box");
 
@@ -345,14 +339,13 @@ function hideTyping() {
   }
 }
 
-// ---------------- FORMAT RESPONSE ----------------
+
 function formatBotReply(text) {
   return text
     .replace(/\n/g, "<br>")
     .replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>");
 }
 
-// ---------------- SEND MESSAGE ----------------
 function sendMessage() {
   const input = document.getElementById("chat-input");
   const text = input.value.trim();
@@ -376,10 +369,8 @@ function sendMessage() {
 
     hideTyping();
 
-    // 🧠 BOT RESPONSE
     addMessage(formatBotReply(data.reply), "bot");
 
-    // 👨‍⚕️ DOCTOR LINK
     if (data.doctor_id) {
       addMessage(
         `<a href="/doctor/${data.doctor_id}" class="text-blue-600 underline hover:text-blue-800">
@@ -389,7 +380,6 @@ function sendMessage() {
       );
     }
 
-    // 🚨 BOOK BUTTON
     if (data.show_booking) {
       addMessage(
         `<form method="POST" action="/auto-book">
@@ -409,7 +399,6 @@ function sendMessage() {
   });
 }
 
-// ---------------- ENTER TO SEND ----------------
 document.getElementById("chat-input").addEventListener("keypress", function(e) {
   if (e.key === "Enter") {
     e.preventDefault();

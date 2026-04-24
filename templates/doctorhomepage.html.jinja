@@ -111,12 +111,12 @@
   <script>
   const toggle = document.getElementById("theme-toggle");
 
-  // Load saved theme
+
   if (localStorage.getItem("theme") === "dark") {
     document.documentElement.classList.add("dark");
   }
 
-  // Set icon on load
+
   toggle.textContent = document.documentElement.classList.contains("dark") ? "☀️" : "🌙";
 
   toggle.addEventListener("click", () => {

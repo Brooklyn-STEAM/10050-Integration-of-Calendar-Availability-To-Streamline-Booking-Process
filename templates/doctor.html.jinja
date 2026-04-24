@@ -156,14 +156,14 @@
     </div>
     </div>
 
-    <!-- REVIEWS -->
+
     <div class="max-w-4xl mx-auto p-6 mt-12">
 
         <div class="bg-white dark:bg-gray-800 p-6 rounded-xl shadow">
 
             <h2 class="text-xl font-bold mb-6 text-center">Patient Reviews</h2>
 
-            <!-- FORM -->
+
             <form method="post" action="/doctor/{{doctor['ID']}}/review" class="space-y-4 mb-10">
 
                 <select name="rating" class="w-full px-3 py-2 border rounded dark:bg-gray-700">
@@ -185,7 +185,7 @@
                 </button>
             </form>
 
-            <!-- LIST -->
+
             {% for review in reviews %}
             <div class="border-b border-gray-200 dark:border-gray-700 py-4">
 
@@ -208,13 +208,13 @@
                     {% endfor %}
                 </div>
 
-                <!-- DELETE -->
+
                 <form method="POST" action="/doctor/{{review['DoctorID']}}/remove_review">
                     <input type="hidden" name="review_id" value="{{ review['ID'] }}">
                     <button class="text-sm text-red-500 mt-2">Delete</button>
                 </form>
 
-                <!-- REPLY -->
+
                 {% if review["Reply"] %}
                 <div class="mt-2 p-2 bg-purple-100 dark:bg-gray-700 rounded">
                     <p class="text-xs font-semibold">Doctor Response:</p>
