@@ -14,6 +14,7 @@ from collections import Counter
 from flask import jsonify
 from flask import session
 
+
 app = Flask(__name__)
 
 config = Dynaconf(settings_files=["settings.toml"])
@@ -682,89 +683,150 @@ def confirm_auto_book():
     flash("Emergency appointment booked successfully.")
     return redirect("/appoint")
 
+BODY_PARTS = ["chest", "head", "back", "leg", "arm", "stomach", "throat"]
+DURATIONS = ["day", "days", "week", "weeks", "month", "months"]
+SEVERITY = ["mild", "moderate", "severe", "sharp", "dull"]
+
+EMERGENCY_KEYWORDS = [
+    "chest pain", "shortness of breath", "stroke",
+    "fainting", "can't breathe", "severe chest"
+]
+
+QUESTIONS = [
+    ("pain_location", "Where exactly is the pain located?"),
+    ("duration", "How long have you had this?"),
+    ("severity", "How severe is it (mild, moderate, severe)?"),
+    ("other_symptoms", "Any other symptoms? (fever, nausea, etc.)")
+]
+
+# ---------------- HELPERS ----------------
+def extract_info(message, chat):
+    data = {}
+
+    # detect body part
+    for part in BODY_PARTS:
+        if part in message:
+            data["pain_location"] = part
+
+    # detect duration
+    for d in DURATIONS:
+        if d in message:
+            data["duration"] = message
+
+    # detect severity
+    for s in SEVERITY:
+        if s in message:
+            data["severity"] = s
+
+    # store "other symptoms" ONLY when it's the missing field
+    if (
+        chat.get("pain_location")
+        and chat.get("duration")
+        and chat.get("severity")
+        and not chat.get("other_symptoms")
+    ):
+        data["other_symptoms"] = message
+
+    return data
+
+
+def analyze_symptoms(context):
+    context = context.lower()
+
+    if "chest" in context:
+        return {
+            "specialist": "Cardiologist",
+            "advice": "Chest-related symptoms should be evaluated carefully."
+        }
+
+    if "head" in context:
+        return {
+            "specialist": "Neurologist",
+            "advice": "Head pain may relate to migraines or neurological issues."
+        }
+
+    if "back" in context:
+        return {
+            "specialist": "Orthopedic Doctor",
+            "advice": "Back pain is often muscle or spine related."
+        }
+
+    return {
+        "specialist": "General Physician",
+        "advice": "A general check-up is recommended."
+    }
+
+
+# ---------------- ROUTES ----------------
+@app.route("/reset-chat")
+def reset_chat():
+    session.pop("chat", None)
+    return "", 200
+
+
 @app.route("/chat-symptoms", methods=["POST"])
 def chat_symptoms():
     data = request.get_json()
     message = data.get("message", "").lower()
 
-    # ---------------- INIT MEMORY ----------------
+    # ---------------- INIT ----------------
     if "chat" not in session:
         session["chat"] = {
             "pain_location": None,
-            "duration": None
+            "duration": None,
+            "severity": None,
+            "other_symptoms": None,
+            "history": []
         }
 
     chat = session["chat"]
 
-    # ---------------- STORE ANSWERS ----------------
-    # detect location
-    if any(loc in message for loc in ["chest", "head", "back", "leg", "arm"]):
-        chat["pain_location"] = message
+    # ---------------- STORE HISTORY ----------------
+    chat["history"].append(message)
 
-    # detect duration
-    if any(word in message for word in ["day", "days", "week", "weeks", "month"]):
-        chat["duration"] = message
+    # ---------------- EMERGENCY CHECK ----------------
+    if any(k in message for k in EMERGENCY_KEYWORDS):
+        return jsonify({
+            "reply": "⚠️ This could be serious. Please seek immediate medical attention.",
+            "show_booking": False
+        })
+
+    # ---------------- EXTRACT INFO ----------------
+    info = extract_info(message, chat)
+
+    for key, value in info.items():
+        chat[key] = value
 
     session["chat"] = chat
 
-    # ---------------- ASK ONLY IF MISSING ----------------
-    if "pain" in message and not chat["pain_location"]:
-        return jsonify({
-            "reply": "Where exactly is the pain located (chest, head, back, etc.)?",
-            "show_booking": False
-        })
+    # ---------------- ASK NEXT QUESTION ----------------
+    for key, question in QUESTIONS:
+        if not chat.get(key):
+            return jsonify({
+                "reply": question,
+                "show_booking": False
+            })
 
-    if not chat["duration"]:
-        return jsonify({
-            "reply": "How long have you been experiencing this?",
-            "show_booking": False
-        })
+    # ---------------- ANALYSIS ----------------
+    full_context = " ".join(chat["history"])
+    result = analyze_symptoms(full_context)
 
-    # ---------------- NOW DO REAL ANALYSIS ----------------
-    result = analyze_symptoms(message)
+    reply = f"""
+Based on your symptoms, you may need a **{result['specialist']}**.
 
-    top_specialist = result["specialists"][0]["name"]
-
-    # ---------------- GET DOCTOR ----------------
-    connection = connect_db()
-    cursor = connection.cursor()
-
-    cursor.execute("""
-        SELECT ID, Name
-        FROM Doctor
-        WHERE Category = %s
-        LIMIT 1
-    """, (top_specialist,))
-
-    doctor = cursor.fetchone()
-    connection.close()
-
-    doctor_text = ""
-    doctor_id = None
-
-    if doctor:
-        doctor_text = f"I can connect you with Dr. {doctor['Name']}."
-        doctor_id = doctor["ID"]
-
-    reply = (
-        f"I understand what you're experiencing. "
-        f"Based on what you shared, this could be related to {top_specialist.lower()} concerns. "
-        f"{result['message']} "
-        f"{doctor_text} "
-        f"Would you like me to find the earliest appointment?"
-    )
+Advice:
+{result['advice']}
+"""
 
     return jsonify({
         "reply": reply,
-        "category": top_specialist,
-        "doctor_id": doctor_id,
+        "category": result["specialist"],
         "show_booking": True
     })
 
-@app.route("/reset-chat")
-def reset_chat():
-    session.pop("chat", None)
-    return "ok"
+
+if __name__ == "__main__":
+    app.run(debug=True)
 
 @app.route("/calendar")
 @login_required

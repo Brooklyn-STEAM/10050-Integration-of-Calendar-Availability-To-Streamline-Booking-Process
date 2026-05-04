@@ -207,31 +207,30 @@
     <div class="max-w-xl mx-auto mt-6">
 
   <!-- Chat box -->
-  <div id="chat-box" class="bg-white dark:bg-gray-900 border rounded-xl p-4 h-96 overflow-y-auto space-y-3">
+  
 
-    <div class="text-sm text-gray-500 dark:text-white">
-      🤖 Hello! Describe your symptoms and I’ll help you find the right doctor.
-    </div>
-   
-
+    <div id="chat-box" class="bg-white border rounded-xl p-4 h-96 overflow-y-auto space-y-3">
+  <div class="text-sm text-gray-500">
+    🤖 Hi! What symptoms are you experiencing?
   </div>
+</div>
 
-  <!-- Input -->
-  <div class="flex mt-3 gap-2">
-    <input id="chat-input" type="text"
-      placeholder="Type your symptoms..."
-      class="flex-1 border rounded-lg px-3 py-2 dark:bg-gray-800">
+<div class="flex mt-3 gap-2">
+  <input id="chat-input" type="text"
+    placeholder="Type your symptoms..."
+    class="flex-1 border rounded-lg px-3 py-2">
 
-    <button onclick="sendMessage()"
-      class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700">
-      Send
-    </button>
+  <button onclick="sendMessage()"
+    class="bg-blue-600 text-white px-4 py-2 rounded-lg">
+    Send
+  </button>
 
-    <button onclick="resetChat()" 
-          class="mb-2 px-3 py-1 bg-gray-300 dark:bg-gray-700 rounded">
-          New Chat
-        </button>
-  </div>
+  <button onclick="resetChat()" 
+    class="px-3 py-2 bg-gray-300 rounded">
+    New Chat
+  </button>
+</div>
+
 
    
 
@@ -270,24 +269,6 @@ input.addEventListener("input", function () {
 </html>
 
 <script>
-window.addEventListener("load", () => {
-  fetch("/reset-chat");
-});
-function resetChat() {
-  fetch("/reset-chat")
-    .then(() => {
-      const box = document.getElementById("chat-box");
-
-      box.innerHTML = `
-        <button onclick="resetChat()" 
-          class="mb-2 px-3 py-1 bg-gray-300 dark:bg-gray-700 rounded">
-          New Chat
-        </button>
-      `;
-
-      addMessage("Hi 👋 I'm here to help. What symptoms are you experiencing?", "bot");
-    });
-}
 let typingIndicator = null;
 
 // ---------------- ADD MESSAGE ----------------
@@ -295,15 +276,13 @@ function addMessage(text, sender="user") {
   const box = document.getElementById("chat-box");
 
   const msg = document.createElement("div");
-  msg.className = sender === "user"
-    ? "text-right"
-    : "text-left text-gray-700 dark:text-gray-300";
+  msg.className = sender === "user" ? "text-right" : "text-left";
 
   msg.innerHTML = `
     <div class="inline-block px-4 py-2 rounded-xl max-w-[80%] ${
       sender === "user"
         ? "bg-blue-600 text-white"
-        : "bg-gray-200 dark:bg-gray-700"
+        : "bg-gray-200"
     }">
       ${text}
     </div>
@@ -313,18 +292,14 @@ function addMessage(text, sender="user") {
   box.scrollTop = box.scrollHeight;
 }
 
+// ---------------- TYPING ----------------
 function showTyping() {
   const box = document.getElementById("chat-box");
 
   typingIndicator = document.createElement("div");
-
   typingIndicator.innerHTML = `
-    <div class="inline-block px-4 py-2 rounded-xl bg-gray-200 dark:bg-gray-700">
-      <span class="flex gap-1">
-        <span class="w-2 h-2 bg-gray-500 rounded-full animate-bounce"></span>
-        <span class="w-2 h-2 bg-gray-500 rounded-full animate-bounce delay-150"></span>
-        <span class="w-2 h-2 bg-gray-500 rounded-full animate-bounce delay-300"></span>
-      </span>
+    <div class="inline-block px-4 py-2 rounded-xl bg-gray-200">
+      Typing...
     </div>
   `;
 
@@ -339,13 +314,15 @@ function hideTyping() {
   }
 }
 
-
-function formatBotReply(text) {
-  return text
-    .replace(/\n/g, "<br>")
-    .replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>");
+// ---------------- RESET ----------------
+function resetChat() {
+  fetch("/reset-chat").then(() => {
+    document.getElementById("chat-box").innerHTML =
+      "<div>🤖 Hi! What symptoms are you experiencing?</div>";
+  });
 }
 
+// ---------------- SEND ----------------
 function sendMessage() {
   const input = document.getElementById("chat-input");
   const text = input.value.trim();
@@ -359,46 +336,35 @@ function sendMessage() {
 
   fetch("/chat-symptoms", {
     method: "POST",
-    headers: {
-      "Content-Type": "application/json"
-    },
+    headers: {"Content-Type": "application/json"},
     body: JSON.stringify({ message: text })
   })
   .then(res => res.json())
   .then(data => {
+    setTimeout(() => {
+      hideTyping();
+      addMessage(formatText(data.reply), "bot");
 
-    hideTyping();
-
-    addMessage(formatBotReply(data.reply), "bot");
-
-    if (data.doctor_id) {
-      addMessage(
-        `<a href="/doctor/${data.doctor_id}" class="text-blue-600 underline hover:text-blue-800">
-          View recommended doctor
-        </a>`,
-        "bot"
-      );
-    }
-
-    if (data.show_booking) {
-      addMessage(
-        `<form method="POST" action="/auto-book">
-          <input type="hidden" name="category" value="${data.category}">
-          <button class="mt-2 bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700">
-            Find earliest appointment
+      if (data.show_booking) {
+        addMessage(`
+          <button onclick="alert('Booking flow here')"
+            class="mt-2 bg-red-600 text-white px-4 py-2 rounded">
+            Find Appointment
           </button>
-        </form>`,
-        "bot"
-      );
-    }
-
-  })
-  .catch(() => {
-    hideTyping();
-    addMessage("Something went wrong. Try again.", "bot");
+        `, "bot");
+      }
+    }, 600);
   });
 }
 
+// ---------------- FORMAT ----------------
+function formatText(text) {
+  return text
+    .replace(/\n/g, "<br>")
+    .replace(/\*\*(.*?)\*\*/g, "<b>$1</b>");
+}
+
+// ENTER KEY
 document.getElementById("chat-input").addEventListener("keypress", function(e) {
   if (e.key === "Enter") {
     e.preventDefault();
