@@ -778,6 +778,7 @@ def calendar_view():
     year = request.args.get("year", type=int) or today.year
     month = request.args.get("month", type=int) or today.month
 
+    # ---------------- HANDLE MONTH BOUNDS ----------------
     if month > 12:
         month = 1
         year += 1
@@ -799,7 +800,7 @@ def calendar_view():
 
     # ---------------- PERSONAL EVENTS ----------------
     cursor.execute("""
-        SELECT Title, EventDate
+        SELECT ID, Title, EventDate
         FROM PersonalEvent
         WHERE UserID = %s
         AND MONTH(EventDate) = %s
@@ -810,9 +811,10 @@ def calendar_view():
 
     connection.close()
 
+    # ---------------- BUILD EVENTS DICTIONARY ----------------
     events = {}
 
-    # PERSONAL EVENTS
+    # -------- PERSONAL EVENTS --------
     for event in personal_events:
         event_date = event["EventDate"]
 
@@ -823,14 +825,18 @@ def calendar_view():
 
         key = event_date.strftime("%Y-%m-%d")
 
-        events.setdefault(key, []).append({
+        if key not in events:
+            events[key] = []
+
+        events[key].append({
+            "ID": event["ID"],
             "Type": event["Title"],
             "Status": "Personal",
             "Date": event_date,
             "Source": "personal"
         })
 
-    # APPOINTMENTS
+    # -------- APPOINTMENTS --------
     for appt in appointments:
         appt_date = appt["Date"]
 
@@ -841,17 +847,22 @@ def calendar_view():
 
         key = appt_date.strftime("%Y-%m-%d")
 
-        events.setdefault(key, []).append({
+        if key not in events:
+            events[key] = []
+
+        events[key].append({
+            "ID": appt["ID"],
             "Type": appt["Type"],
             "Status": appt["Status"],
             "Date": appt_date,
             "Source": "appointment"
         })
 
+    # ---------------- SORT EVENTS BY TIME ----------------
     for date in events:
         events[date].sort(key=lambda x: x["Date"])
 
-    # ---------------- CALENDAR ----------------
+    # ---------------- CALENDAR GRID ----------------
     month_calendar = cal.monthcalendar(year, month)
     month_name = cal.month_name[month]
 
@@ -865,6 +876,23 @@ def calendar_view():
         today=today.strftime("%Y-%m-%d"),
         timedelta=timedelta
     )
+
+@app.route("/delete-event/<int:event_id>", methods=["POST"])
+@login_required
+def delete_event(event_id):
+    connection = connect_db()
+    cursor = connection.cursor()
+
+    cursor.execute("""
+        DELETE FROM PersonalEvent
+        WHERE ID = %s AND UserID = %s
+    """, (event_id, current_user.id))
+
+    connection.commit()
+    connection.close()
+
+    flash("Event deleted successfully!", "success")
+    return redirect("/calendar")
 
 
 @app.route("/appoint/<int:appointment_id>/cancel", methods=["POST"])
