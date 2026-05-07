@@ -381,12 +381,24 @@ function sendMessage() {
     }
 
     if (data.show_booking) {
-      addMessage(`
-        <button class="mt-2 bg-red-600 text-white px-4 py-2 rounded">
-          Find Appointment
-        </button>
-      `, "bot");
-    }
+
+  const box = document.getElementById("chat-box");
+
+  const wrapper = document.createElement("div");
+  wrapper.className = "text-left mb-2";
+
+  wrapper.innerHTML = `
+    <button
+      onclick="findAppointment()"
+      class="mt-2 bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg transition">
+      Find Appointment
+    </button>
+  `;
+
+  box.appendChild(wrapper);
+
+  box.scrollTop = box.scrollHeight;
+}
   })
   .catch(error => {
 
@@ -400,6 +412,48 @@ function sendMessage() {
     );
   });
 }
+function findAppointment() {
+
+  showTyping();
+
+  fetch("/auto-book-chat", {
+    method: "POST"
+  })
+  .then(res => res.json())
+  .then(data => {
+
+    hideTyping();
+
+    if (data.success) {
+
+      addMessage(`
+        ✅ Appointment booked with <b>${data.doctor}</b><br>
+        📅 ${data.date}<br>
+        🕒 ${data.time}
+      `, "bot");
+
+    } else {
+
+      addMessage(
+        "No appointments available right now.",
+        "bot"
+      );
+
+    }
+
+  })
+  .catch(() => {
+
+    hideTyping();
+
+    addMessage(
+      "Booking system unavailable.",
+      "bot"
+    );
+
+  });
+
+}
 
 // ---------------- ENTER KEY ----------------
 document.addEventListener("DOMContentLoaded", function () {
@@ -411,6 +465,7 @@ document.addEventListener("DOMContentLoaded", function () {
     if (e.key === "Enter") {
       e.preventDefault();
       sendMessage();
+      
     }
 
   });
