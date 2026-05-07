@@ -69,6 +69,7 @@
 <body class="min-h-screen w-screen overflow-x-hidden flex flex-col bg-white text-black dark:bg-gray-900 dark:text-white transition-colors duration-300">
 
   {% include "components/navbar.html.jinja"%}
+  {% include "components/chat_widget.html.jinja" %}
 
 <section class="relative min-h-[50vh] md:h-screen/2 flex items-center justify-center overflow-hidden">
 
@@ -283,4 +284,8 @@ document.addEventListener("DOMContentLoaded", () => {
 </body>
 
 </html>
+<script>
+ function toggleChat() {
+  document.getElementById("chat-widget").classList.toggle("hidden");
+}</script>
 
