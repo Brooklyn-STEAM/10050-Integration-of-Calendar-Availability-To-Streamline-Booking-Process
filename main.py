@@ -662,6 +662,39 @@ def auto_book():
         category=category
     )
 
+@app.route("/auto-book-chat", methods=["POST"])
+def auto_book_chat():
+
+    connection = connect_db()
+    cursor = connection.cursor()
+
+    # Get first available doctor
+    cursor.execute("""
+        SELECT *
+        FROM Doctor
+        ORDER BY ID
+        LIMIT 1
+    """)
+
+    doctor = cursor.fetchone()
+
+    if not doctor:
+        return jsonify({
+            "success": False
+        })
+
+    # appointment time = 1 hour from now
+    appointment_time = datetime.datetime.now() + datetime.timedelta(hours=1)
+
+    connection.close()
+
+    return jsonify({
+        "success": True,
+        "doctor": doctor["Name"],
+        "date": appointment_time.strftime("%Y-%m-%d"),
+        "time": appointment_time.strftime("%H:%M")
+    })
+
 @app.route("/confirm-auto-book", methods=["POST"])
 @login_required
 def confirm_auto_book():
