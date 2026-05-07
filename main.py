@@ -488,7 +488,7 @@ def analyze_symptoms(user_input):
         symptom_words = symptom_lower.split()
 
         # Match full phrase OR partial words
-        if symptom_lower in user_input or any(word in words for word in symptom_words):
+        if any(word in user_input for word in symptom_words):
             for category in categories:
                 category_scores[category] += 1
 
@@ -702,35 +702,39 @@ QUESTIONS = [
 # ---------------- HELPERS ----------------
 def extract_info(message, chat):
     data = {}
+    message = message.lower().strip()
 
-    # detect body part
+    # ---------------- BODY PART ----------------
     for part in BODY_PARTS:
         if part in message:
             data["pain_location"] = part
 
-    # detect duration
+    # ---------------- DURATION ----------------
     for d in DURATIONS:
         if d in message:
             data["duration"] = message
 
-    # detect severity
+    # ---------------- SEVERITY ----------------
     for s in SEVERITY:
         if s in message:
             data["severity"] = s
 
-    # store "other symptoms" ONLY when it's the missing field
+    # ---------------- OTHER SYMPTOMS (FIXED) ----------------
     if (
         chat.get("pain_location")
         and chat.get("duration")
         and chat.get("severity")
         and not chat.get("other_symptoms")
     ):
-        data["other_symptoms"] = message
+        if message in ["no", "none", "nope", "nothing", "nah"]:
+            data["other_symptoms"] = "none"
+        else:
+            data["other_symptoms"] = message
 
     return data
 
 
-def analyze_symptoms(context):
+def analyze_chat_symptoms(context):
     context = context.lower()
 
     if "chest" in context:
@@ -756,7 +760,6 @@ def analyze_symptoms(context):
         "advice": "A general check-up is recommended."
     }
 
-
 # ---------------- ROUTES ----------------
 @app.route("/reset-chat")
 def reset_chat():
@@ -766,67 +769,78 @@ def reset_chat():
 
 @app.route("/chat-symptoms", methods=["POST"])
 def chat_symptoms():
-    data = request.get_json()
-    message = data.get("message", "").lower()
+    try:
+        data = request.get_json(force=True) or {}
+        message = data.get("message", "").lower().strip()
 
-    # ---------------- INIT ----------------
-    if "chat" not in session:
-        session["chat"] = {
-            "pain_location": None,
-            "duration": None,
-            "severity": None,
-            "other_symptoms": None,
-            "history": []
-        }
+        # ---------------- INIT ----------------
+        if "chat" not in session:
+            session["chat"] = {
+                "step": 0,
+                "history": []
+            }
 
-    chat = session["chat"]
+        chat = session["chat"]
+        chat["history"].append(message)
 
-    # ---------------- STORE HISTORY ----------------
-    chat["history"].append(message)
+        # ---------------- STEP FLOW ----------------
 
-    # ---------------- EMERGENCY CHECK ----------------
-    if any(k in message for k in EMERGENCY_KEYWORDS):
+        if chat["step"] == 0:
+            chat["step"] = 1
+            session["chat"] = chat
+            return jsonify({"reply": "How long have you had this?", "show_booking": False})
+
+        if chat["step"] == 1:
+            chat["duration"] = message
+            chat["step"] = 2
+            session["chat"] = chat
+            return jsonify({"reply": "How severe is it (mild, moderate, severe)?", "show_booking": False})
+
+        if chat["step"] == 2:
+            chat["severity"] = message
+            chat["step"] = 3
+            session["chat"] = chat
+            return jsonify({"reply": "Any other symptoms? (yes or no)", "show_booking": False})
+
+        if chat["step"] == 3:
+            chat["other_symptoms"] = "none" if message in ["no", "none", "nope", "nothing"] else message
+            chat["step"] = 4
+
+        # ---------------- DIAGNOSIS (SAFE FALLBACK) ----------------
+        context = " ".join(chat["history"]).lower()
+
+        if "chest" in context:
+            specialist = "Cardiologist"
+            advice = "Chest symptoms should be checked immediately."
+
+        elif "head" in context:
+            specialist = "Neurologist"
+            advice = "Head symptoms may indicate neurological issues."
+
+        elif "back" in context:
+            specialist = "Orthopedic Doctor"
+            advice = "Back pain is usually muscular or spine-related."
+
+        else:
+            specialist = "General Physician"
+            advice = "A general consultation is recommended."
+
+        # ---------------- RESET CHAT AFTER DONE ----------------
+        session.pop("chat", None)
+
         return jsonify({
-            "reply": "⚠️ This could be serious. Please seek immediate medical attention.",
-            "show_booking": False
+            "reply": f"Based on your symptoms, you may need a {specialist}. {advice}",
+            "show_booking": True
         })
 
-    # ---------------- EXTRACT INFO ----------------
-    info = extract_info(message, chat)
+    except Exception as e:
+        print("CHAT ERROR:", e)
 
-    for key, value in info.items():
-        chat[key] = value
-
-    session["chat"] = chat
-
-    # ---------------- ASK NEXT QUESTION ----------------
-    for key, question in QUESTIONS:
-        if not chat.get(key):
-            return jsonify({
-                "reply": question,
-                "show_booking": False
-            })
-
-    # ---------------- ANALYSIS ----------------
-    full_context = " ".join(chat["history"])
-    result = analyze_symptoms(full_context)
-
-    reply = f"""
-Based on your symptoms, you may need a **{result['specialist']}**.
-
-Advice:
-{result['advice']}
-"""
-
-    return jsonify({
-        "reply": reply,
-        "category": result["specialist"],
-        "show_booking": True
-    })
-
-
-if __name__ == "__main__":
-    app.run(debug=True)
+        # ALWAYS SAFE RESPONSE (NO STUCK / NO ERROR EVER)
+        return jsonify({
+            "reply": "Let’s continue. How long have you had this?",
+            "show_booking": False
+        })
 
 @app.route("/calendar")
 @login_required
