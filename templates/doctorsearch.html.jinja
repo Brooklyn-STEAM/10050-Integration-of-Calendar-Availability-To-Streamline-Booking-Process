@@ -223,42 +223,34 @@
   class="hidden fixed bottom-24 right-6 w-96 max-w-[90vw] bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-700 rounded-2xl shadow-2xl z-50 overflow-hidden">
 
   <!-- HEADER -->
-  <div class="bg-purple-600 text-white px-4 py-3 flex justify-between items-center">
-    <h2 class="font-semibold">BookWell Assistant</h2>
+<div class="bg-purple-600 text-white px-4 py-3 flex justify-between items-center">
+  <h2 class="font-semibold">BookWell Assistant</h2>
+  <button onclick="toggleChat()" class="text-white text-xl">✕</button>
+</div>
 
-    <button onclick="toggleChat()" class="text-white text-xl">
-      ✕
-    </button>
-  </div>
+<!-- CHAT BOX -->
+<div id="chat-box" class="p-3 h-96 overflow-y-auto text-sm">
+  <div class="text-gray-500">Hi! What symptoms are you experiencing?</div>
+</div>
 
-  <!-- CHAT BOX -->
-  <div
-    id="chat-box"
-    class="p-4 h-96 overflow-y-auto space-y-3 bg-white dark:bg-gray-900">
+<!-- INPUT AREA -->
+<div class="flex gap-2 p-3 border-t">
+  <input id="chat-input"
+    class="flex-1 border rounded px-3 py-2"
+    placeholder="Type here..." />
 
-    <div class="text-sm text-gray-500 dark:text-gray-300">
-      🤖 Hi! What symptoms are you experiencing?
-    </div>
+  <button onclick="sendMessage()"
+    class="bg-blue-600 text-white px-3 rounded">
+    Send
+  </button>
 
-  </div>
+  <button onclick="resetChat()"
+    class="bg-gray-300 px-3 rounded">
+    New
+  </button>
+</div>
 
-  <!-- INPUT -->
-  <div class="flex gap-2 p-3 border-t dark:border-gray-700">
-
-    <input
-      id="chat-input"
-      type="text"
-      placeholder="Type symptoms..."
-      class="flex-1 border rounded-lg px-3 py-2 dark:bg-gray-800 dark:text-white">
-
-    <button
-      onclick="sendMessage()"
-      class="bg-blue-600 text-white px-4 py-2 rounded-lg">
-      Send
-    </button>
-
-  </div>
-
+  
 </div>
 
   </div>
@@ -288,7 +280,7 @@ input.addEventListener("input", function () {
 </script>
 
 
-
+<script src="/static/js/chat.js"></script>
 </body>
 
 </html>
@@ -296,12 +288,27 @@ input.addEventListener("input", function () {
 <script>
 let typingIndicator = null;
 
+window.addEventListener("DOMContentLoaded", () => {
+
+  const savedChat = localStorage.getItem("bookwell_chat");
+
+  if (savedChat) {
+    document.getElementById("chat-box").innerHTML = savedChat;
+  }
+
+});
+
 // ---------------- ADD MESSAGE ----------------
 function addMessage(text, sender="user") {
+
   const box = document.getElementById("chat-box");
 
   const msg = document.createElement("div");
-  msg.className = sender === "user" ? "text-right mb-2" : "text-left mb-2";
+
+  msg.className =
+    sender === "user"
+      ? "text-right mb-2"
+      : "text-left mb-2";
 
   msg.innerHTML = `
     <div class="inline-block px-4 py-2 rounded-xl max-w-[80%] ${
@@ -314,7 +321,14 @@ function addMessage(text, sender="user") {
   `;
 
   box.appendChild(msg);
+
   box.scrollTop = box.scrollHeight;
+
+  // SAVE CHAT
+  localStorage.setItem(
+    "bookwell_chat",
+    box.innerHTML
+  );
 }
 
 // ---------------- SHOW TYPING ----------------
@@ -351,9 +365,13 @@ function hideTyping() {
 function resetChat() {
   fetch("/reset-chat")
     .then(() => {
-      document.getElementById("chat-box").innerHTML = `
-        <div class="text-sm text-gray-500">
-          🤖 Hi! What symptoms are you experiencing?
+      localStorage.removeItem("bookwell_chat");
+
+      const box = document.getElementById("chat-box");
+
+      box.innerHTML = `
+        <div class="text-gray-500">
+          Hi! What symptoms are you experiencing?
         </div>
       `;
     });
@@ -488,19 +506,20 @@ function findAppointment() {
 }
 
 // ---------------- ENTER KEY ----------------
-document.addEventListener("DOMContentLoaded", function () {
-
+document.addEventListener("DOMContentLoaded", () => {
   const input = document.getElementById("chat-input");
 
-  input.addEventListener("keypress", function(e) {
+  if (!input) return;
 
+  input.addEventListener("keydown", function (e) {
     if (e.key === "Enter") {
       e.preventDefault();
       sendMessage();
-      
     }
-
   });
-
 });
+window.sendMessage = sendMessage;
+window.resetChat = resetChat;
+window.toggleChat = toggleChat;
 </script>
+
