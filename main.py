@@ -116,12 +116,23 @@ def doctor():
 
 @app.route("/doctor/<int:doctor_id>/reply_review", methods=["POST"])
 def reply_review(doctor_id):
+
+   
+    if not session.get("doctor_logged_in"):
+        flash("Please login first")
+        return redirect("/doctorlogin")
+
+   
+    if session.get("doctor_id") != doctor_id:
+        flash("Unauthorized access")
+        return redirect("/doctorlogin")
+
     review_id = request.form.get("review_id")
     reply = request.form.get("reply")
 
     if not review_id or not reply:
         flash("Reply cannot be empty", "error")
-        return redirect(f"/doctor/{doctor_id}")
+        return redirect(f"/doctor/{doctor_id}/appointments")
 
     connection = connect_db()
     cursor = connection.cursor()
@@ -129,14 +140,63 @@ def reply_review(doctor_id):
     cursor.execute("""
         UPDATE Review
         SET Reply = %s
-        WHERE ID = %s AND DoctorID = %s
+        WHERE ID = %s
+        AND DoctorID = %s
     """, (reply, review_id, doctor_id))
 
     connection.commit()
     connection.close()
 
     flash("Reply added successfully!", "success")
-    return redirect(f"/doctor/{doctor_id}")
+
+    return redirect(f"/doctor/{doctor_id}/appointments")
+
+@app.route("/doctorlogout")
+def doctor_logout():
+
+    session.clear()
+
+    flash("Logged out successfully")
+
+    return redirect("/doctorlogin")
+
+@app.route("/doctorlogin", methods=["GET","POST"])
+def doctor_login():
+
+    if request.method == "POST":
+
+        email = request.form["email"]
+        password = request.form["password"]
+
+        connection = connect_db()
+        cursor = connection.cursor()
+
+        cursor.execute(
+            "SELECT * FROM Doctor WHERE Email=%s",
+            (email,)
+        )
+
+        doctor = cursor.fetchone()
+
+        connection.close()
+
+        if doctor is None:
+            flash("Doctor account not found")
+
+        elif password != doctor["Password"]:
+            flash("Incorrect password")
+
+        else:
+            session.permanent = True
+            session["doctor_logged_in"] = True
+            session["doctor_id"] = doctor["ID"]
+            session["doctor_name"] = doctor["Name"]
+
+            flash("Doctor login successful")
+
+            return redirect(f"/doctor/{doctor['ID']}/homepage")
+
+    return render_template("doctorlogin.html.jinja")
 
 @app.route("/doctor/<int:doctor_id>")
 def doctor_page(doctor_id):
@@ -1170,7 +1230,7 @@ def doctor_contact(doctor_id):
 
 
 @app.route("/doctorlogin", methods=["GET","POST"])
-def doctor_login():
+def doctor_loginN():
 
     if request.method == "POST":
 
