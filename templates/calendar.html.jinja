@@ -41,6 +41,7 @@
 
 <body class="bg-gray-100 min-h-screen flex flex-col dark:bg-gray-900 dark:text-white">
     {% include "components/navbar.html.jinja" %}
+    {% include "components/chat_widget.html.jinja" %}
 
     {% with messages = get_flashed_messages(with_categories=true) %}
     {% if messages %}
@@ -317,3 +318,7 @@
 </body>
 
 </html>
+<script>
+ function toggleChat() {
+  document.getElementById("chat-widget").classList.toggle("hidden");
+}</script>

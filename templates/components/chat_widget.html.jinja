@@ -1,0 +1,40 @@
+<!-- FLOATING CHAT BUTTON -->
+<button
+  id="chat-toggle"
+  onclick="toggleChat()"
+  class="fixed bottom-6 right-6 z-50 bg-purple-600 hover:bg-purple-700 text-white w-16 h-16 rounded-full shadow-2xl text-2xl">
+  💬
+</button>
+
+<!-- CHAT WINDOW -->
+<div
+  id="chat-widget"
+  class="hidden fixed bottom-24 right-6 w-96 max-w-[90vw] bg-white dark:bg-gray-900 border rounded-2xl shadow-2xl z-50 overflow-hidden">
+
+  <!-- HEADER -->
+  <div class="bg-purple-600 text-white px-4 py-3 flex justify-between">
+    <h2 class="font-semibold">BookWell Assistant</h2>
+    <button onclick="toggleChat()">✕</button>
+  </div>
+
+  <!-- CHAT BOX -->
+  <div id="chat-box" class="p-4 h-96 overflow-y-auto space-y-2">
+    <div class="text-sm text-gray-500">
+      🤖 Hi! What symptoms are you experiencing?
+    </div>
+  </div>
+
+  <!-- INPUT -->
+  <div class="flex gap-2 p-3 border-t">
+    <input id="chat-input"
+      class="flex-1 border rounded px-3 py-2"
+      placeholder="Type symptoms...">
+
+    <button onclick="sendMessage()"
+      class="bg-blue-600 text-white px-4 py-2 rounded">
+      Send
+    </button>
+  </div>
+
+</div>
+
