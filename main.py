@@ -151,6 +151,14 @@ def reply_review(doctor_id):
 
     return redirect(f"/doctor/{doctor_id}/appointments")
 
+@app.route("/doctorappoint/<int:dtr_id>/delete_review", methods=["POST"])
+@login_required
+def delete_review(dtr_id):
+
+    del_id = request.form.get("del_id")
+
+    return redirect(f"/doctorappoint/{dtr_id}")
+
 @app.route("/doctorlogout")
 def doctor_logout():
 
