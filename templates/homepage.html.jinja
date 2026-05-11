@@ -68,8 +68,8 @@
 
 <body class="min-h-screen w-screen overflow-x-hidden flex flex-col bg-white text-black dark:bg-gray-900 dark:text-white transition-colors duration-300">
 
-  {% include "components/navbar.html.jinja"%}
-  {% include "components/chat_widget.html.jinja" %}
+{% include "components/navbar.html.jinja"%}
+{% include "components/chat_widget.html.jinja" %}
 
 <section class="relative min-h-[50vh] md:h-screen/2 flex items-center justify-center overflow-hidden">
 
@@ -285,7 +285,91 @@ document.addEventListener("DOMContentLoaded", () => {
 
 </html>
 <script>
- function toggleChat() {
-  document.getElementById("chat-widget").classList.toggle("hidden");
-}</script>
+function waitForChat() {
+  const input = document.getElementById("chat-input");
+  const box = document.getElementById("chat-box");
 
+  if (!input || !box) return;
+
+  // ENTER KEY FIX
+  input.addEventListener("keydown", (e) => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      sendMessage();
+    }
+  });
+}
+
+document.addEventListener("DOMContentLoaded", waitForChat);
+
+// ---------------- GLOBAL FUNCTIONS (IMPORTANT) ----------------
+window.toggleChat = function () {
+  document.getElementById("chat-widget").classList.toggle("hidden");
+};
+
+window.resetChat = function () {
+  fetch("/reset-chat").then(() => {
+    localStorage.removeItem("bookwell_chat");
+
+    const box = document.getElementById("chat-box");
+    if (!box) return;
+
+    box.innerHTML = `
+      <div class="text-gray-500">
+        Hi! What symptoms are you experiencing?
+      </div>
+    `;
+  });
+};
+
+window.sendMessage = function () {
+  const input = document.getElementById("chat-input");
+  const box = document.getElementById("chat-box");
+
+  if (!input || !box) return;
+
+  const text = input.value.trim();
+  if (!text) return;
+
+  box.innerHTML += `<div class="text-right">You: ${text}</div>`;
+  input.value = "";
+
+  // SAVE AFTER USER MESSAGE
+  localStorage.setItem("bookwell_chat", box.innerHTML);
+
+  fetch("/chat-symptoms", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ message: text })
+  })
+  .then(r => r.json())
+  .then(data => {
+
+    box.innerHTML += `<div class="text-left">Bot: ${data.reply}</div>`;
+
+    // SAVE AFTER BOT MESSAGE TOO
+    localStorage.setItem("bookwell_chat", box.innerHTML);
+
+    box.scrollTop = box.scrollHeight;
+  });
+};
+</script>
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+  const box = document.getElementById("chat-box");
+  if (!box) return;
+
+  const saved = localStorage.getItem("bookwell_chat");
+
+  if (saved) {
+    box.innerHTML = saved;
+  } else {
+    box.innerHTML = `
+      <div class="text-gray-500">
+        Hi! What symptoms are you experiencing?
+      </div>
+    `;
+  }
+});
+</script>
+ 
