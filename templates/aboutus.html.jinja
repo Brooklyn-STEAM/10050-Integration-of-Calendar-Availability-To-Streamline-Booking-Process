@@ -1,87 +1,237 @@
+
 <!doctype html>
-<html>
+<html lang="en">
 
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <link rel="shortcut icon" href="/static/images/logotab.png" type="image/x-icon">
+
   <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+
+  <title>Meet The Team | Bookwell</title>
 </head>
 
-<body class="bg-gray-100 dark:bg-gray-900 dark:text-white">
+<body class="bg-gradient-to-b from-gray-100 to-violet-100 dark:from-gray-900 dark:to-gray-950 dark:text-white min-h-screen">
 
-{% include "components/navbar.html.jinja" %}
+  {% include "components/navbar.html.jinja" %}
 
-<!-- TITLE -->
-<div class="text-center mt-10 px-4">
-  <h1 class="text-4xl font-bold underline text-gray-800 dark:text-white">
-    MEET THE TEAM!
-  </h1>
+  <section class="text-center px-6 pt-20 pb-14">
 
-  <p class="mt-6 max-w-4xl mx-auto text-lg text-gray-700 dark:text-gray-300">
-    The brains behind Bookwell include 3 fullstack development students from the Brooklyn STEAM Center.
-    As a team, this idea was chosen because we realized many individuals don't have an efficient way
-    to book appointments that fits their schedule. We built this to make scheduling simple, fast,
-    and frustration-free.
-  </p>
-</div>
+    <div class="inline-block bg-violet-200 dark:bg-violet-900/40 text-violet-800 dark:text-violet-300 px-5 py-2 rounded-full text-sm font-semibold mb-6 shadow-sm">
+      The Developers Behind Bookwell
+    </div>
 
+    <h1 class="text-5xl md:text-6xl font-extrabold text-gray-800 dark:text-white leading-tight">
+      Meet Our Team
+    </h1>
 
-<main class="mt-14 flex flex-nowrap overflow-x-auto gap-6 px-6 lg:justify-center pb-10">
-
-
-  <div class="bg-white dark:bg-gray-800 shadow-lg rounded-2xl w-80 flex-shrink-0 p-6 space-y-4">
-    <p class="text-2xl font-bold text-center underline">Prity</p>
-
-    <img class="mx-auto w-36 h-36 object-cover rounded-full border-4 border-violet-300"
-         src="/static/members/Prity.png"
-         alt="Prity">
-
-    <p class="text-sm text-gray-600 dark:text-gray-300">
-     Hi, my name is Jannatul Prity. I am a Full Stack Developer currently studying at the Brooklyn STEAM Center, where I am learning the skills and tools needed to become a successful developer. I aspire to use my work to make people’s lives easier and more flexible. To explore some of my projects, feel free to check out my GitHub link below.
+    <p class="max-w-3xl mx-auto mt-8 text-lg text-gray-700 dark:text-gray-300 leading-relaxed">
+      We are full stack development students from the Brooklyn STEAM Center passionate about building
+      technology that solves real-world problems. Bookwell was created to simplify appointment booking,
+      reduce scheduling frustration, and make healthcare management more accessible for everyone.
     </p>
 
-    <a href="https://github.com/JannatulP49" target="_blank"
-       class="block text-center font-semibold text-violet-600 dark:text-violet-400 hover:underline">
-      GitHub Profile
-    </a>
-  </div>
+  </section>
 
-  <div class="bg-white dark:bg-gray-800 shadow-lg rounded-2xl w-80 flex-shrink-0 p-6 space-y-4">
-    <p class="text-2xl font-bold text-center underline">Sanah</p>
 
-    <img class="mx-auto w-36 h-36 object-cover rounded-full border-4 border-violet-300"
-         src="/static/members/ASANAH1.jpg"
-         alt="Sanah">
+  <main class="max-w-7xl mx-auto px-6 pb-20">
 
-    <p class="text-sm text-gray-600 dark:text-gray-300">
-      Hello, my name is Sanah White and I'm currently a senior at the Brooklyn STEAM Center pursuing fullstack development.
-      I hope to become a software engineer or developer in the future.
-    </p>
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
 
-    <a href="https://github.com/Sanahw7" target="_blank"
-       class="block text-center font-semibold text-violet-600 dark:text-violet-400 hover:underline">
-      GitHub Profile
-    </a>
-  </div>
+      <div class="group bg-white dark:bg-gray-800 rounded-3xl shadow-xl overflow-hidden hover:-translate-y-2 hover:shadow-2xl transition duration-300 border border-gray-200 dark:border-gray-700">
 
-  <div class="bg-white dark:bg-gray-800 shadow-lg rounded-2xl w-80 flex-shrink-0 p-6 space-y-4">
-    <p class="text-2xl font-bold text-center underline">Jahmere</p>
+        <div class="h-28 bg-gradient-to-r from-violet-500 to-purple-500"></div>
 
-    <img class="mx-auto w-36 h-36 object-cover rounded-full border-4 border-violet-300"
-         src="/static/members/jahmere.jpeg"
-         alt="Jahmere">
+        <div class="px-8 pb-8 -mt-16 text-center">
 
-    <p class="text-sm text-gray-600 dark:text-gray-300">
-      Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore.
-    </p>
+          <img
+            src="/static/members/Prity.png"
+            alt="Prity"
+            class="w-32 h-32 object-cover rounded-full border-4 border-white dark:border-gray-800 mx-auto shadow-lg"
+          >
 
-    <a href="https://github.com/JahmereStacks" target="_blank"
-       class="block text-center font-semibold text-violet-600 dark:text-violet-400 hover:underline">
-      GitHub Profile
-    </a>
-  </div>
+          <h2 class="mt-5 text-3xl font-bold text-gray-800 dark:text-white">
+            Prity
+          </h2>
 
-</main>
+          <p class="text-violet-600 dark:text-violet-400 font-semibold mt-1">
+            Full Stack Developer
+          </p>
+
+          <p class="mt-5 text-gray-600 dark:text-gray-300 leading-relaxed text-sm">
+            Hi, my name is Jannatul Prity. I am a Full Stack Developer currently studying at the Brooklyn
+            STEAM Center, where I am learning the skills and tools needed to become a successful developer.
+            I aspire to use technology to create solutions that improve people's everyday lives.
+          </p>
+
+          <div class="mt-6">
+            <h3 class="font-semibold text-gray-800 dark:text-white mb-3">
+              Contributions
+            </h3>
+
+            <div class="flex flex-wrap justify-center gap-2 text-sm">
+              <span class="bg-violet-100 dark:bg-violet-900/40 px-3 py-1 rounded-full">Frontend Design</span>
+              <span class="bg-violet-100 dark:bg-violet-900/40 px-3 py-1 rounded-full">Backend Logic</span>
+              <span class="bg-violet-100 dark:bg-violet-900/40 px-3 py-1 rounded-full">Database Work</span>
+            </div>
+          </div>
+
+          <a
+            href="https://github.com/JannatulP49"
+            target="_blank"
+            class="inline-block mt-7 bg-violet-600 hover:bg-violet-700 text-white font-semibold px-6 py-3 rounded-xl transition duration-300"
+          >
+            View GitHub
+          </a>
+
+        </div>
+      </div>
+
+
+
+      <div class="group bg-white dark:bg-gray-800 rounded-3xl shadow-xl overflow-hidden hover:-translate-y-2 hover:shadow-2xl transition duration-300 border border-gray-200 dark:border-gray-700">
+
+        <div class="h-28 bg-gradient-to-r from-pink-500 to-violet-500"></div>
+
+        <div class="px-8 pb-8 -mt-16 text-center">
+
+          <img
+            src="/static/members/ASANAH1.jpg"
+            alt="Sanah"
+            class="w-32 h-32 object-cover rounded-full border-4 border-white dark:border-gray-800 mx-auto shadow-lg"
+          >
+
+          <h2 class="mt-5 text-3xl font-bold text-gray-800 dark:text-white">
+            Sanah
+          </h2>
+
+          <p class="text-violet-600 dark:text-violet-400 font-semibold mt-1">
+            Full Stack Developer
+          </p>
+
+          <p class="mt-5 text-gray-600 dark:text-gray-300 leading-relaxed text-sm">
+            Hello, my name is Sanah White and I am currently a senior at the Brooklyn STEAM Center pursuing
+            full stack development. I enjoy creating clean user experiences and learning new technologies.
+            My goal is to become a software engineer in the future.
+          </p>
+
+          <div class="mt-6">
+            <h3 class="font-semibold text-gray-800 dark:text-white mb-3">
+              Contributions
+            </h3>
+
+            <div class="flex flex-wrap justify-center gap-2 text-sm">
+              <span class="bg-violet-100 dark:bg-violet-900/40 px-3 py-1 rounded-full">UI Development</span>
+              <span class="bg-violet-100 dark:bg-violet-900/40 px-3 py-1 rounded-full">Responsive Design</span>
+              <span class="bg-violet-100 dark:bg-violet-900/40 px-3 py-1 rounded-full">Testing</span>
+            </div>
+          </div>
+
+          <a
+            href="https://github.com/Sanahw7"
+            target="_blank"
+            class="inline-block mt-7 bg-violet-600 hover:bg-violet-700 text-white font-semibold px-6 py-3 rounded-xl transition duration-300"
+          >
+            View GitHub
+          </a>
+
+        </div>
+      </div>
+
+
+      <div class="group bg-white dark:bg-gray-800 rounded-3xl shadow-xl overflow-hidden hover:-translate-y-2 hover:shadow-2xl transition duration-300 border border-gray-200 dark:border-gray-700">
+
+        <div class="h-28 bg-gradient-to-r from-indigo-500 to-violet-500"></div>
+
+        <div class="px-8 pb-8 -mt-16 text-center">
+
+          <img
+            src="/static/members/jahmere.jpeg"
+            alt="Jahmere"
+            class="w-32 h-32 object-cover rounded-full border-4 border-white dark:border-gray-800 mx-auto shadow-lg"
+          >
+
+          <h2 class="mt-5 text-3xl font-bold text-gray-800 dark:text-white">
+            Jahmere
+          </h2>
+
+          <p class="text-violet-600 dark:text-violet-400 font-semibold mt-1">
+            Full Stack Developer
+          </p>
+
+          <p class="mt-5 text-gray-600 dark:text-gray-300 leading-relaxed text-sm">
+            Hi, my name is Jahmere and I am a developer at the Brooklyn STEAM Center. I enjoy building
+            modern applications, learning new programming concepts, and collaborating with teams to create
+            impactful digital experiences.
+          </p>
+
+          <div class="mt-6">
+            <h3 class="font-semibold text-gray-800 dark:text-white mb-3">
+              Contributions
+            </h3>
+
+            <div class="flex flex-wrap justify-center gap-2 text-sm">
+              <span class="bg-violet-100 dark:bg-violet-900/40 px-3 py-1 rounded-full">Authentication</span>
+              <span class="bg-violet-100 dark:bg-violet-900/40 px-3 py-1 rounded-full">API Integration</span>
+              <span class="bg-violet-100 dark:bg-violet-900/40 px-3 py-1 rounded-full">Optimization</span>
+            </div>
+          </div>
+
+          <a
+            href="https://github.com/JahmereStacks"
+            target="_blank"
+            class="inline-block mt-7 bg-violet-600 hover:bg-violet-700 text-white font-semibold px-6 py-3 rounded-xl transition duration-300"
+          >
+            View GitHub
+          </a>
+
+        </div>
+      </div>
+
+    </div>
+
+
+    <section class="mt-24 text-center">
+
+      <h2 class="text-4xl font-bold text-gray-800 dark:text-white">
+        Technologies We Used
+      </h2>
+
+      <p class="mt-4 text-gray-600 dark:text-gray-300 max-w-2xl mx-auto">
+        Bookwell was built using modern development tools and frameworks focused on performance,
+        accessibility, and clean design.
+      </p>
+
+      <div class="flex flex-wrap justify-center gap-4 mt-10">
+
+        <div class="bg-white dark:bg-gray-800 px-6 py-3 rounded-2xl shadow-md font-semibold">
+          Flask
+        </div>
+
+        <div class="bg-white dark:bg-gray-800 px-6 py-3 rounded-2xl shadow-md font-semibold">
+          TailwindCSS
+        </div>
+
+        <div class="bg-white dark:bg-gray-800 px-6 py-3 rounded-2xl shadow-md font-semibold">
+          JavaScript
+        </div>
+
+        <div class="bg-white dark:bg-gray-800 px-6 py-3 rounded-2xl shadow-md font-semibold">
+          HTML
+        </div>
+
+        <div class="bg-white dark:bg-gray-800 px-6 py-3 rounded-2xl shadow-md font-semibold">
+          Python
+        </div>
+
+      </div>
+
+    </section>
+
+  </main>
 
 </body>
+
+</html>
+

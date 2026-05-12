@@ -450,6 +450,30 @@ def suggest_doctors():
         selected_date=date,
         category_filter=category
     )
+
+
+@app.route("/appoint/<int:appointment_id>/delete", methods=["POST"])
+@login_required
+def delete_appointment(appointment_id):
+
+    connection = connect_db()
+    cursor = connection.cursor()
+
+    cursor.execute("""
+        DELETE FROM Appointment
+        WHERE ID = %s
+        AND UserID = %s
+        AND Status = 'Confirmed'
+    """, (appointment_id, current_user.id))
+
+    connection.commit()
+    connection.close()
+
+    flash("Appointment removed successfully.")
+
+    return redirect("/appoint")
+
+
 # ---------------- BOOK APPOINTMENT ----------------
 
 SYMPTOM_MAP = {
