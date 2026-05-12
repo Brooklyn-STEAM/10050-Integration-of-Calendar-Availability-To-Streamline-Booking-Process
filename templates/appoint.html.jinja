@@ -12,16 +12,58 @@
 <body class="bg-purple-50 text-gray-800 dark:bg-gray-900 dark:text-white">
 
 
-{% include "components/navbar.html.jinja" %}
-{% include "components/chat_widget.html.jinja" %}
+  {% include "components/navbar.html.jinja" %}
+  {% include "components/chat_widget.html.jinja" %}
 
-<main class="max-w-6xl mx-auto px-6 py-12">
+  <main class="max-w-6xl mx-auto px-6 py-12">
 
-  <h1 class="text-3xl font-semibold mb-8 border-b border-purple-200 pb-4 text-[#57068c] dark:text-white">
-    My Appointments
-  </h1>
+    <!-- HEADER -->
+    <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-6 mb-10">
 
-  {% if appointments|length == 0 %}
+      <div>
+        <h1 class="text-5xl font-extrabold text-[#57068c] dark:text-white">
+          My Appointments
+        </h1>
+
+        <p class="mt-3 text-gray-600 dark:text-gray-300 text-lg">
+          Manage, track, and organize all your healthcare appointments in one place.
+        </p>
+      </div>
+
+      <a href="/doctorsearch"
+        class="bg-[#57068c] hover:bg-purple-800 text-white px-6 py-3 rounded-2xl shadow-lg font-semibold transition duration-300 hover:-translate-y-1">
+        + Book Appointment
+      </a>
+
+    </div>
+
+
+    <!-- STATS -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
+
+      <div class="bg-white dark:bg-gray-800 rounded-3xl shadow-lg p-6 border border-purple-100 dark:border-gray-700">
+        <p class="text-gray-500 dark:text-gray-400 text-sm">
+          Total Appointments
+        </p>
+
+        <h2 class="text-4xl font-bold mt-2 text-[#57068c] dark:text-white">
+          {{ appointments|length }}
+        </h2>
+      </div> 
+
+      <div class="bg-white dark:bg-gray-800 rounded-3xl shadow-lg p-6 border border-purple-100 dark:border-gray-700">
+        <p class="text-gray-500 dark:text-gray-400 text-sm">
+          Upcoming
+        </p>
+
+        <h2 class="text-4xl font-bold mt-2 text-purple-600">
+          {{ appointments | selectattr('Status', 'equalto', 'Scheduled') | list | length }}
+        </h2>
+      </div>
+
+    </div>
+
+    {% if appointments|length == 0 %}
 
     <div class="text-center py-20 bg-white dark:bg-gray-800 rounded-xl shadow-md">
       <p class="text-lg mb-6 text-gray-600 dark:text-gray-300">
@@ -34,14 +76,25 @@
       </a>
     </div>
 
-  {% else %}
+    {% else %}
 
     {% for appointment in appointments %}
 
-    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-md mb-8 p-6">
+    <div class="relative bg-white dark:bg-gray-800 rounded-xl shadow-md mb-8 p-10">
 
+      {% if appointment["Status"] == "Confirmed" %}
 
-      <div class="flex flex-col md:flex-row md:justify-between md:items-center border-b border-purple-200 pb-4 mb-4 gap-4">
+      <form action="/appoint/{{ appointment['ID'] }}/delete" method="POST" class="absolute top-4 right-4">
+        <button type="submit" class="w-8 h-8 rounded-full bg-purple-100 hover:bg-purple-200
+           text-purple-600 font-bold flex items-center justify-center transition">
+          ×
+        </button>
+      </form>
+
+      {% endif %}
+
+      <div
+        class="flex flex-col md:flex-row md:justify-between md:items-center border-b border-purple-200 pb-4 mb-4 gap-4">
 
         <div>
           <p class="font-semibold text-lg text-[#57068c] dark:text-white">
@@ -51,6 +104,8 @@
             Dr. {{ appointment["DoctorName"] }}
           </p>
         </div>
+
+
 
         <span class="px-4 py-1 rounded-full text-sm font-medium
           {% if appointment['Status'] == 'Confirmed' %}
@@ -90,127 +145,129 @@
 
         {% if appointment["Status"] == "Scheduled" %}
 
-          <form action="/appoint/{{ appointment['ID'] }}/cancel" method="POST">
-            <button class="bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700">
-              Cancel
-            </button>
-          </form>
+        <form action="/appoint/{{ appointment['ID'] }}/cancel" method="POST">
+          <button class="bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700">
+            Cancel
+          </button>
+        </form>
 
-          <form action="/appoint/{{ appointment['ID'] }}/attend" method="POST">
-            <button class="bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700">
-              Mark as Attended
-            </button>
-          </form>
+        <form action="/appoint/{{ appointment['ID'] }}/attend" method="POST">
+          <button class="bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700">
+            Mark as Attended
+          </button>
+        </form>
 
         {% endif %}
 
         {% if appointment["Status"] in ["Cancelled", "Confirmed"] %}
 
-          <a href="/doctor/{{ appointment['DoctorID'] }}"
-            class="bg-purple-700 text-white px-4 py-2 rounded-lg hover:bg-purple-800">
-            Reschedule
-          </a>
+        <a href="/doctor/{{ appointment['DoctorID'] }}"
+          class="bg-purple-700 text-white px-4 py-2 rounded-lg hover:bg-purple-800">
+          Reschedule
+        </a>
 
         {% endif %}
+
+
 
       </div>
 
     </div>
 
     {% endfor %}
-  {% endif %}
+    {% endif %}
 
-</main>
+
+  </main>
 
 </body>
 
 </html>
- <script>
-function waitForChat() {
-  const input = document.getElementById("chat-input");
-  const box = document.getElementById("chat-box");
+<script>
+  function waitForChat() {
+    const input = document.getElementById("chat-input");
+    const box = document.getElementById("chat-box");
 
-  if (!input || !box) return;
+    if (!input || !box) return;
 
-  // ENTER KEY FIX
-  input.addEventListener("keydown", (e) => {
-    if (e.key === "Enter") {
-      e.preventDefault();
-      sendMessage();
-    }
-  });
-}
+    // ENTER KEY FIX
+    input.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") {
+        e.preventDefault();
+        sendMessage();
+      }
+    });
+  }
 
-document.addEventListener("DOMContentLoaded", waitForChat);
+  document.addEventListener("DOMContentLoaded", waitForChat);
 
-// ---------------- GLOBAL FUNCTIONS (IMPORTANT) ----------------
-window.toggleChat = function () {
-  document.getElementById("chat-widget").classList.toggle("hidden");
-};
+  // ---------------- GLOBAL FUNCTIONS (IMPORTANT) ----------------
+  window.toggleChat = function () {
+    document.getElementById("chat-widget").classList.toggle("hidden");
+  };
 
-window.resetChat = function () {
-  fetch("/reset-chat").then(() => {
-    localStorage.removeItem("bookwell_chat");
+  window.resetChat = function () {
+    fetch("/reset-chat").then(() => {
+      localStorage.removeItem("bookwell_chat");
 
+      const box = document.getElementById("chat-box");
+      if (!box) return;
+
+      box.innerHTML = `
+      <div class="text-gray-500">
+        Hi! What symptoms are you experiencing?
+      </div>
+    `;
+    });
+  };
+
+  window.sendMessage = function () {
+    const input = document.getElementById("chat-input");
+    const box = document.getElementById("chat-box");
+
+    if (!input || !box) return;
+
+    const text = input.value.trim();
+    if (!text) return;
+
+    box.innerHTML += `<div class="text-right">You: ${text}</div>`;
+    input.value = "";
+
+    // SAVE AFTER USER MESSAGE
+    localStorage.setItem("bookwell_chat", box.innerHTML);
+
+    fetch("/chat-symptoms", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ message: text })
+    })
+      .then(r => r.json())
+      .then(data => {
+
+        box.innerHTML += `<div class="text-left">Bot: ${data.reply}</div>`;
+
+        // SAVE AFTER BOT MESSAGE TOO
+        localStorage.setItem("bookwell_chat", box.innerHTML);
+
+        box.scrollTop = box.scrollHeight;
+      });
+  };
+</script>
+<script>
+  document.addEventListener("DOMContentLoaded", () => {
     const box = document.getElementById("chat-box");
     if (!box) return;
 
-    box.innerHTML = `
+    const saved = localStorage.getItem("bookwell_chat");
+
+    if (saved) {
+      box.innerHTML = saved;
+    } else {
+      box.innerHTML = `
       <div class="text-gray-500">
         Hi! What symptoms are you experiencing?
       </div>
     `;
+    }
   });
-};
-
-window.sendMessage = function () {
-  const input = document.getElementById("chat-input");
-  const box = document.getElementById("chat-box");
-
-  if (!input || !box) return;
-
-  const text = input.value.trim();
-  if (!text) return;
-
-  box.innerHTML += `<div class="text-right">You: ${text}</div>`;
-  input.value = "";
-
-  // SAVE AFTER USER MESSAGE
-  localStorage.setItem("bookwell_chat", box.innerHTML);
-
-  fetch("/chat-symptoms", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ message: text })
-  })
-  .then(r => r.json())
-  .then(data => {
-
-    box.innerHTML += `<div class="text-left">Bot: ${data.reply}</div>`;
-
-    // SAVE AFTER BOT MESSAGE TOO
-    localStorage.setItem("bookwell_chat", box.innerHTML);
-
-    box.scrollTop = box.scrollHeight;
-  });
-};
 </script>
-<script>
-document.addEventListener("DOMContentLoaded", () => {
-  const box = document.getElementById("chat-box");
-  if (!box) return;
-
-  const saved = localStorage.getItem("bookwell_chat");
-
-  if (saved) {
-    box.innerHTML = saved;
-  } else {
-    box.innerHTML = `
-      <div class="text-gray-500">
-        Hi! What symptoms are you experiencing?
-      </div>
-    `;
-  }
-});
-</script>
- 
