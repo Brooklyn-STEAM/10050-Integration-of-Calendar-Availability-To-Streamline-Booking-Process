@@ -1124,7 +1124,6 @@ def chat_symptoms():
                 "chest pain",
                 "palpitations",
                 "heart",
-                "fainting",
                 "blood pressure"
             ]):
 
