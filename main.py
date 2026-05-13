@@ -894,6 +894,17 @@ QUESTIONS = [
     ("other_symptoms", "Any other symptoms? (fever, nausea, etc.)")
 ]
 
+CASUAL_MESSAGES = [
+    "hi",
+    "hello",
+    "hey",
+    "help",
+    "thanks",
+    "thank you",
+    "good morning",
+    "good afternoon"
+]
+
 # ---------------- HELPERS ----------------
 def extract_info(message, chat):
     data = {}
@@ -964,79 +975,216 @@ def reset_chat():
 
 @app.route("/chat-symptoms", methods=["POST"])
 def chat_symptoms():
+
     try:
         data = request.get_json(force=True) or {}
         message = data.get("message", "").lower().strip()
 
-        # ---------------- INIT ----------------
+        # ---------------- CASUAL CHAT ----------------
+        greetings = ["hi", "hello", "hey", "yo"]
+        thanks = ["thanks", "thank you"]
+        
+        if message in greetings:
+            return jsonify({
+                "reply": "Hi! I can help you check symptoms, find doctors, and book appointments.",
+                "show_booking": False
+            })
+
+        if message in thanks:
+            return jsonify({
+                "reply": "You're welcome!",
+                "show_booking": False
+            })
+
+        if "help" in message:
+            return jsonify({
+                "reply": "Tell me your symptoms or ask me to help book an appointment.",
+                "show_booking": False
+            })
+
+        # ---------------- APPOINTMENT HELP ----------------
+        if "appointment" in message or "book" in message:
+
+            chat = session.get("chat", {})
+
+            chat["booking_mode"] = True
+
+            session["chat"] = chat
+
+            return jsonify({
+                    "reply": "Sure. What type of doctor are you looking for?",
+                    "show_booking": False
+         })
+        # ---------------- INIT CHAT ----------------
         if "chat" not in session:
+
             session["chat"] = {
                 "step": 0,
-                "history": []
+                "history": [],
+                "symptom": "",
+                "duration": "",
+                "severity": "",
+                "other_symptoms": ""
             }
 
         chat = session["chat"]
+        # ---------------- BOOKING MODE ----------------
+        if chat.get("booking_mode"):
+
+            doctor_map = {
+        "cardio": "Cardiologist",
+        "cardiologist": "Cardiologist",
+        "heart": "Cardiologist",
+
+        "neuro": "Neurologist",
+        "neurologist": "Neurologist",
+        "brain": "Neurologist",
+
+        "ortho": "Orthopedic Doctor",
+        "orthopedic": "Orthopedic Doctor",
+        "bone": "Orthopedic Doctor",
+        "back": "Orthopedic Doctor",
+
+        "pulmonary": "Pulmonary Doctor",
+        "lung": "Pulmonary Doctor",
+        "breathing": "Pulmonary Doctor"
+    }
+
+            for key, value in doctor_map.items():
+
+                if key in message:
+
+                    chat["booking_mode"] = False
+                    session["chat"] = chat
+
+                    return jsonify({
+                        "reply": f"Okay — I can help you book with a {value}. Click below to find appointments.",
+                        "show_booking": True,
+                        "category": value
+                    })
+
+                return jsonify({
+                "reply": "Please enter a doctor type like cardiologist, neurologist, orthopedic, or pulmonary.",
+                "show_booking": False
+            })
+
         chat["history"].append(message)
 
-        # ---------------- STEP FLOW ----------------
-
+        # ---------------- STEP 0 ----------------
         if chat["step"] == 0:
-            chat["step"] = 1
-            session["chat"] = chat
-            return jsonify({"reply": "How long have you had this?", "show_booking": False})
 
+            chat["symptom"] = message
+            chat["step"] = 1
+
+            session["chat"] = chat
+
+            return jsonify({
+                "reply": "How long have you had this?",
+                "show_booking": False
+            })
+
+        # ---------------- STEP 1 ----------------
         if chat["step"] == 1:
+
             chat["duration"] = message
             chat["step"] = 2
-            session["chat"] = chat
-            return jsonify({"reply": "How severe is it (mild, moderate, severe)?", "show_booking": False})
 
+            session["chat"] = chat
+
+            return jsonify({
+                "reply": "How severe is it? (mild, moderate, severe)",
+                "show_booking": False
+            })
+
+        # ---------------- STEP 2 ----------------
         if chat["step"] == 2:
+
             chat["severity"] = message
             chat["step"] = 3
+
             session["chat"] = chat
-            return jsonify({"reply": "Any other symptoms? (yes or no)", "show_booking": False})
 
+            return jsonify({
+                "reply": "Any other symptoms?",
+                "show_booking": False
+            })
+
+        # ---------------- STEP 3 ----------------
         if chat["step"] == 3:
-            chat["other_symptoms"] = "none" if message in ["no", "none", "nope", "nothing"] else message
-            chat["step"] = 4
 
-        # ---------------- DIAGNOSIS (SAFE FALLBACK) ----------------
-        context = " ".join(chat["history"]).lower()
+            if message in ["no", "none", "nope", "nah"]:
+                chat["other_symptoms"] = "none"
+            else:
+                chat["other_symptoms"] = message
 
-        if "chest" in context:
-            specialist = "Cardiologist"
-            advice = "Chest symptoms should be checked immediately."
+            # ---------------- ANALYSIS ----------------
+            context = " ".join(chat["history"]).lower()
 
-        elif "head" in context:
-            specialist = "Neurologist"
-            advice = "Head symptoms may indicate neurological issues."
+            if any(word in context for word in [
+                "chest pain",
+                "palpitations",
+                "heart",
+                "blood pressure"
+            ]):
 
-        elif "back" in context:
-            specialist = "Orthopedic Doctor"
-            advice = "Back pain is usually muscular or spine-related."
+                specialist = "Cardiologist"
+                advice = "Heart-related symptoms should be checked soon."
 
-        else:
-            specialist = "General Physician"
-            advice = "A general consultation is recommended."
+            elif any(word in context for word in [
+                "headache",
+                "migraine",
+                "seizure",
+                "memory",
+                "dizziness"
+            ]):
 
-        # ---------------- RESET CHAT AFTER DONE ----------------
-        session.pop("chat", None)
+                specialist = "Neurologist"
+                advice = "Neurological symptoms may need further evaluation."
 
-        return jsonify({
-            "reply": f"Based on your symptoms, you may need a {specialist}. {advice}",
-            "show_booking": True
-        })
+            elif any(word in context for word in [
+                "back pain",
+                "knee pain",
+                "joint pain",
+                "fracture",
+                "sprain"
+            ]):
+
+                specialist = "Orthopedic Doctor"
+                advice = "This may be muscle, joint, or spine related."
+
+            elif any(word in context for word in [
+                "cough",
+                "whooping cough",
+                "asthma",
+                "breathing",
+                "shortness of breath"
+            ]):
+
+                specialist = "Pulmonary Doctor"
+                advice = "Breathing symptoms should be evaluated."
+
+            else:
+
+                specialist = "General Physician"
+                advice = "A general medical consultation is recommended."
+
+            # ---------------- RESET ----------------
+            session.pop("chat", None)
+
+            return jsonify({
+                "reply": f"Based on your symptoms, you may need a {specialist}. {advice}",
+                "show_booking": True,
+                "category": specialist
+            })
 
     except Exception as e:
+
         print("CHAT ERROR:", e)
 
-        # ALWAYS SAFE RESPONSE (NO STUCK / NO ERROR EVER)
         return jsonify({
-            "reply": "Let’s continue. How long have you had this?",
+            "reply": "Sorry, something went wrong. Please try again.",
             "show_booking": False
         })
-
 @app.route("/calendar")
 @login_required
 def calendar_view():
