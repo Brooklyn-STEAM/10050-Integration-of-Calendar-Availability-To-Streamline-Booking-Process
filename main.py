@@ -1031,42 +1031,46 @@ def chat_symptoms():
         # ---------------- BOOKING MODE ----------------
         if chat.get("booking_mode"):
 
-            doctor_map = {
-        "cardio": "Cardiologist",
-        "cardiologist": "Cardiologist",
-        "heart": "Cardiologist",
+                    doctor_map = {
+                        "cardio": "Cardiologist",
+                        "cardiologist": "Cardiologist",
+                        "heart": "Cardiologist",
 
-        "neuro": "Neurologist",
-        "neurologist": "Neurologist",
-        "brain": "Neurologist",
+                        "neuro": "Neurologist",
+                        "neurologist": "Neurologist",
+                        "brain": "Neurologist",
 
-        "ortho": "Orthopedic Doctor",
-        "orthopedic": "Orthopedic Doctor",
-        "bone": "Orthopedic Doctor",
-        "back": "Orthopedic Doctor",
+                        "ortho": "Orthopedic Doctor",
+                        "orthopedic": "Orthopedic Doctor",
+                        "bone": "Orthopedic Doctor",
+                        "back": "Orthopedic Doctor",
 
-        "pulmonary": "Pulmonary Doctor",
-        "lung": "Pulmonary Doctor",
-        "breathing": "Pulmonary Doctor"
-    }
+                        "pulmonary": "Pulmonary Doctor",
+                        "lung": "Pulmonary Doctor",
+                        "breathing": "Pulmonary Doctor"
+                    }
 
-            for key, value in doctor_map.items():
+                    matched = None
 
-                if key in message:
+                    for key, value in doctor_map.items():
+                        if key in message:
+                            matched = value
+                            break
 
-                    chat["booking_mode"] = False
-                    session["chat"] = chat
+                    if matched:
+                        chat["booking_mode"] = False
+                        session["chat"] = chat
+
+                        return jsonify({
+                            "reply": f"Okay — I can help you book with a {matched}. Click below to find appointments.",
+                            "show_booking": True,
+                            "category": matched
+                        })
 
                     return jsonify({
-                        "reply": f"Okay — I can help you book with a {value}. Click below to find appointments.",
-                        "show_booking": True,
-                        "category": value
+                        "reply": "Please enter a doctor type like cardiologist, neurologist, orthopedic, or pulmonary.",
+                        "show_booking": False
                     })
-
-                return jsonify({
-                "reply": "Please enter a doctor type like cardiologist, neurologist, orthopedic, or pulmonary.",
-                "show_booking": False
-            })
 
         chat["history"].append(message)
 

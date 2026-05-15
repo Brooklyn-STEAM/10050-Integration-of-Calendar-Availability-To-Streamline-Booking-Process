@@ -24,9 +24,10 @@ function toggleChat() {
     })
     .then(r => r.json())
     .then(data => {
-      hideTyping();
-      addMessage(data.reply || "Error", "bot");
-    })
+        hideTyping();
+        addMessage(data.reply || "Error", "bot");
+        handleBotResponse(data);
+      })
     .catch(() => {
       hideTyping();
       addMessage("Server error", "bot");
@@ -46,4 +47,14 @@ function toggleChat() {
         </div>
       `;
     });
+  }
+  function handleBotResponse(data) {
+    const btn = document.getElementById("book-btn-container");
+  
+    if (data.show_booking) {
+      selectedCategory = data.category;
+      btn.classList.remove("hidden");
+    } else {
+      btn.classList.add("hidden");
+    }
   }
