@@ -35,6 +35,20 @@
   Send
 </button>
 
+<div id="book-btn-container" class="hidden fixed bottom-24 right-6 z-50">
+  <button
+    id="find-appointment-btn"
+    class="bg-green-600 hover:bg-green-700 text-white px-4 py-3 rounded-xl shadow-xl">
+    Find Appointment
+  </button>
+  <!-- GLOBAL APPOINTMENT BUTTON -->
+<a href="/doctorsearch"
+   class="fixed bottom-24 left-6 z-50 bg-blue-600 hover:bg-blue-700 text-white px-5 py-3 rounded-full shadow-xl">
+   Find Appointment
+</a>
+</div>
+<!-- GLOBAL APPOINTMENT BUTTON -->
+
 <button onclick="resetChat()"
   class="bg-gray-300 px-4 py-2 rounded">
   New
@@ -43,3 +57,26 @@
 
 </div>
 
+<script>
+let selectedCategory = null;
+
+document.addEventListener("click", function(e) {
+  if (e.target && e.target.id === "find-appointment-btn") {
+    if (!selectedCategory) return;
+
+    // send user to doctor search page with category
+    window.location.href = `/doctorsearch?category=${encodeURIComponent(selectedCategory)}`;
+  }
+});
+
+function handleBotResponse(data) {
+  const btn = document.getElementById("book-btn-container");
+
+  if (data.show_booking) {
+    selectedCategory = data.category;
+    btn.classList.remove("hidden");
+  } else {
+    btn.classList.add("hidden");
+  }
+}
+</script>

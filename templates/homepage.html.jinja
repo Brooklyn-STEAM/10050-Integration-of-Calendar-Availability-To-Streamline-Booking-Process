@@ -251,6 +251,25 @@
     </p>
 
   </footer>
+  <!-- INPUT AREA -->
+<div class="flex gap-2 p-3 border-t">
+  <input id="chat-input"
+    class="flex-1 border rounded px-3 py-2"
+    placeholder="Type here..." />
+
+  <button onclick="sendMessage()"
+    class="bg-blue-600 text-white px-3 rounded">
+    Send
+  </button>
+
+  <button onclick="resetChat()"
+    class="bg-gray-300 px-3 rounded">
+    New
+  </button>
+</div>
+
+  
+</div>
 
 <script>
 document.addEventListener("DOMContentLoaded", () => {
@@ -372,4 +391,27 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 });
 </script>
- 
+
+ <script>
+let selectedCategory = null;
+
+document.addEventListener("click", function(e) {
+  if (e.target && e.target.id === "find-appointment-btn") {
+    if (!selectedCategory) return;
+
+    // send user to doctor search page with category
+    window.location.href = `/doctorsearch?category=${encodeURIComponent(selectedCategory)}`;
+  }
+});
+
+function handleBotResponse(data) {
+  const btn = document.getElementById("book-btn-container");
+
+  if (data.show_booking) {
+    selectedCategory = data.category;
+    btn.classList.remove("hidden");
+  } else {
+    btn.classList.add("hidden");
+  }
+}
+</script>

@@ -523,3 +523,26 @@ window.resetChat = resetChat;
 window.toggleChat = toggleChat;
 </script>
 
+<script>
+let selectedCategory = null;
+
+document.addEventListener("click", function(e) {
+  if (e.target && e.target.id === "find-appointment-btn") {
+    if (!selectedCategory) return;
+
+    // send user to doctor search page with category
+    window.location.href = `/doctorsearch?category=${encodeURIComponent(selectedCategory)}`;
+  }
+});
+
+function handleBotResponse(data) {
+  const btn = document.getElementById("book-btn-container");
+
+  if (data.show_booking) {
+    selectedCategory = data.category;
+    btn.classList.remove("hidden");
+  } else {
+    btn.classList.add("hidden");
+  }
+}
+</script>
