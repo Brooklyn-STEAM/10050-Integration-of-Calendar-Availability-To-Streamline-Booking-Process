@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Profile</title>
+
+    <link rel="shortcut icon" href="/static/images/logotab.png" type="image/x-icon">
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+
+    <style>
+        @keyframes fadeUp {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .fade-up {
+            animation: fadeUp 0.5s ease forwards;
+        }
+    </style>
+</head>
+
+<body class="bg-gray-100 dark:bg-gray-900 min-h-screen flex flex-col dark:text-white">
+
+    {% include "components/navbar.html.jinja" %}
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+
+    <div class="max-w-5xl mx-auto mt-6 w-full px-4 space-y-3">
+
+        {% for category, message in messages %}
+
+        <div class="p-4 rounded-lg border shadow-sm flex items-center justify-between
+            {% if category == 'success' %}
+                bg-green-50 border-green-200 text-green-700
+            {% elif category == 'error' %}
+                bg-red-50 border-red-200 text-red-700
+            {% else %}
+                bg-blue-50 border-blue-200 text-blue-700
+            {% endif %}
+        ">
+
+            <div class="flex items-center gap-3">
+
+                {% if category == 'success' %}
+                <span class="text-xl">✅</span>
+                {% elif category == 'error' %}
+                <span class="text-xl">❌</span>
+                {% else %}
+                <span class="text-xl">ℹ️</span>
+                {% endif %}
+
+                <p class="font-medium">{{ message }}</p>
+
+            </div>
+
+        </div>
+
+        {% endfor %}
+
+    </div>
+
+    {% endif %}
+    {% endwith %}
+
+
+    <section class="flex-grow px-4 py-10 fade-up">
+
+        <div class="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-3 gap-8">
+
+            <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-8 h-fit border border-gray-200 dark:border-gray-700">
+
+                <div class="flex flex-col items-center text-center">
+
+                    <div class="relative">
+
+                        <img src="https://ui-avatars.com/api/?name={{ user.Name }}&background=57068c&color=fff&size=256"
+                            class="w-32 h-32 rounded-full object-cover border-4 border-purple-600 shadow-md">
+                    </div>
+ 
+                    <h1 class="text-2xl font-bold mt-5 text-gray-800 dark:text-white">
+                        {{ user.Name }}
+                    </h1>
+
+                    <p class="text-gray-500 dark:text-gray-300 mt-1">
+                        {{ user.Email }}
+                    </p>
+
+                    <div class="mt-6 w-full space-y-4">
+
+                        <div class="bg-gray-100 dark:bg-gray-700 rounded-xl p-4 text-left">
+                            <p class="text-xs uppercase tracking-wide text-gray-500 dark:text-gray-300">
+                                Account Status
+                            </p>
+                            <p class="font-semibold text-green-600 mt-1">
+                                Active
+                            </p>
+                        </div>
+
+                        <div class="bg-gray-100 dark:bg-gray-700 rounded-xl p-4 text-left">
+                            <p class="text-xs uppercase tracking-wide text-gray-500 dark:text-gray-300">
+                                Member Since
+                            </p>
+                            <p class="font-semibold mt-1 text-gray-800 dark:text-white">
+                                {{ user.Joindate.strftime('%B %d, %Y') if user.Joindate else 'Recently Joined' }}
+                            </p>
+                        </div>
+
+                        <div class="bg-gray-100 dark:bg-gray-700 rounded-xl p-4 text-left">
+                            <p class="text-xs uppercase tracking-wide text-gray-500 dark:text-gray-300">
+                                Upcoming Appointments
+                            </p>
+                            <p class="font-semibold mt-1 text-gray-800 dark:text-white">
+                                {{ appointment_count if appointment_count else 0 }} Scheduled
+                            </p>
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <div class="lg:col-span-2 space-y-8">
+                <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700 p-8">
+
+                    <div class="flex items-center justify-between mb-8">
+                        <div>
+                            <h2 class="text-2xl font-bold text-gray-800 dark:text-white">
+                                Personal Information
+                            </h2>
+                            <p class="text-gray-500 dark:text-gray-300 mt-1">
+                                Update your personal account details.
+                            </p>
+                        </div>
+                    </div>
+
+                    <form method="POST" class="space-y-6">
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+
+                            <div>
+                                <label class="block mb-2 text-sm font-semibold text-gray-700 dark:text-gray-200">
+                                    Full Name
+                                </label>
+
+                                <input type="text"
+                                    name="name"
+                                    value="{{ user.Name }}"
+                                    class="w-full px-4 py-3 rounded-xl border border-gray-300 dark:border-gray-600
+                                    bg-white dark:bg-gray-700
+                                    focus:outline-none focus:ring-2 focus:ring-purple-500">
+                            </div>
+
+                            <div>
+                                <label class="block mb-2 text-sm font-semibold text-gray-700 dark:text-gray-200">
+                                    Email Address
+                                </label>
+
+                                <input type="email"
+                                    name="email"
+                                    value="{{ user.Email }}"
+                                    class="w-full px-4 py-3 rounded-xl border border-gray-300 dark:border-gray-600
+                                    bg-white dark:bg-gray-700
+                                    focus:outline-none focus:ring-2 focus:ring-purple-500">
+                            </div>
+
+                        </div>
+
+                        <div>
+                            <label class="block mb-2 text-sm font-semibold text-gray-700 dark:text-gray-200">
+                                Home Address
+                            </label>
+
+                            <input type="text"
+                                name="address"
+                                value="{{ user.Address }}"
+                                class="w-full px-4 py-3 rounded-xl border border-gray-300 dark:border-gray-600
+                                bg-white dark:bg-gray-700
+                                focus:outline-none focus:ring-2 focus:ring-purple-500">
+                        </div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+
+                            <div>
+                                <label class="block mb-2 text-sm font-semibold text-gray-700 dark:text-gray-200">
+                                    Insurance Provider
+                                </label>
+
+                                <select name="insurance"
+                                    class="w-full px-4 py-3 rounded-xl border border-gray-300 dark:border-gray-600
+                                    bg-white dark:bg-gray-700
+                                    focus:outline-none focus:ring-2 focus:ring-purple-500">
+
+                                    <option value="">Select Insurance</option>
+                                    <option>Aetna</option>
+                                    <option>Blue Cross Blue Shield</option>
+                                    <option>Cigna</option>
+                                    <option>UnitedHealthcare</option>
+                                    <option>Humana</option>
+                                    <option>Medicare</option>
+                                    <option>Medicaid</option>
+                                    <option>Oscar Health</option>
+
+                                </select>
+                            </div>
+
+                            <div>
+                                <label class="block mb-2 text-sm font-semibold text-gray-700 dark:text-gray-200">
+                                    Phone Number
+                                </label>
+
+                                <input type="text"
+                                    name="phone"
+                                    placeholder="(123) 456-7890"
+                                    class="w-full px-4 py-3 rounded-xl border border-gray-300 dark:border-gray-600
+                                    bg-white dark:bg-gray-700
+                                    focus:outline-none focus:ring-2 focus:ring-purple-500">
+                            </div>
+
+                        </div>
+
+                        <div class="flex justify-end pt-2">
+
+                            <button type="submit"
+                                class="bg-purple-700 hover:bg-purple-800 transition text-white font-semibold px-8 py-3 rounded-xl shadow-md">
+                                Save Changes
+                            </button>
+
+                        </div>
+
+                    </form>
+
+                </div>
+
+
+                <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700 p-8">
+
+                    <h2 class="text-2xl font-bold text-gray-800 dark:text-white mb-2">
+                        Security Settings
+                    </h2>
+
+                    <p class="text-gray-500 dark:text-gray-300 mb-8">
+                        Change your password and keep your account secure.
+                    </p>
+
+                    <form method="POST" action="/change-password" class="space-y-6">
+
+                        <div>
+                            <label class="block mb-2 text-sm font-semibold text-gray-700 dark:text-gray-200">
+                                Current Password
+                            </label>
+
+                            <input type="password"
+                                name="current_password"
+                                class="w-full px-4 py-3 rounded-xl border border-gray-300 dark:border-gray-600
+                                bg-white dark:bg-gray-700
+                                focus:outline-none focus:ring-2 focus:ring-purple-500">
+                        </div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+
+                            <div>
+                                <label class="block mb-2 text-sm font-semibold text-gray-700 dark:text-gray-200">
+                                    New Password
+                                </label>
+
+                                <input type="password"
+                                    name="new_password"
+                                    class="w-full px-4 py-3 rounded-xl border border-gray-300 dark:border-gray-600
+                                    bg-white dark:bg-gray-700
+                                    focus:outline-none focus:ring-2 focus:ring-purple-500">
+                            </div>
+
+                            <div>
+                                <label class="block mb-2 text-sm font-semibold text-gray-700 dark:text-gray-200">
+                                    Confirm Password
+                                </label>
+
+                                <input type="password"
+                                    name="confirm_password"
+                                    class="w-full px-4 py-3 rounded-xl border border-gray-300 dark:border-gray-600
+                                    bg-white dark:bg-gray-700
+                                    focus:outline-none focus:ring-2 focus:ring-purple-500">
+                            </div>
+
+                        </div>
+
+                        <div class="flex justify-end">
+                            <button type="submit"
+                                class="bg-gray-900 dark:bg-purple-700 hover:bg-black dark:hover:bg-purple-800 transition text-white font-semibold px-8 py-3 rounded-xl shadow-md">
+                                Update Password
+                            </button>
+                        </div>
+
+                    </form>
+
+                </div>
+
