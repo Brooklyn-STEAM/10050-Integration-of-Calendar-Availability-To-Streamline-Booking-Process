@@ -14,7 +14,6 @@ from collections import Counter
 from flask import jsonify
 from flask import session
 
-
 app = Flask(__name__)
 
 config = Dynaconf(settings_files=["settings.toml"])
@@ -480,6 +479,166 @@ def delete_appointment(appointment_id):
     flash("Appointment removed successfully.")
 
     return redirect("/appoint")
+
+
+# ---------------- PROFILE PAGE ----------------
+@app.route("/profile", methods=["GET", "POST"])
+@login_required
+def profile():
+
+    connection = connect_db()
+    cursor = connection.cursor()
+
+    cursor.execute("""
+        SELECT *
+        FROM User
+        WHERE ID = %s
+    """, (current_user.id,))
+
+    user = cursor.fetchone()
+
+    if request.method == "POST":
+
+        name = request.form.get("name")
+        email = request.form.get("email")
+        address = request.form.get("address")
+        phone = request.form.get("phone")
+        insurance = request.form.get("insurance")
+
+        current_password = request.form.get("current_password")
+        new_password = request.form.get("new_password")
+        confirm_password = request.form.get("confirm_password")
+
+        if not name or not email or not address:
+            flash("Please fill in all required fields.", "error")
+            connection.close()
+            return redirect("/profile")
+
+        cursor.execute("""
+            SELECT ID
+            FROM User
+            WHERE Email = %s
+            AND ID != %s
+        """, (email, current_user.id))
+
+        existing_email = cursor.fetchone()
+
+        if existing_email:
+            flash("Email already in use.", "error")
+            connection.close()
+            return redirect("/profile")
+
+        cursor.execute("""
+            UPDATE User
+            SET
+                Name = %s,
+                Email = %s,
+                Address = %s,
+                Phone = %s,
+                Insurance = %s
+            WHERE ID = %s
+        """, (
+            name,
+            email,
+            address,
+            phone,
+            insurance,
+            current_user.id
+        ))
+
+        if current_password or new_password or confirm_password:
+
+            if current_password != user["Password"]:
+                flash("Current password is incorrect.", "error")
+                connection.close()
+                return redirect("/profile")
+
+            if new_password != confirm_password:
+                flash("New passwords do not match.", "error")
+                connection.close()
+                return redirect("/profile")
+
+            if len(new_password) < 8:
+                flash("Password must be at least 8 characters.", "error")
+                connection.close()
+                return redirect("/profile")
+
+            cursor.execute("""
+                UPDATE User
+                SET Password = %s
+                WHERE ID = %s
+            """, (new_password, current_user.id))
+
+        connection.commit()
+
+        cursor.execute("""
+            SELECT *
+            FROM User
+            WHERE ID = %s
+        """, (current_user.id,))
+
+        updated_user = cursor.fetchone()
+
+        connection.close()
+
+        login_user(User(updated_user))
+
+        flash("Profile updated successfully!", "success")
+        return redirect("/profile")
+
+    connection.close()
+
+    return render_template(
+        "profile.html.jinja",
+        user=user
+    )
+
+
+@app.route("/change-password", methods=["POST"])
+@login_required
+def change_password():
+
+    current_password = request.form.get("current_password")
+    new_password = request.form.get("new_password")
+    confirm_password = request.form.get("confirm_password")
+
+    connection = connect_db()
+    cursor = connection.cursor()
+
+    cursor.execute("""
+        SELECT Password
+        FROM User
+        WHERE ID = %s
+    """, (current_user.id,))
+
+    user = cursor.fetchone()
+
+    if current_password != user["Password"]:
+        flash("Current password is incorrect.", "error")
+        connection.close()
+        return redirect("/profile")
+
+    if new_password != confirm_password:
+        flash("New passwords do not match.", "error")
+        connection.close()
+        return redirect("/profile")
+
+    if len(new_password) < 8:
+        flash("Password must be at least 8 characters.", "error")
+        connection.close()
+        return redirect("/profile")
+
+    cursor.execute("""
+        UPDATE User
+        SET Password = %s
+        WHERE ID = %s
+    """, (new_password, current_user.id))
+
+    connection.commit()
+    connection.close()
+
+    flash("Password updated successfully!", "success")
+    return redirect("/profile")
 
 
 # ---------------- BOOK APPOINTMENT ----------------
