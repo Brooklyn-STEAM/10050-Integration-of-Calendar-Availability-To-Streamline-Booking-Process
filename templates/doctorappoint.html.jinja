@@ -19,7 +19,15 @@
         {% for appt in appointments %}
         <div class="bg-white dark:bg-gray-600 dark:text-white rounded-lg shadow-md p-5 border-l-4 border-purple-600 flex flex-col justify-between">
           <div>
-            <h3 class="text-lg font-semibold text-gray-800 dark:bg-gray-600 dark:text-white">{{ appt.PatientName }}</h3>
+            <h3 class="text-lg font-semibold text-gray-800 dark:bg-gray-600 dark:text-white">
+            <a
+             href="{{ url_for('patient_profile', user_id=appt.UserID) }}"
+            class="text-purple-700 hover:underline dark:text-purple-300"
+            >
+            {{ appt.PatientName }}
+            </a>
+            
+            </h3>
             <p class="text-gray-600 text-sm mt-1 dark:bg-gray-600 dark:text-white">Date: {{ appt.Date.strftime('%Y-%m-%d %H:%M') }}</p>
             <p class="text-gray-600 text-sm dark:bg-gray-600 dark:text-white">Type: {{ appt.Type }}</p>
             <p class="mt-1 text-sm font-medium 
