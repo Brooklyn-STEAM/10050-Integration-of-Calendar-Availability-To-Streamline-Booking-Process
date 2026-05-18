@@ -20,6 +20,23 @@
         <h2 class="text-3xl font-bold text-gray-800 dark:bg-gray-900 dark:text-white">Welcome Back</h2>
         <p class="text-gray-500 dark:bg-gray-900 dark:text-white">Sign in to your account</p>
 
+          {% with messages = get_flashed_messages(with_categories=true) %}
+  {% if messages %}
+    {% for category, message in messages %}
+
+      <div class="fixed top-5 right-5 z-50
+                  px-4 py-3 rounded-lg shadow-lg text-white
+                  {% if category == 'success' %}
+                    bg-green-600
+                  {% else %}
+                    bg-red-600
+                  {% endif %}">
+        {{ message }}
+      </div>
+
+    {% endfor %}
+  {% endif %}
+{% endwith %}
         <form action="/login" method="post" class="space-y-4">
 
           <div>
@@ -46,6 +63,13 @@
               placeholder="••••••••"
               class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-purple-500 focus:outline-none dark:bg-gray-900 dark:text-white"
             />
+          </div>
+
+          <div class="text-right">
+          <a href="/forgot-password"
+          class="text-sm text-purple-600 hover:underline">
+          Forgot Password?
+          </a>
           </div>
 
           <div class="flex items-center justify-between text-sm">
