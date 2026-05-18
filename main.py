@@ -13,6 +13,8 @@ import re
 from collections import Counter
 from flask import jsonify
 from flask import session
+import secrets
+from werkzeug.security import generate_password_hash, check_password_hash
 
 app = Flask(__name__)
 
@@ -1593,6 +1595,139 @@ def login():
     return render_template("login.html.jinja")
 
 
+#----------------- FORGOT PASSWORD --------------
+
+@app.route("/forgot-password", methods=["GET", "POST"])
+def forgot_password():
+
+    if request.method == "POST":
+
+        email = request.form.get("email")
+
+        connection = connect_db()
+        cursor = connection.cursor()
+
+        cursor.execute(
+            "SELECT * FROM User WHERE Email=%s",
+            (email,)
+        )
+
+        user = cursor.fetchone()
+
+        if user:
+
+            token = secrets.token_urlsafe(32)
+
+            expire_time = datetime.datetime.now() + datetime.timedelta(hours=1)
+
+            cursor.execute("""
+                UPDATE User
+                SET ResetToken=%s,
+                    ResetExpires=%s
+                WHERE Email=%s
+            """, (token, expire_time, email))
+
+            connection.commit()
+
+            reset_link = f"http://127.0.0.1:5000/reset-password/{token}"
+            
+            send_reset_email(email, reset_link)
+
+        connection.close()
+
+        flash("If an account exists, a reset email was sent.")
+        return redirect("/login")
+
+    return render_template("forgotpassword.html.jinja")
+
+#---------------- EMAIL FUNCTION ---------------
+
+def send_reset_email(email, reset_link):
+
+    with app.app_context():
+
+        msg = Message(
+            subject="Reset Your BookWell Password",
+            recipients=[email]
+        )
+
+        msg.body = f"""
+Hello,
+
+We received a request to reset your password.
+
+Click the link below to create a new password:
+
+{reset_link}
+
+This link expires in 1 hour.
+
+If you did not request this, ignore this email.
+
+- BookWell
+"""
+
+        mail.send(msg)
+
+
+
+#-----------------RESET PASSWORD ROUTE--------
+@app.route("/reset-password/<token>", methods=["GET", "POST"])
+def reset_password(token):
+
+    connection = connect_db()
+    cursor = connection.cursor()
+
+    cursor.execute("""
+        SELECT *
+        FROM User
+        WHERE ResetToken=%s
+    """, (token,))
+
+    user = cursor.fetchone()
+
+    # TOKEN NOT FOUND
+    if not user:
+        connection.close()
+        flash("Invalid reset link.")
+        return redirect("/login")
+
+    # EXPIRED
+    if user["ResetExpires"] < datetime.datetime.now():
+        connection.close()
+        flash("Reset link expired.")
+        return redirect("/forgot-password")
+
+    # SUBMIT NEW PASSWORD
+    if request.method == "POST":
+
+        password = request.form.get("password")
+        confirm = request.form.get("confirm")
+
+        if password != confirm:
+            flash("Passwords do not match")
+            return redirect(request.url)
+
+        cursor.execute("""
+            UPDATE User
+            SET Password=%s,
+                ResetToken=NULL,
+                ResetExpires=NULL
+            WHERE ID=%s
+        """, (password, user["ID"]))
+
+        connection.commit()
+        connection.close()
+
+        flash("Password reset successful.", "success")
+        return redirect("/login")
+
+    connection.close()
+
+    return render_template(
+        "resetpassword.html.jinja",
+        token=token
+    )
 # ---------------- SIGNUP ----------------
 @app.route("/signup", methods=["GET", "POST"])
 def signup():
