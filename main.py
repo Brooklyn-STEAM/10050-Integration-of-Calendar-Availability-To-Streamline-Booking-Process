@@ -1457,7 +1457,7 @@ def doctor_appointments(doctor_id):
        
 
     cursor.execute("""
-        SELECT Appointment.ID, Appointment.Date, Appointment.Type, Appointment.Status,
+        SELECT Appointment.ID, Appointment.Date, Appointment.Type, Appointment.Status, Appointment.UserID,
                User.Name AS PatientName
         FROM Appointment
         JOIN User ON User.ID = Appointment.UserID
@@ -1676,6 +1676,8 @@ The BookWell Team
         except Exception as e:
             print(f"Failed to send cancellation email: {e}")
 
+            
+
 # ---------------- CONTACT ----------------
 @app.route("/contact", methods=["GET", "POST"])
 def contact():
@@ -1847,3 +1849,67 @@ scheduler.start()
 @app.route("/aboutus")
 def about():
     return render_template("aboutus.html.jinja")
+
+
+     # ------------- PATIENT PROFILE --------------
+@app.route("/patientprofile")
+def profile():
+    return render_template("patientprofile.html.jinja")
+
+
+# ------------- PATIENT PROFILE --------------
+@app.route("/patientprofile/<int:user_id>")
+def patient_profile(user_id):
+
+    # ---------------- DOCTOR ONLY ACCESS ----------------
+    if not session.get("doctor_logged_in"):
+        abort(404)
+
+    connection = connect_db()
+    cursor = connection.cursor()
+
+    # ---------------- GET PATIENT ----------------
+    cursor.execute("""
+        SELECT *
+        FROM User
+        WHERE ID = %s
+    """, (user_id,))
+
+    patient = cursor.fetchone()
+
+    if patient is None:
+        connection.close()
+        abort(404)
+
+    # ---------------- GET ALL APPOINTMENTS FOR THIS PATIENT ----------------
+    cursor.execute("""
+SELECT
+    Appointment.ID,
+    Appointment.UserID,
+    Appointment.Date,
+    Appointment.Type,
+    Appointment.Status,
+    User.Name AS PatientName
+FROM Appointment
+JOIN User
+    ON User.ID = Appointment.UserID
+JOIN Doctor
+    ON Doctor.ID = Appointment.DoctorID
+WHERE Appointment.UserID = %s
+ORDER BY Appointment.Date DESC
+""", (user_id,))
+    
+
+    appointments = cursor.fetchall()
+
+    # ---------------- CHECK IF PATIENT HAS APPOINTMENTS ----------------
+    has_appointments = len(appointments) > 0
+
+    connection.close()
+
+    return render_template(
+        "patientprofile.html.jinja",
+        patient=patient,
+        appointments=appointments,
+        has_appointments=has_appointments
+    )

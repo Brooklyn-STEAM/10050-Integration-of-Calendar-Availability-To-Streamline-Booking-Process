@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="shortcut icon" href="/static/images/logotab.png" type="image/x-icon">
+
+  <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+
+  <title>Patient Profile | Bookwell</title>
+</head>
+
+<body class="flex flex-col">
+{% include "components/navbar.html.jinja" %}
+{% if appointments and appointments|length > 0 %}
+
+    <h1>Patient Profile</h1>
+
+    {% if has_appointments %}
+
+    {% for appt in appointments %}
+        <div class="appointment-card">
+            <p><strong>Doctor:</strong> Dr. {{ appt.DoctorName }}</p>
+            <p><strong>Date:</strong> {{ appt.Date }}</p>
+            <p><strong>Status:</strong> {{ appt.Status }}</p>
+            <p><strong>Type:</strong> {{ appt.Type }}</p>
+        </div>
+    {% endfor %}
+
+{% else %}
+
+    <p>No current appointments right now.</p>
+
+{% endif %}
+
+{%endif%} 
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    {# <div class="patient-card">
+        <h2>{{ patient.Name }}</h2>
+        <p><strong>Email:</strong> {{ patient.Email }}</p>
+        <p><strong>Address:</strong> {{ patient.Address }}</p>
+        <p><strong>Joined:</strong> {{ patient.Joindate }}</p>
+    </div>
+
+    <hr>
+
+    <h2>Appointments</h2>
+
+    {% for appt in appointments %}
+        <div class="appointment-card">
+            <p><strong>Doctor:</strong> {{ appt.DoctorName }}</p>
+            <p><strong>Category:</strong> {{ appt.Category }}</p>
+            <p><strong>Date:</strong> {{ appt.Date }}</p>
+            <p><strong>Type:</strong> {{ appt.Type }}</p>
+            <p><strong>Status:</strong> {{ appt.Status }}</p>
+        </div>
+
+        <hr>
+    {% endfor %}
+
+{% else %}
+
+    <h2>This patient has no appointments.</h2>
+
+{% endif %}
+ 
+ 
+ 
+ 
+ </div> #}
+
+
+
+</body>
