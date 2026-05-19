@@ -2299,7 +2299,7 @@ def about():
 
      # ------------- PATIENT PROFILE --------------
 @app.route("/patientprofile")
-def profile():
+def profile1():
     return render_template("patientprofile.html.jinja")
 
 
@@ -2343,6 +2343,16 @@ JOIN Doctor
     ON Doctor.ID = Appointment.DoctorID
 WHERE Appointment.UserID = %s
 ORDER BY Appointment.Date DESC
+""", (user_id,))
+    
+    cursor.execute("""
+    SELECT 
+        Appointment.*,
+        Doctor.Name AS DoctorName
+    FROM Appointment
+    JOIN Doctor 
+        ON Appointment.DoctorID = Doctor.ID
+    WHERE Appointment.UserID = %s
 """, (user_id,))
     
 
