@@ -2299,7 +2299,7 @@ def about():
 
      # ------------- PATIENT PROFILE --------------
 @app.route("/patientprofile")
-def profile():
+def profile1():
     return render_template("patientprofile.html.jinja")
 
 
