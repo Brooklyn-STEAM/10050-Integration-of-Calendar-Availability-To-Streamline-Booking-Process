@@ -73,48 +73,40 @@
 
 <section class="relative min-h-[50vh] md:h-screen/2 flex items-center justify-center overflow-hidden">
 
+  <!-- VIDEO -->
+  <video
+    autoplay
+    muted
+    loop
+    playsinline
+    class="absolute inset-0 w-full h-full object-cover hero-bg z-0"
+  >
+    <source src="/static/video/homepage.mp4" type="video/mp4">
+  </video>
 
-  <div class="absolute inset-0 bg-[url('/static/images/medicinebg.jpeg')] bg-cover bg-center hero-bg"></div>
+  <!-- OVERLAY -->
+  <div class="absolute inset-0 bg-purple-600/30 z-10"></div>
 
- 
-  <div class="absolute inset-0 bg-purple-600/30"></div>
+  <!-- BUTTONS -->
+ <div class="absolute bottom-10 right-10 z-50 flex flex-col md:flex-row gap-4">
 
-  
-  <div class="relative w-full md:max-w-4xl text-center px-4 md:px-0 fade-up">
+    {% if not current_user.is_authenticated %}
 
-    <h1 class="text-3xl md:text-5xl font-bold text-white drop-shadow">
-      Book Smarter. Faster. Better.
-    </h1>
+    <a href="/signup"
+      class="w-full md:w-auto px-6 py-3 bg-white text-purple-600 font-semibold rounded-lg text-center hover:bg-purple-100 hover:scale-105 transform transition duration-300">
+      Get Started
+    </a>
 
-    <p class="mt-6 text-base md:text-xl text-white/90">
-      Book, manage, and reschedule NYU Langone appointments with ease --
-      synced to your calendar and tailored to your availability.
-    </p>
+    <a href="/doctorlogin"
+      class="w-full md:w-auto px-6 py-3 bg-white text-purple-600 font-semibold rounded-lg text-center hover:bg-purple-100 hover:scale-105 transform transition duration-300">
+      Doctor's Get Started
+    </a>
 
-    <!-- Buttons -->
-    <div class="mt-8 flex flex-col md:flex-row justify-center gap-4">
-
-      {% if not current_user.is_authenticated %}
-      
-      <a href="/signup"
-        class="w-full md:w-auto px-6 py-3 bg-white text-purple-600 font-semibold rounded-lg text-center hover:bg-purple-100 hover:scale-105 transform transition duration-300">
-        Get Started
-      </a>
-
-      <a href="/doctorlogin"
-        class="w-full md:w-auto px-6 py-3 bg-white text-purple-600 font-semibold rounded-lg text-center hover:bg-purple-100 hover:scale-105 transform transition duration-300">
-        Doctor's Get Started
-      </a>
-
-      {% endif %}
-
-     
-    </div>
+    {% endif %}
 
   </div>
 
 </section>
-  
 
  <section class="bg-gray-50 dark:bg-gray-800 px-6 py-16 transition-colors">
     <div class="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
