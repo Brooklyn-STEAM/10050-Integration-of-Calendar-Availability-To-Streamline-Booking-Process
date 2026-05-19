@@ -2345,6 +2345,16 @@ WHERE Appointment.UserID = %s
 ORDER BY Appointment.Date DESC
 """, (user_id,))
     
+    cursor.execute("""
+    SELECT 
+        Appointment.*,
+        Doctor.Name AS DoctorName
+    FROM Appointment
+    JOIN Doctor 
+        ON Appointment.DoctorID = Doctor.ID
+    WHERE Appointment.UserID = %s
+""", (user_id,))
+    
 
     appointments = cursor.fetchall()
 
