@@ -2300,7 +2300,10 @@ def about():
      # ------------- PATIENT PROFILE --------------
 @app.route("/patientprofile")
 def profile1():
-    return render_template("patientprofile.html.jinja")
+
+    if not session.get("doctor_logged_in"):
+        flash("Doctors only")
+    return redirect("/doctorlogin")
 
 
 # ------------- PATIENT PROFILE --------------
