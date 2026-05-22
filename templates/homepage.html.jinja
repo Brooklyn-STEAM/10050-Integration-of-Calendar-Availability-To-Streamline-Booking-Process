@@ -41,6 +41,11 @@
     .hero-bg {
       animation: slowZoom 15s ease-in-out infinite alternate;
     }
+    @media (max-width: 768px) {
+  .hero-bg {
+    animation: none;
+  }
+}
 
     .fade-up {
       animation: fadeUp 1s ease forwards;
@@ -71,7 +76,7 @@
 {% include "components/navbar.html.jinja"%}
 {% include "components/chat_widget.html.jinja" %}
 
-<section class="relative min-h-[50vh] md:h-screen/2 flex items-center justify-center overflow-hidden">
+<section class="relative h-[60vh] md:h-screen overflow-hidden">
 
   <!-- VIDEO -->
   <video
@@ -79,26 +84,26 @@
     muted
     loop
     playsinline
-    class="absolute inset-0 w-full h-full object-cover hero-bg z-0"
+    class="absolute inset-0 w-full h-full object-cover md:object-cover object-center z-0 hero-bg"
   >
     <source src="/static/video/homepage.mp4" type="video/mp4">
   </video>
 
   <!-- OVERLAY -->
-  <div class="absolute inset-0 bg-purple-600/30 z-10"></div>
+  <div class="absolute inset-0 bg-purple-700/30 z-10"></div>
 
   <!-- BUTTONS -->
- <div class="absolute bottom-10 right-10 z-50 flex flex-col md:flex-row gap-4">
+  <div class="absolute bottom-6 right-1/2 translate-x-1/2 md:translate-x-0 md:right-10 md:bottom-10 z-50 flex flex-col sm:flex-row gap-4 px-4">
 
     {% if not current_user.is_authenticated %}
 
     <a href="/signup"
-      class="w-full md:w-auto px-6 py-3 bg-white text-purple-600 font-semibold rounded-lg text-center hover:bg-purple-100 hover:scale-105 transform transition duration-300">
+      class="px-6 py-3 bg-white text-purple-600 font-semibold rounded-xl text-center shadow-lg hover:bg-purple-100 hover:scale-105 transition duration-300 whitespace-nowrap">
       Get Started
     </a>
 
     <a href="/doctorlogin"
-      class="w-full md:w-auto px-6 py-3 bg-white text-purple-600 font-semibold rounded-lg text-center hover:bg-purple-100 hover:scale-105 transform transition duration-300">
+      class="px-6 py-3 bg-white text-purple-600 font-semibold rounded-xl text-center shadow-lg hover:bg-purple-100 hover:scale-105 transition duration-300 whitespace-nowrap">
       Doctor's Get Started
     </a>
 
