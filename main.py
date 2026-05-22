@@ -2306,18 +2306,33 @@ def profile1():
     return redirect("/doctorlogin")
 
 
-# ------------- PATIENT PROFILE --------------
-@app.route("/patientprofile/<int:user_id>")
+@app.route("/patientprofile/<int:user_id>", methods=["GET", "POST"])
 def patient_profile(user_id):
 
-    # ---------------- DOCTOR ONLY ACCESS ----------------
+   
     if not session.get("doctor_logged_in"):
         abort(404)
 
     connection = connect_db()
     cursor = connection.cursor()
 
-    # ---------------- GET PATIENT ----------------
+    if request.method == "POST":
+
+        appointment_id = request.form.get("appointment_id")
+        new_date = request.form.get("new_date")
+        new_time = request.form.get("new_time")
+
+        new_datetime = f"{new_date} {new_time}"
+
+        cursor.execute("""
+            UPDATE Appointment
+            SET Date = %s
+            WHERE ID = %s
+        """, (new_datetime, appointment_id))
+
+        connection.commit()
+
+ 
     cursor.execute("""
         SELECT *
         FROM User
@@ -2330,7 +2345,7 @@ def patient_profile(user_id):
         connection.close()
         abort(404)
 
-    # ---------------- GET ALL APPOINTMENTS FOR THIS PATIENT ----------------
+#    Gather the appointments for patient that joins 2 tables
     cursor.execute("""
 SELECT
     Appointment.ID,
@@ -2358,10 +2373,11 @@ ORDER BY Appointment.Date DESC
     WHERE Appointment.UserID = %s
 """, (user_id,))
     
+    
 
     appointments = cursor.fetchall()
 
-    # ---------------- CHECK IF PATIENT HAS APPOINTMENTS ----------------
+    # Seeing if the patient has any appointments
     has_appointments = len(appointments) > 0
 
     connection.close()
