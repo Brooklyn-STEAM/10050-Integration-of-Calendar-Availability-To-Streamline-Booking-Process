@@ -117,10 +117,10 @@
 
                         <div class="bg-gray-100 dark:bg-gray-700 rounded-xl p-4 text-left">
                             <p class="text-xs uppercase tracking-wide text-gray-500 dark:text-gray-300">
-                                Upcoming Appointments
+                                Upcoming Appointment(s)
                             </p>
                             <p class="font-semibold mt-1 text-gray-800 dark:text-white">
-                                {{ appointment_count if appointment_count else 0 }} Scheduled
+                                {{ appointment_count or 0 }} Scheduled
                             </p>
                         </div>
 
