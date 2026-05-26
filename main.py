@@ -491,6 +491,7 @@ def profile():
     connection = connect_db()
     cursor = connection.cursor()
 
+    # ---------------- GET USER ----------------
     cursor.execute("""
         SELECT *
         FROM User
@@ -499,6 +500,7 @@ def profile():
 
     user = cursor.fetchone()
 
+    # ---------------- UPDATE PROFILE ----------------
     if request.method == "POST":
 
         name = request.form.get("name")
@@ -511,42 +513,11 @@ def profile():
         new_password = request.form.get("new_password")
         confirm_password = request.form.get("confirm_password")
 
-        if not name or not email or not address:
-            flash("Please fill in all required fields.", "error")
-            connection.close()
-            return redirect("/profile")
-
-        cursor.execute("""
-            SELECT ID
-            FROM User
-            WHERE Email = %s
-            AND ID != %s
-        """, (email, current_user.id))
-
-        existing_email = cursor.fetchone()
-
-        if existing_email:
-            flash("Email already in use.", "error")
-            connection.close()
-            return redirect("/profile")
-
         cursor.execute("""
             UPDATE User
-            SET
-                Name = %s,
-                Email = %s,
-                Address = %s,
-                Phone = %s,
-                Insurance = %s
-            WHERE ID = %s
-        """, (
-            name,
-            email,
-            address,
-            phone,
-            insurance,
-            current_user.id
-        ))
+            SET Name=%s, Email=%s, Address=%s, Phone=%s, Insurance=%s
+            WHERE ID=%s
+        """, (name, email, address, phone, insurance, current_user.id))
 
         if current_password or new_password or confirm_password:
 
@@ -556,46 +527,41 @@ def profile():
                 return redirect("/profile")
 
             if new_password != confirm_password:
-                flash("New passwords do not match.", "error")
+                flash("Passwords do not match.", "error")
                 connection.close()
                 return redirect("/profile")
 
             if len(new_password) < 8:
-                flash("Password must be at least 8 characters.", "error")
+                flash("Password too short.", "error")
                 connection.close()
                 return redirect("/profile")
 
             cursor.execute("""
                 UPDATE User
-                SET Password = %s
-                WHERE ID = %s
+                SET Password=%s
+                WHERE ID=%s
             """, (new_password, current_user.id))
 
         connection.commit()
-
-        cursor.execute("""
-            SELECT *
-            FROM User
-            WHERE ID = %s
-        """, (current_user.id,))
-
-        updated_user = cursor.fetchone()
-
-        connection.close()
-
-        login_user(User(updated_user))
-
-        flash("Profile updated successfully!", "success")
         return redirect("/profile")
+
+    # ---------------- APPOINTMENT COUNT ----------------
+    cursor.execute("""
+        SELECT COUNT(*) AS total
+        FROM Appointment
+        WHERE UserID = %s
+    """, (current_user.id,))
+
+    appointment_result = cursor.fetchone()
+    appointment_count = appointment_result["total"] if appointment_result else 0
 
     connection.close()
 
     return render_template(
         "profile.html.jinja",
-        user=user
+        user=user,
+        appointment_count=appointment_count
     )
-
-
 @app.route("/change-password", methods=["POST"])
 @login_required
 def change_password():
@@ -2122,6 +2088,74 @@ The BookWell Team
         except Exception as e:
             print(f"Failed to send cancellation email: {e}")
 
+
+@app.route("/aboutus")
+def about():
+    return render_template("aboutus.html.jinja")
+
+
+     # ------------- PATIENT PROFILE --------------
+@app.route("/patientprofile")
+def profile1():
+    return render_template("patientprofile.html.jinja")
+
+
+# ------------- PATIENT PROFILE --------------
+@app.route("/patientprofile/<int:user_id>")
+def patient_profile(user_id):
+
+    # ---------------- DOCTOR ONLY ACCESS ----------------
+    if not session.get("doctor_logged_in"):
+        abort(404)
+
+    connection = connect_db()
+    cursor = connection.cursor()
+
+    # ---------------- GET PATIENT ----------------
+    cursor.execute("""
+        SELECT *
+        FROM User
+        WHERE ID = %s
+    """, (user_id,))
+
+    patient = cursor.fetchone()
+
+    if patient is None:
+        connection.close()
+        abort(404)
+
+    # ---------------- GET ALL APPOINTMENTS FOR THIS PATIENT ----------------
+    cursor.execute("""
+SELECT
+    Appointment.ID,
+    Appointment.UserID,
+    Appointment.Date,
+    Appointment.Type,
+    Appointment.Status,
+    User.Name AS PatientName
+FROM Appointment
+JOIN User
+    ON User.ID = Appointment.UserID
+JOIN Doctor
+    ON Doctor.ID = Appointment.DoctorID
+WHERE Appointment.UserID = %s
+ORDER BY Appointment.Date DESC
+""", (user_id,))
+    
+
+    appointments = cursor.fetchall()
+
+    # ---------------- CHECK IF PATIENT HAS APPOINTMENTS ----------------
+    has_appointments = len(appointments) > 0
+
+    connection.close()
+
+    return render_template(
+        "patientprofile.html.jinja",
+        patient=patient,
+        appointments=appointments,
+        has_appointments=has_appointments
+    )
             
 
 # ---------------- CONTACT ----------------
@@ -2290,72 +2324,3 @@ scheduler = BackgroundScheduler()
 scheduler.add_job(check_appointment_reminders, "interval", minutes=15)
 scheduler.add_job(cleanup_cancelled_appointments, "interval", seconds=30)
 scheduler.start()
-
-
-@app.route("/aboutus")
-def about():
-    return render_template("aboutus.html.jinja")
-
-
-     # ------------- PATIENT PROFILE --------------
-@app.route("/patientprofile")
-def profile1():
-    return render_template("patientprofile.html.jinja")
-
-
-# ------------- PATIENT PROFILE --------------
-@app.route("/patientprofile/<int:user_id>")
-def patient_profile(user_id):
-
-    # ---------------- DOCTOR ONLY ACCESS ----------------
-    if not session.get("doctor_logged_in"):
-        abort(404)
-
-    connection = connect_db()
-    cursor = connection.cursor()
-
-    # ---------------- GET PATIENT ----------------
-    cursor.execute("""
-        SELECT *
-        FROM User
-        WHERE ID = %s
-    """, (user_id,))
-
-    patient = cursor.fetchone()
-
-    if patient is None:
-        connection.close()
-        abort(404)
-
-    # ---------------- GET ALL APPOINTMENTS FOR THIS PATIENT ----------------
-    cursor.execute("""
-SELECT
-    Appointment.ID,
-    Appointment.UserID,
-    Appointment.Date,
-    Appointment.Type,
-    Appointment.Status,
-    User.Name AS PatientName
-FROM Appointment
-JOIN User
-    ON User.ID = Appointment.UserID
-JOIN Doctor
-    ON Doctor.ID = Appointment.DoctorID
-WHERE Appointment.UserID = %s
-ORDER BY Appointment.Date DESC
-""", (user_id,))
-    
-
-    appointments = cursor.fetchall()
-
-    # ---------------- CHECK IF PATIENT HAS APPOINTMENTS ----------------
-    has_appointments = len(appointments) > 0
-
-    connection.close()
-
-    return render_template(
-        "patientprofile.html.jinja",
-        patient=patient,
-        appointments=appointments,
-        has_appointments=has_appointments
-    )

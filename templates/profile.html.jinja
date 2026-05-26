@@ -120,7 +120,7 @@
                                 Upcoming Appointments
                             </p>
                             <p class="font-semibold mt-1 text-gray-800 dark:text-white">
-                                {{ appointment_count if appointment_count else 0 }} Scheduled
+                                {{ appointment_count or 0 }} Scheduled
                             </p>
                         </div>
 
