@@ -2316,6 +2316,8 @@ def patient_profile(user_id):
     connection = connect_db()
     cursor = connection.cursor()
 
+    
+
     if request.method == "POST":
 
         appointment_id = request.form.get("appointment_id")
@@ -2373,9 +2375,21 @@ ORDER BY Appointment.Date DESC
     WHERE Appointment.UserID = %s
 """, (user_id,))
     
+    cursor.execute("""
+    SELECT 
+        Appointment.*,
+        Doctor.Name AS DoctorName,
+        Doctor.Insurance AS Insurance
+        FROM Appointment
+        JOIN Doctor
+            ON Appointment.DoctorID = Doctor.ID
+        WHERE Appointment.UserID = %s
+            
+""", (user_id,))
     
 
     appointments = cursor.fetchall()
+
 
     # Seeing if the patient has any appointments
     has_appointments = len(appointments) > 0
@@ -2386,5 +2400,6 @@ ORDER BY Appointment.Date DESC
         "patientprofile.html.jinja",
         patient=patient,
         appointments=appointments,
-        has_appointments=has_appointments
+        has_appointments=has_appointments,
+        
     )
