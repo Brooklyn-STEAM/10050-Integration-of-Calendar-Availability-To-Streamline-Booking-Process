@@ -2436,6 +2436,4 @@ ORDER BY Appointment.Date DESC
         appointments=appointments,
         has_appointments=has_appointments
     )
-        has_appointments=has_appointments,
-        
-    )
+      
