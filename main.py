@@ -595,6 +595,114 @@ def profile():
         user=user
     )
 
+@app.route("/doctor/<int:doctor_id>/docprofile", methods=["GET", "POST"])
+def doctor_profile(doctor_id):
+
+    connection = connect_db()
+    cursor = connection.cursor()
+    cursor.execute("""
+        SELECT *
+        FROM Doctor
+        WHERE ID = %s
+    """, (doctor_id,))
+
+    doctor = cursor.fetchone()
+
+    if not doctor:
+        flash("Doctor not found.", "error")
+        connection.close()
+        return redirect("/")
+
+    if request.method == "POST":
+
+        name = request.form.get("name") or doctor["Name"]
+        email = request.form.get("email") or doctor["Email"]
+        location = request.form.get("location") or doctor["Location"]
+        insurance = request.form.get("insurance") or doctor["Insurance"]
+
+        current_password = request.form.get("current_password")
+        new_password = request.form.get("new_password")
+        confirm_password = request.form.get("confirm_password")
+
+        cursor.execute("""
+            SELECT ID
+            FROM Doctor
+            WHERE Email = %s
+            AND ID != %s
+        """, (email, doctor_id))
+
+        existing_email = cursor.fetchone()
+
+        if existing_email:
+            flash("Email already in use.", "error")
+            connection.close()
+            return redirect(f"/doctor/{doctor_id}/docprofile")
+
+        cursor.execute("""
+            UPDATE Doctor
+            SET
+                Name = %s,
+                Email = %s,
+                Location = %s,
+                Insurance = %s
+            WHERE ID = %s
+        """, (
+            name,
+            email,
+            location,
+            insurance,
+            doctor_id
+        ))
+
+        if current_password or new_password or confirm_password:
+
+            if current_password != doctor["Password"]:
+                flash("Current password is incorrect.", "error")
+                connection.close()
+                return redirect(f"/doctor/{doctor_id}/docprofile")
+
+            if new_password != confirm_password:
+                flash("New passwords do not match.", "error")
+                connection.close()
+                return redirect(f"/doctor/{doctor_id}/docprofile")
+
+            if len(new_password) < 8:
+                flash("Password must be at least 8 characters.", "error")
+                connection.close()
+                return redirect(f"/doctor/{doctor_id}/docprofile")
+
+            cursor.execute("""
+                UPDATE Doctor
+                SET Password = %s
+                WHERE ID = %s
+            """, (new_password, doctor_id))
+
+        connection.commit()
+
+        cursor.execute("""
+            SELECT *
+            FROM Doctor
+            WHERE ID = %s
+        """, (doctor_id,))
+
+        updated_doctor = cursor.fetchone()
+
+        connection.close()
+
+        flash("Profile updated successfully!", "success")
+
+        return render_template(
+            "docprofile.html.jinja",
+            doctor=updated_doctor
+        )
+
+    connection.close()
+
+    return render_template(
+        "docprofile.html.jinja",
+        doctor=doctor
+    )
+
 
 @app.route("/change-password", methods=["POST"])
 @login_required
