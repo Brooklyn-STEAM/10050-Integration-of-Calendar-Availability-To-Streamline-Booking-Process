@@ -2324,3 +2324,101 @@ scheduler = BackgroundScheduler()
 scheduler.add_job(check_appointment_reminders, "interval", minutes=15)
 scheduler.add_job(cleanup_cancelled_appointments, "interval", seconds=30)
 scheduler.start()
+
+
+@app.route("/aboutus")
+def about():
+    return render_template("aboutus.html.jinja")
+
+
+     # ------------- PATIENT PROFILE --------------
+@app.route("/patientprofile")
+def profile1():
+
+    if not session.get("doctor_logged_in"):
+        flash("Doctors only")
+    return redirect("/doctorlogin")
+
+
+@app.route("/patientprofile/<int:user_id>", methods=["GET", "POST"])
+def patient_profile(user_id):
+
+   
+    if not session.get("doctor_logged_in"):
+        abort(404)
+
+    connection = connect_db()
+    cursor = connection.cursor()
+
+    if request.method == "POST":
+
+        appointment_id = request.form.get("appointment_id")
+        new_date = request.form.get("new_date")
+        new_time = request.form.get("new_time")
+
+        new_datetime = f"{new_date} {new_time}"
+
+        cursor.execute("""
+            UPDATE Appointment
+            SET Date = %s
+            WHERE ID = %s
+        """, (new_datetime, appointment_id))
+
+        connection.commit()
+
+ 
+    cursor.execute("""
+        SELECT *
+        FROM User
+        WHERE ID = %s
+    """, (user_id,))
+
+    patient = cursor.fetchone()
+
+    if patient is None:
+        connection.close()
+        abort(404)
+
+#    Gather the appointments for patient that joins 2 tables
+    cursor.execute("""
+SELECT
+    Appointment.ID,
+    Appointment.UserID,
+    Appointment.Date,
+    Appointment.Type,
+    Appointment.Status,
+    User.Name AS PatientName
+FROM Appointment
+JOIN User
+    ON User.ID = Appointment.UserID
+JOIN Doctor
+    ON Doctor.ID = Appointment.DoctorID
+WHERE Appointment.UserID = %s
+ORDER BY Appointment.Date DESC
+""", (user_id,))
+    
+    cursor.execute("""
+    SELECT 
+        Appointment.*,
+        Doctor.Name AS DoctorName
+    FROM Appointment
+    JOIN Doctor 
+        ON Appointment.DoctorID = Doctor.ID
+    WHERE Appointment.UserID = %s
+""", (user_id,))
+    
+    
+
+    appointments = cursor.fetchall()
+
+    # Seeing if the patient has any appointments
+    has_appointments = len(appointments) > 0
+
+    connection.close()
+
+    return render_template(
+        "patientprofile.html.jinja",
+        patient=patient,
+        appointments=appointments,
+        has_appointments=has_appointments
+    )
