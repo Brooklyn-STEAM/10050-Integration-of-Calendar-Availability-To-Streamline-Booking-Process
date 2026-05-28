@@ -1,0 +1,55 @@
+<nav class="sticky top-0 z-50 bg-[#57068c]/90 backdrop-blur-md px-4 md:px-8 py-4 shadow-md flex items-center justify-between font-medium text-white w-full">
+
+ 
+  <div class="flex items-center gap-3 md:gap-4">
+    <img
+      src="/static/images/logo.png"
+      alt="Logo"
+      class="h-12 w-12 md:h-18 md:w-18 rounded-full object-cover ring-2 ring-white/40"
+    >
+
+    {% if current_user.is_authenticated %}
+      <span class="text-xs md:text-sm opacity-80 truncate max-w-[140px]">
+        {{ doctor.Name}}
+      </span>
+    {% endif %}
+  </div>
+
+  <div class="hidden md:flex items-center gap-8 text-sm">
+
+    
+      <a href="/patient/{{ patient.ID }}/homepage" class="hover:text-[#e0c3ff] transition">Home</a>
+      <a href="/patient/{{ patient.ID }}/appointments" class="hover:text-[#e0c3ff] transition">Appointment</a>
+      <a href="/patient/{{ patient.ID }}/calender" class="hover:text-[#e0c3ff] transition">Calender</a>
+      <a href="/patient/{{ patient.ID }}/contact" class="hover:text-[#e0c3ff] transition">Reach Us</a>
+    
+    
+
+  </div>
+
+
+  <div class="relative">
+    <button onclick="document.getElementById('menu').classList.toggle('hidden')"
+            class="flex items-center hover:text-[#e0c3ff] transition">
+      <svg xmlns="http://www.w3.org/2000/svg" class="h-7 w-7" fill="none"
+           viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M4 6h16M4 12h16M4 18h16" />
+      </svg>
+    </button>
+
+    <ul id="menu"
+        class="hidden absolute right-0 mt-3 w-44 bg-white text-[#57068c] rounded-xl shadow-lg text-sm overflow-hidden">
+
+     
+        <li><a href="/patient/{{ patient.ID }}/homepage" class="block px-4 py-3 hover:bg-purple-200">Profile</a></li>
+        <li><a href="/patient/{{ patient.ID }}/appointments" class="block px-4 py-3 hover:bg-purple-200">Appointments</a></li>
+        <li><a href="/patient/{{ patient.ID }}/calender" class="block px-4 py-3 hover:bg-purple-200">Calender</a></li>
+        <li><a href="/patient/{{ patient.ID }}/contact" class="block px-4 py-3 hover:bg-purple-200">Reach Us</a></li>
+      
+
+      <li><a href="/logout" class="block px-4 py-3 hover:bg-purple-100">Logout</a></li>
+    </ul>
+  </div>
+
+</nav>
