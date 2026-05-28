@@ -2327,7 +2327,7 @@ scheduler.start()
 
 
 @app.route("/aboutus")
-def about():
+def about1():
     return render_template("aboutus.html.jinja")
 
 
