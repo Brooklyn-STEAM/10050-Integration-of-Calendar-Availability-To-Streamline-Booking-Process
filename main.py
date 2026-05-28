@@ -2095,14 +2095,14 @@ def about():
 
 
      # ------------- PATIENT PROFILE --------------
-@app.route("/patientprofile")
-def profile1():
-    return render_template("patientprofile.html.jinja")
+# @app.route("/patientprofile")
+# def profile1():
+#     return render_template("patientprofile.html.jinja")
 
 
-# ------------- PATIENT PROFILE --------------
-@app.route("/patientprofile/<int:user_id>")
-def patient_profile(user_id):
+# # ------------- PATIENT PROFILE --------------
+# @app.route("/patientprofile/<int:user_id>")
+# def patient_profile(user_id):
 
     # ---------------- DOCTOR ONLY ACCESS ----------------
     if not session.get("doctor_logged_in"):

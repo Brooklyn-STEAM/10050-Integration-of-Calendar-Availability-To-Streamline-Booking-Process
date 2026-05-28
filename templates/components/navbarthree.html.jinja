@@ -18,10 +18,10 @@
   <div class="hidden md:flex items-center gap-8 text-sm">
 
     
-      <a href="/patient/{{ patient.ID }}/homepage" class="hover:text-[#e0c3ff] transition">Profile</a>
-      <a href="/patient/{{ patient.ID }}/appointments" class="hover:text-[#e0c3ff] transition">Appointments</a>
-      <a href="/patient/{{ patient.ID }}/calender" class="hover:text-[#e0c3ff] transition">Records</a>
-      <a href="/patient/{{ patient.ID }}/contact" class="hover:text-[#e0c3ff] transition">Support</a>
+      <a href="/patient/{{ patient.ID }}/homepage" class="hover:text-[#e0c3ff] transition">Home</a>
+      <a href="/patient/{{ patient.ID }}/appointments" class="hover:text-[#e0c3ff] transition">Appointment</a>
+      <a href="/patient/{{ patient.ID }}/calender" class="hover:text-[#e0c3ff] transition">Calender</a>
+      <a href="/patient/{{ patient.ID }}/contact" class="hover:text-[#e0c3ff] transition">Reach Us</a>
     
     
 
@@ -41,12 +41,12 @@
     <ul id="menu"
         class="hidden absolute right-0 mt-3 w-44 bg-white text-[#57068c] rounded-xl shadow-lg text-sm overflow-hidden">
 
-      {% if patient %}
+     
         <li><a href="/patient/{{ patient.ID }}/homepage" class="block px-4 py-3 hover:bg-purple-200">Profile</a></li>
         <li><a href="/patient/{{ patient.ID }}/appointments" class="block px-4 py-3 hover:bg-purple-200">Appointments</a></li>
-        <li><a href="/patient/{{ patient.ID }}/calender" class="block px-4 py-3 hover:bg-purple-200">Records</a></li>
-        <li><a href="/patient/{{ patient.ID }}/contact" class="block px-4 py-3 hover:bg-purple-200">Support</a></li>
-      {% endif %}
+        <li><a href="/patient/{{ patient.ID }}/calender" class="block px-4 py-3 hover:bg-purple-200">Calender</a></li>
+        <li><a href="/patient/{{ patient.ID }}/contact" class="block px-4 py-3 hover:bg-purple-200">Reach Us</a></li>
+      
 
       <li><a href="/logout" class="block px-4 py-3 hover:bg-purple-100">Logout</a></li>
     </ul>
